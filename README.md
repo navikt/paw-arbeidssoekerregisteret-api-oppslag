@@ -9,7 +9,7 @@ https://oppslag-arbeidssoekerregisteret.intern.dev.nav.no/docs
 ## Flytdiagram
 
 ![Flytdiagram](docs/flytdiagram.png)
-[Link til flytdiagram](https://whimsical.com/paw-arbeidssokerregisteret-api-U87hbLkoU52ZVsnpYYccyg)
+[Link til flytdiagram](https://whimsical.com/paw-arbeidssoekerregisteret-api-oppslag-U87hbLkoU52ZVsnpYYccyg)
 
 ## Teknologier
 
