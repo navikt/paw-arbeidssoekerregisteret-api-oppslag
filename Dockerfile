@@ -1,10 +1,12 @@
-FROM busybox:latest
-ENV PORT=8080
+FROM ghcr.io/navikt/baseimages/temurin:21
 
-ADD ./www/index.html /www/index.html
-ADD ./www/hello-nais.png /www/hello-nais.png
+ENV SERVICE_NAVN=paw-arbeidssoekerregisteret-api-oppslag
+ENV AGENT=agents/opentelemetry-javaagent.jar
+ENV ANONYMISERING=agents/opentelemetry-anonymisering-1.30.0-23.09.22.7-1.jar
+ENV APPLIKASJON_JAR=App.jar
 
-HEALTHCHECK CMD nc -z localhost $PORT
-
-# Create a basic webserver and run it until the container is stopped
-CMD echo "httpd started" && trap "exit 0;" TERM INT; httpd -v -p $PORT -h /www -f & wait
+COPY build/libs/fat.jar app.jar
+COPY $AGENT opentelemetry-javaagent.jar
+COPY $ANONYMISERING opentelemetry-agent-extension.jar
+ENV JAVA_OPTS -javaagent:opentelemetry-javaagent.jar -Dotel.javaagent.extensions=opentelemetry-agent-extension.jar -Dotel.resource.attributes=service.name=$SERVICE_NAVN
+CMD ["java", "$JAVA_OPTS", "-jar", "$APPLIKASJON_JAR"]

@@ -1,0 +1,437 @@
+openapi: "3.0.3"
+info:
+  title: "paw_arbeidssoekerregisteret_api_oppslag API"
+  description: "paw_arbeidssoekerregisteret_api_oppslag API"
+  version: "1.0.0"
+servers:
+- url: "https://paw_arbeidssoekerregisteret_api_oppslag"
+paths:
+  /api/v1/arbeidssoekerperioder:
+    get:
+      description: ""
+      responses:
+        "403":
+          description: "Forbidden"
+          content:
+            '*/*':
+              schema:
+                type: "object"
+        "500":
+          description: "Internal Server Error"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/ArbeidssoekerperiodeResponse"
+  /api/v1/opplysninger-om-arbeidssoeker/{periodeId}:
+    get:
+      description: ""
+      parameters:
+      - name: "periodeId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "500":
+          description: "Internal Server Error"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/OpplysningerOmArbeidssoekerResponse"
+  /api/v1/profilering/{periodeId}:
+    get:
+      description: ""
+      parameters:
+      - name: "periodeId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "500":
+          description: "Internal Server Error"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/ProfileringResponse"
+  /api/v1/veileder/arbeidssoekerperioder:
+    post:
+      description: ""
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              $ref: "#/components/schemas/ArbeidssoekerperiodeRequest"
+        required: true
+      responses:
+        "500":
+          description: "Internal Server Error"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+        "403":
+          description: "Forbidden"
+          content:
+            '*/*':
+              schema:
+                type: "object"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/ArbeidssoekerperiodeResponse"
+  /api/v1/veileder/opplysninger-om-arbeidssoeker:
+    post:
+      description: ""
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              $ref: "#/components/schemas/OpplysningerOmArbeidssoekerRequest"
+        required: true
+      responses:
+        "500":
+          description: "Internal Server Error"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+        "403":
+          description: "Forbidden"
+          content:
+            '*/*':
+              schema:
+                type: "object"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/OpplysningerOmArbeidssoekerResponse"
+  /api/v1/veileder/profilering:
+    post:
+      description: ""
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              $ref: "#/components/schemas/ProfileringRequest"
+        required: true
+      responses:
+        "500":
+          description: "Internal Server Error"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+        "403":
+          description: "Forbidden"
+          content:
+            '*/*':
+              schema:
+                type: "object"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/ProfileringResponse"
+  /internal/isAlive:
+    get:
+      description: ""
+      responses:
+        "200":
+          description: "OK"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "ALIVE"
+  /internal/isReady:
+    get:
+      description: ""
+      responses:
+        "200":
+          description: "OK"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "READY"
+  /internal/metrics:
+    get:
+      description: ""
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+components:
+  schemas:
+    Instant:
+      type: "string"
+      format: "date-time"
+      example: "'2021-09-29T11:22:33.444Z'"
+    BrukerResponse:
+      type: "object"
+      properties:
+        type:
+          type: "string"
+          enum:
+          - "UKJENT_VERDI"
+          - "UDEFINERT"
+          - "VEILEDER"
+          - "SYSTEM"
+          - "SLUTTBRUKER"
+      required:
+      - "type"
+    MetadataResponse:
+      type: "object"
+      properties:
+        tidspunkt:
+          $ref: "#/components/schemas/Instant"
+        utfoertAv:
+          $ref: "#/components/schemas/BrukerResponse"
+        kilde:
+          type: "string"
+        aarsak:
+          type: "string"
+      required:
+      - "tidspunkt"
+      - "utfoertAv"
+      - "kilde"
+      - "aarsak"
+    ArbeidssoekerperiodeResponse:
+      type: "object"
+      properties:
+        periodeId:
+          type: "string"
+          format: "uuid"
+        startet:
+          $ref: "#/components/schemas/MetadataResponse"
+        avsluttet:
+          $ref: "#/components/schemas/MetadataResponse"
+      required:
+      - "periodeId"
+      - "startet"
+    UtdanningResponse:
+      type: "object"
+      properties:
+        lengde:
+          type: "string"
+          enum:
+          - "UKJENT_VERDI"
+          - "UDEFINERT"
+          - "INGEN_UTDANNING"
+          - "GRUNNSKOLE"
+          - "VIDEREGAENDE_GRUNNUTDANNING"
+          - "VIDEREGAENDE_FAGBREV_SVENNEBREV"
+          - "HOYERE_UTDANNING_1_TIL_4"
+          - "HOYERE_UTDANNING_5_ELLER_MER"
+        bestaatt:
+          type: "string"
+          enum:
+          - "JA"
+          - "NEI"
+          - "VET_IKKE"
+        godkjent:
+          type: "string"
+          enum:
+          - "JA"
+          - "NEI"
+          - "VET_IKKE"
+      required:
+      - "lengde"
+      - "bestaatt"
+      - "godkjent"
+    HelseResponse:
+      type: "object"
+      properties:
+        helseTilstandHindrerArbeid:
+          type: "string"
+          enum:
+          - "JA"
+          - "NEI"
+          - "VET_IKKE"
+      required:
+      - "helseTilstandHindrerArbeid"
+    ArbeidserfaringResponse:
+      type: "object"
+      properties:
+        harHattArbeid:
+          type: "string"
+          enum:
+          - "JA"
+          - "NEI"
+          - "VET_IKKE"
+      required:
+      - "harHattArbeid"
+    AnnetResponse:
+      type: "object"
+      properties:
+        andreForholdHindrerArbeid:
+          type: "string"
+          enum:
+          - "JA"
+          - "NEI"
+          - "VET_IKKE"
+      required:
+      - "andreForholdHindrerArbeid"
+    BeskrivelseMedDetaljerResponse:
+      type: "object"
+      properties:
+        beskrivelse:
+          type: "string"
+          enum:
+          - "UKJENT_VERDI"
+          - "UDEFINERT"
+          - "HAR_SAGT_OPP"
+          - "HAR_BLITT_SAGT_OPP"
+          - "ER_PERMITTERT"
+          - "ALDRI_HATT_JOBB"
+          - "IKKE_VAERT_I_JOBB_SISTE_2_AAR"
+          - "AKKURAT_FULLFORT_UTDANNING"
+          - "VIL_BYTTE_JOBB"
+          - "USIKKER_JOBBSITUASJON"
+          - "MIDLERTIDIG_JOBB"
+          - "DELTIDSJOBB_VIL_MER"
+          - "NY_JOBB"
+          - "KONKURS"
+          - "ANNET"
+        detaljer:
+          type: "string"
+      required:
+      - "beskrivelse"
+      - "detaljer"
+    OpplysningerOmArbeidssoekerResponse:
+      type: "object"
+      properties:
+        opplysningerOmArbeidssoekerId:
+          type: "string"
+          format: "uuid"
+        periodeId:
+          type: "string"
+          format: "uuid"
+        sendtInnAv:
+          $ref: "#/components/schemas/MetadataResponse"
+        utdanning:
+          $ref: "#/components/schemas/UtdanningResponse"
+        helse:
+          $ref: "#/components/schemas/HelseResponse"
+        arbeidserfaring:
+          $ref: "#/components/schemas/ArbeidserfaringResponse"
+        annet:
+          $ref: "#/components/schemas/AnnetResponse"
+        jobbsituasjon:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/BeskrivelseMedDetaljerResponse"
+      required:
+      - "opplysningerOmArbeidssoekerId"
+      - "periodeId"
+      - "sendtInnAv"
+      - "utdanning"
+      - "helse"
+      - "arbeidserfaring"
+      - "annet"
+      - "jobbsituasjon"
+    ProfileringResponse:
+      type: "object"
+      properties:
+        profileringId:
+          type: "string"
+          format: "uuid"
+        periodeId:
+          type: "string"
+          format: "uuid"
+        opplysningerOmArbeidssoekerId:
+          type: "string"
+          format: "uuid"
+        sendtInnAv:
+          $ref: "#/components/schemas/MetadataResponse"
+        profilertTil:
+          type: "string"
+          enum:
+          - "UKJENT_VERDI"
+          - "UDEFINERT"
+          - "ANTATT_GODE_MULIGHETER"
+          - "ANTATT_BEHOV_FOR_VEILEDNING"
+          - "OPPGITT_HINDRINGER"
+        jobbetSammenhengendeSeksAvTolvSisteManeder:
+          type: "boolean"
+        alder:
+          type: "integer"
+          format: "int32"
+      required:
+      - "profileringId"
+      - "periodeId"
+      - "opplysningerOmArbeidssoekerId"
+      - "sendtInnAv"
+      - "profilertTil"
+    ArbeidssoekerperiodeRequest:
+      type: "object"
+      properties:
+        identitetsnummer:
+          type: "string"
+      required:
+      - "identitetsnummer"
+    OpplysningerOmArbeidssoekerRequest:
+      type: "object"
+      properties:
+        identitetsnummer:
+          type: "string"
+        periodeId:
+          type: "string"
+          format: "uuid"
+      required:
+      - "identitetsnummer"
+      - "periodeId"
+    ProfileringRequest:
+      type: "object"
+      properties:
+        identitetsnummer:
+          type: "string"
+        periodeId:
+          type: "string"
+          format: "uuid"
+      required:
+      - "identitetsnummer"
+      - "periodeId"

@@ -1,0 +1,41 @@
+authProviders:
+  - name: tokenx
+    discoveryUrl: ${TOKEN_X_WELL_KNOWN_URL}
+    tokenEndpointUrl: ${TOKEN_X_TOKEN_ENDPOINT}
+    clientId: ${TOKEN_X_CLIENT_ID}
+    claims:
+      map:
+        - acr=Level4
+        - acr=idporten-loa-high
+      combineWithOr: true
+  - name: azure
+    discoveryUrl: ${AZURE_APP_WELL_KNOWN_URL}
+    tokenEndpointUrl: ${AZURE_OPENID_CONFIG_TOKEN_ENDPOINT}
+    clientId: ${AZURE_APP_CLIENT_ID}
+    claims:
+      map:
+        - NAVident
+database:
+  host: ${NAIS_DATABASE_PAW_ARBEIDSSOEKERREGISTERET_API_OPPSLAG_ARBEIDSSOEKERREGISTERETAPIOPPSLAG_HOST}
+  port: ${NAIS_DATABASE_PAW_ARBEIDSSOEKERREGISTERET_API_OPPSLAG_ARBEIDSSOEKERREGISTERETAPIOPPSLAG_PORT}
+  username: ${NAIS_DATABASE_PAW_ARBEIDSSOEKERREGISTERET_API_OPPSLAG_ARBEIDSSOEKERREGISTERETAPIOPPSLAG_USERNAME}
+  password: ${NAIS_DATABASE_PAW_ARBEIDSSOEKERREGISTERET_API_OPPSLAG_ARBEIDSSOEKERREGISTERETAPIOPPSLAG_PASSWORD}
+  name: ${NAIS_DATABASE_PAW_ARBEIDSSOEKERREGISTERET_API_OPPSLAG_ARBEIDSSOEKERREGISTERETAPIOPPSLAG_DATABASE}
+poaoClientConfig:
+  url: http://poao-tilgang.poao.svc.cluster.local
+  scope: api://${NAIS_CLUSTER_NAME}.poao.poao-tilgang/.default
+kafka:
+  gruppeId: paw.arbeidssoekerregisteret-api-oppslag-v1
+  periodeTopic: paw.arbeidssokerperioder-beta-v7
+  opplysningerOmArbeidssoekerTopic: paw.opplysninger-om-arbeidssoeker-beta-v7
+  profileringTopic: paw.arbeidssoker-profilering-beta-v2
+  serverConfig:
+      autentisering: SSL
+      kafkaBrokers: ${KAFKA_BROKERS}
+      keystorePath: ${KAFKA_KEYSTORE_PATH}
+      credstorePassword: ${KAFKA_CREDSTORE_PASSWORD}
+      truststorePath: ${KAFKA_TRUSTSTORE_PATH}
+  schemaRegistryConfig:
+      url: ${KAFKA_SCHEMA_REGISTRY}
+      bruker: ${KAFKA_SCHEMA_REGISTRY_USER}
+      passord: ${KAFKA_SCHEMA_REGISTRY_PASSWORD}

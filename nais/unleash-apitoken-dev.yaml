@@ -1,0 +1,14 @@
+apiVersion: unleash.nais.io/v1
+kind: ApiToken
+metadata:
+  name: paw-arbeidssoekerregister-api-oppslag-unleash
+  namespace: paw
+  labels:
+    "team": "paw"
+spec:
+  unleashInstance:
+    apiVersion: unleash.nais.io/v1
+    kind: RemoteUnleash
+    name: paw
+  secretName: paw-arbeidssoekerregister-api-oppslag-unleash-api-token
+  environment: development
