@@ -22,7 +22,7 @@ spec:
   kafka:
     pool: nav-dev
   envFrom:
-    - secret: paw-arbeidssoekerregister-api-oppslag-unleash-api-token
+    - secret: paw-arbeidssoekerregisteret-api-oppslag-unleash-api-token
   env:
     - name: OTEL_METRICS_EXPORTER
       value: "none"
