@@ -14,6 +14,7 @@ fun main() {
 }
 
 fun migrateDatabase(dataSource: DataSource) {
+    cleanDatabase(dataSource) // TODO: Fjern denne linjen ved neste commit
     Flyway.configure().baselineOnMigrate(true).dataSource(dataSource).load().migrate()
 }
 

@@ -1,5 +1,6 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
@@ -96,7 +97,7 @@ class PeriodeRepositoryTest : StringSpec({
         retrievedPeriode shouldBe updatedPeriode
     }
 
-    "Oppdatere periode med avsluttet metadata til null skal ikke være mulig" {
+    "Oppdatere periode med avsluttet lik null skal ikke være mulig" {
         val repository = ArbeidssoekerperiodeRepository(database)
 
         val periode = hentTestPeriode()
@@ -104,12 +105,15 @@ class PeriodeRepositoryTest : StringSpec({
 
         val updatedPeriode = periode.copy(avsluttet = null)
 
-        repository.oppdaterArbeidssoekerperiode(updatedPeriode)
+        val exception =
+            shouldThrow<IllegalArgumentException> {
+                repository.oppdaterArbeidssoekerperiode(updatedPeriode)
+            }
 
         val retrievedPeriode = repository.hentArbeidssoekerperiode(periode.id)
 
-        retrievedPeriode shouldNotBe null
-        retrievedPeriode shouldNotBe updatedPeriode
+        exception.message shouldBe "Avsluttet kan ikke være null ved oppdatering av periode"
+        retrievedPeriode?.avsluttet shouldNotBe null
     }
 })
 

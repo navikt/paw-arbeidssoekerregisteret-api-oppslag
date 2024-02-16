@@ -22,6 +22,11 @@ import java.sql.SQLException
 import java.util.UUID
 
 class ArbeidssoekerperiodeRepository(private val database: Database) {
+    fun finnesArbeidssoekerperiode(periodeId: UUID): Boolean =
+        transaction(database) {
+            PeriodeTable.selectAll().where { PeriodeTable.periodeId eq periodeId }.singleOrNull() != null
+        }
+
     fun hentArbeidssoekerperiode(periodeId: UUID): Periode? =
         transaction(database) {
             PeriodeTable.selectAll().where { PeriodeTable.periodeId eq periodeId }.singleOrNull()?.let { resultRow ->
@@ -117,49 +122,24 @@ class ArbeidssoekerperiodeRepository(private val database: Database) {
     fun oppdaterArbeidssoekerperiode(arbeidssoekerperiode: Periode) {
         transaction(database) {
             try {
-                val eksisterendePeriode = PeriodeTable.selectAll().where { PeriodeTable.periodeId eq arbeidssoekerperiode.id }.singleOrNull()
-
-                eksisterendePeriode?.let {
-                    val startetId = it[PeriodeTable.startetId]
-                    val avsluttetId = it[PeriodeTable.avsluttetId]
-
-                    oppdaterMetadata(startetId, arbeidssoekerperiode.startet)
-                    arbeidssoekerperiode.avsluttet?.let {
-                            avsluttetPeriode ->
-                        oppdaterAvsluttetMetadata(avsluttetId, avsluttetPeriode, arbeidssoekerperiode.id)
-                    }
+                if(arbeidssoekerperiode.avsluttet != null) {
+                    oppdaterAvsluttetMetadata(arbeidssoekerperiode.id, arbeidssoekerperiode.avsluttet)
+                } else {
+                    throw IllegalArgumentException("Avsluttet kan ikke være null ved oppdatering av periode")
                 }
             } catch (e: SQLException) {
-                logger.error("Feil ved opprettelse av periode", e)
-                throw e
+                logger.error("Feil ved oppdatering av periode", e)
             }
-        }
-    }
-
-    private fun oppdaterMetadata(
-        metadataId: Long,
-        metadata: Metadata
-    ) {
-        MetadataTable.update({ MetadataTable.id eq metadataId }) {
-            it[utfoertAvId] = settInnBruker(metadata.utfoertAv)
-            it[tidspunkt] = metadata.tidspunkt
-            it[kilde] = metadata.kilde
-            it[aarsak] = metadata.aarsak
         }
     }
 
     private fun oppdaterAvsluttetMetadata(
-        avsluttetId: Long?,
+        periodeId: UUID,
         avsluttetMetadata: Metadata,
-        periodeId: UUID
     ) {
-        if (avsluttetId != null) {
-            oppdaterMetadata(avsluttetId, avsluttetMetadata)
-        } else {
-            val avsluttetMetadataId = settInnMetadata(avsluttetMetadata)
-            PeriodeTable.update({ PeriodeTable.periodeId eq periodeId }) {
-                it[PeriodeTable.avsluttetId] = avsluttetMetadataId
-            }
+        val avsluttetMetadataId = settInnMetadata(avsluttetMetadata)
+        PeriodeTable.update({ PeriodeTable.periodeId eq periodeId }) {
+            it[avsluttetId] = avsluttetMetadataId
         }
     }
 }

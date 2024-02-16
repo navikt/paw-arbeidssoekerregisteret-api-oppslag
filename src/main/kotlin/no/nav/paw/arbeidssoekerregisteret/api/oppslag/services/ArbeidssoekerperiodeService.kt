@@ -9,8 +9,8 @@ class ArbeidssoekerperiodeService(private val arbeidssoekerperiodeRepository: Ar
     fun hentArbeidssoekerperioder(identitetsnummer: Identitetsnummer): List<ArbeidssoekerperiodeResponse> = arbeidssoekerperiodeRepository.hentArbeidssoekerperioder(identitetsnummer)
 
     fun opprettEllerOppdaterArbeidssoekerperiode(arbeidssoekerperiode: Periode) {
-        val eksisterendePeriode = arbeidssoekerperiodeRepository.hentArbeidssoekerperiode(arbeidssoekerperiode.id)
-        if (eksisterendePeriode != null) {
+        val finnesArbeidssoekerperiode = arbeidssoekerperiodeRepository.finnesArbeidssoekerperiode(arbeidssoekerperiode.id)
+        if (finnesArbeidssoekerperiode) {
             arbeidssoekerperiodeRepository.oppdaterArbeidssoekerperiode(arbeidssoekerperiode)
         } else {
             arbeidssoekerperiodeRepository.opprettArbeidssoekerperiode(arbeidssoekerperiode)
