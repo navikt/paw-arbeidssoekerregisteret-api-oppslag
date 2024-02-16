@@ -122,7 +122,7 @@ class ArbeidssoekerperiodeRepository(private val database: Database) {
     fun oppdaterArbeidssoekerperiode(arbeidssoekerperiode: Periode) {
         transaction(database) {
             try {
-                if(arbeidssoekerperiode.avsluttet != null) {
+                if (arbeidssoekerperiode.avsluttet != null) {
                     oppdaterAvsluttetMetadata(arbeidssoekerperiode.id, arbeidssoekerperiode.avsluttet)
                 } else {
                     throw IllegalArgumentException("Avsluttet kan ikke være null ved oppdatering av periode")
@@ -135,7 +135,7 @@ class ArbeidssoekerperiodeRepository(private val database: Database) {
 
     private fun oppdaterAvsluttetMetadata(
         periodeId: UUID,
-        avsluttetMetadata: Metadata,
+        avsluttetMetadata: Metadata
     ) {
         val avsluttetMetadataId = settInnMetadata(avsluttetMetadata)
         PeriodeTable.update({ PeriodeTable.periodeId eq periodeId }) {
