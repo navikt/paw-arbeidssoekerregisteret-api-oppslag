@@ -18,7 +18,7 @@ object MetadataTable : LongIdTable("metadata") {
 }
 
 object PeriodeTable : LongIdTable("periode") {
-    val periodeId = uuid("periode_id")
+    val periodeId = uuid("periode_id").uniqueIndex()
     val identitetsnummer = varchar("identitetsnummer", 11)
     val startetId = long("startet_id").references(MetadataTable.id)
     val avsluttetId = long("avsluttet_id").references(MetadataTable.id).nullable()

@@ -55,11 +55,10 @@ CREATE TABLE metadata
 CREATE TABLE periode
 (
     id BIGSERIAL PRIMARY KEY,
-    periode_id UUID NOT NULL,
+    periode_id UUID NOT NULL UNIQUE,
     identitetsnummer VARCHAR(11) NOT NULL,
     startet_id BIGINT REFERENCES  metadata(id),
-    avsluttet_id BIGINT REFERENCES  metadata(id),
-    UNIQUE (periode_id)
+    avsluttet_id BIGINT REFERENCES  metadata(id)
 );
 
 /* Opplysninger om arbeidssøker */
