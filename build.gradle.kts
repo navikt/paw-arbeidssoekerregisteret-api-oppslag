@@ -46,6 +46,9 @@ dependencies {
     //Unleash
     implementation("io.getunleash:unleash-client-java:9.2.0")
 
+    // Mockito
+    implementation("org.mockito:mockito-core:3.12.4")
+
     // Ktor
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-swagger:$ktorVersion")

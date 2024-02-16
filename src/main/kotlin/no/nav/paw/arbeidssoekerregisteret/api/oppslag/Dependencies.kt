@@ -18,6 +18,8 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.OpplysningerOmArb
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ProfileringService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.TokenService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.generateDatasource
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getUnleashMock
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.isLocalEnvironment
 import no.nav.poao_tilgang.client.PoaoTilgangCachedClient
 import no.nav.poao_tilgang.client.PoaoTilgangHttpClient
 import org.jetbrains.exposed.sql.Database
@@ -44,14 +46,18 @@ fun createDependencies(config: Config): Dependencies {
         )
 
     val unleashClient =
-        DefaultUnleash(
-            UnleashConfig.builder()
-                .appName(getenv("NAIS_APP_NAME"))
-                .instanceId(getenv("NAIS_APP_NAME"))
-                .unleashAPI(getenv("UNLEASH_SERVER_API_URL"))
-                .apiKey(getenv("UNLEASH_SERVER_API_TOKEN"))
-                .build()
-        )
+        if (isLocalEnvironment()) {
+            getUnleashMock()
+        } else {
+            DefaultUnleash(
+                UnleashConfig.builder()
+                    .appName(getenv("NAIS_APP_NAME"))
+                    .instanceId(getenv("NAIS_APP_NAME"))
+                    .unleashAPI(getenv("UNLEASH_SERVER_API_URL"))
+                    .apiKey(getenv("UNLEASH_SERVER_API_TOKEN"))
+                    .build()
+            )
+        }
 
     // OBO vs StS token
     val autorisasjonService = AutorisasjonService(poaoTilgangHttpClient)
