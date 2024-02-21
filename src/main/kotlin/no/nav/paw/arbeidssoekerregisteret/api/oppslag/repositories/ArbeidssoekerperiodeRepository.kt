@@ -61,6 +61,11 @@ class ArbeidssoekerperiodeRepository(private val database: Database) {
         }
     }
 
+    fun hentAntallAktivePerioder(): Long =
+        transaction(database) {
+            PeriodeTable.selectAll().where { PeriodeTable.avsluttetId eq null }.count()
+        }
+
     private fun hentBruker(brukerId: Long): Bruker? {
         return BrukerTable.selectAll().where { BrukerTable.id eq brukerId }.singleOrNull()?.let {
             Bruker(

@@ -167,3 +167,25 @@ select
 from periode inner join periode_opplysninger po on periode.periode_id = po.periode_id
              inner join opplysninger_om_arbeidssoeker ooa on po.opplysninger_om_arbeidssoeker_id = ooa.id
              inner join test_data_dev on test_data_dev.foedselsnummer = periode.identitetsnummer
+
+
+    from periode inner join periode_opplysninger po on periode.periode_id = po.periode_id
+    inner join opplysninger_om_arbeidssoeker ooa on po.opplysninger_om_arbeidssoeker_id = ooa.id
+    inner join test_data_dev on test_data_dev.foedselsnummer = periode.identitetsnummer;
+
+insert into detaljer(beskrivelse_id, noekkel, verdi)
+select
+    id,
+    'stilling' noekkel,
+    'Administrasjonskonsulent' verdi
+from beskrivelse;
+
+insert into detaljer(beskrivelse_id, noekkel, verdi)
+select
+    id,
+    'stilling_styrk08' noekkel,
+    '3343' verdi
+from beskrivelse;
+
+delete from detaljer
+where beskrivelse_id in (4,5);

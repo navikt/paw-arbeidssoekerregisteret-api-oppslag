@@ -78,6 +78,11 @@ fun Application.module(
         }
     }
 
+    // Oppdaterer grafana gauge for antall aktive perioder
+    thread {
+        dependencies.scheduleGetAktivePerioderGaugeService.scheduleGetAktivePerioderTask()
+    }
+
     // Ruter
     routing {
         healthRoutes(dependencies.registry)

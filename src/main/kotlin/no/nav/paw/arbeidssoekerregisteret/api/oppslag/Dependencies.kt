@@ -9,6 +9,7 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.createKafkaConsumer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.consumers.ArbeidssoekerperiodeConsumer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.consumers.OpplysningerOmArbeidssoekerConsumer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.consumers.ProfileringConsumer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.metrics.ScheduleGetAktivePerioderGaugeService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.ArbeidssoekerperiodeRepository
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.OpplysningerOmArbeidssoekerRepository
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.ProfileringRepository
@@ -64,6 +65,7 @@ fun createDependencies(config: Config): Dependencies {
 
     // Arbeidssøkerperiode avhengigheter
     val arbeidssoekerperiodeRepository = ArbeidssoekerperiodeRepository(database)
+    val scheduleGetAktivePerioderGaugeService = ScheduleGetAktivePerioderGaugeService(registry, arbeidssoekerperiodeRepository)
     val arbeidssoekerperiodeService = ArbeidssoekerperiodeService(arbeidssoekerperiodeRepository)
     val arbeidssoekerperiodeConsumer =
         ArbeidssoekerperiodeConsumer(
@@ -104,7 +106,8 @@ fun createDependencies(config: Config): Dependencies {
         opplysningerOmArbeidssoekerConsumer,
         profileringService,
         profileringConsumer,
-        autorisasjonService
+        autorisasjonService,
+        scheduleGetAktivePerioderGaugeService
     )
 }
 
@@ -117,5 +120,6 @@ data class Dependencies(
     val opplysningerOmArbeidssoekerConsumer: OpplysningerOmArbeidssoekerConsumer,
     val profileringService: ProfileringService,
     val profileringConsumer: ProfileringConsumer,
-    val autorisasjonService: AutorisasjonService
+    val autorisasjonService: AutorisasjonService,
+    val scheduleGetAktivePerioderGaugeService: ScheduleGetAktivePerioderGaugeService
 )
