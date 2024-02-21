@@ -14,7 +14,7 @@ fun main() {
 }
 
 fun migrateDatabase(dataSource: DataSource) {
-    cleanDatabase(dataSource) //TODO: slett
+    cleanDatabase(dataSource) // TODO: slett
     Flyway.configure().baselineOnMigrate(true).dataSource(dataSource).load().migrate()
 }
 
