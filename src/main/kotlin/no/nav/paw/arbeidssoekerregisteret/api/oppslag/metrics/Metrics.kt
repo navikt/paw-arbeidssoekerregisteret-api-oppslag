@@ -14,7 +14,7 @@ fun gaugeAntallAktivePerioder(
 ) {
     val antallAktivePerioder = repository.hentAntallAktivePerioder()
     antallAktivePerioderReference.set(antallAktivePerioder)
-    registry.gauge("paw.arbeidssoekerregisteret.api.oppslag.antall.aktive.perioder", Tags.empty(), antallAktivePerioderReference) {
+    registry.gauge("paw_arbeidssoekerregisteret_api_oppslag_antall_aktive_perioder", Tags.empty(), antallAktivePerioderReference) {
         antallAktivePerioderReference.get().toDouble()
     }
 }
