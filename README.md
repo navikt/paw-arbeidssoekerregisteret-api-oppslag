@@ -9,8 +9,8 @@ https://oppslag-arbeidssoekerregisteret.intern.dev.nav.no/docs
 ## Flytdiagram
 
 ```mermaid
-flowchart RL
-    A(Frontend/backend løsninger);
+graph RL
+    A("Frontend/backend løsninger");
     subgraph paw-arbeidssoekerregisteret-api-oppslag
         B[fa:fa-lock TOKENX/AZURE];
         id1[[
@@ -33,8 +33,8 @@ flowchart RL
         ];
         D[Services];
         E[(Postgres database)];
-        I[Consumer: arbeidssøkerperiode]; 
-        J[Consumer: opplysninger-om-arbeidssøker];
+        I["Consumer: arbeidssøkerperiode"]; 
+        J["Consumer: opplysninger-om-arbeidssøker"];
         K[Consumer: profilering];
     end
     F[Kafka topic: arbeidssoekerperiode];
