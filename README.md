@@ -9,47 +9,32 @@ https://oppslag-arbeidssoekerregisteret.intern.dev.nav.no/docs
 ## Flytdiagram
 
 ```mermaid
-graph RL
-    A("Frontend/backend løsninger");
+flowchart RL;
+    A(Frontend/backend løsninger);
     subgraph paw-arbeidssoekerregisteret-api-oppslag
         B[TOKENX/AZURE];
-        id1[[
-            REST API
-
-            GET
-            /arbeidssoekerperioder
-            /opplysninger-om-arbeidssoeker/periodeId
-            /profilering/periodeId
-
-            POST
-            /veileder/arbeidssoekerperioder
-            /veileder/opplysninger-om-arbeidssoeker
-            /veileder/profilering
-        ]];
-        id2[
-            Helse endepunkter
-            Opentelemetry tracing
-            Logging
-        ];
-        D[Services];
-        E[(Postgres database)];
-        I["Consumer: arbeidssøkerperiode"]; 
-        J["Consumer: opplysninger-om-arbeidssøker"];
-        K[Consumer: profilering];
-    end
-    F[Kafka topic: arbeidssoekerperiode];
-    G[Kafka topic: opplysninger-om-arbeidssoeker];
-    H[Kafka topic: arbeidssoeker-profilering];
+        id1[REST API <br/> <br/> GET <br/> /arbeidssoekerperioder <br/> /opplysninger-om-arbeidssoeker <br/> /profilering <br/> <br/> POST <br/> /veileder/arbeidssoekerperioder <br/> /veileder/opplysninger-om-arbeidssoeker <br/> /veileder/profilering];
+        id2[Helse endepunkter <br/> Opentelemetry tracing <br/> Logging];
+        C[Services];
+        D[(Postgres database)];
+        E[Consumer: arbeidssøkerperiode];
+        F[Consumer: opplysninger-om-arbeidssøker];
+        G[Consumer: profilering];
+    end;
+    H[Kafka topic: arbeidssoekerperiode];
+    I[Kafka topic: opplysninger-om-arbeidssoeker];
+    J[Kafka topic: arbeidssoeker-profilering];
     A-->B;
     B-->id1;
-    E-->D;
-    D-->id1;
-    I-->E;
-    J-->E;
-    K-->E;
-    F-->I;
-    G-->J;
-    H-->K;
+    id2~~~id1
+    C-->id1;
+    D-->C
+    E-->D
+    F-->D;
+    G-->D;
+    J-->G;
+    I-->F;
+    H-->E;
 ```
 
 ## Teknologier
