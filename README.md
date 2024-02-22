@@ -12,7 +12,7 @@ https://oppslag-arbeidssoekerregisteret.intern.dev.nav.no/docs
 graph RL
     A("Frontend/backend løsninger");
     subgraph paw-arbeidssoekerregisteret-api-oppslag
-        B[fa:fa-lock TOKENX/AZURE];
+        B[TOKENX/AZURE];
         id1[[
             REST API
 
