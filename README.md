@@ -8,8 +8,50 @@ https://oppslag-arbeidssoekerregisteret.intern.dev.nav.no/docs
 
 ## Flytdiagram
 
-![Flytdiagram](docs/flytdiagram.png)
-[Link til flytdiagram](https://whimsical.com/paw-arbeidssoekerregisteret-api-oppslag-U87hbLkoU52ZVsnpYYccyg)
+```mermaid
+flowchart RL
+    A(Frontend/backend løsninger)
+    subgraph paw-arbeidssoekerregisteret-api-oppslag
+        B[fa:fa-lock TOKENX/AZURE]
+        id1[[
+            REST API
+
+            GET
+            /arbeidssoekerperioder
+            /opplysninger-om-arbeidssoeker/periodeId
+            /profilering/periodeId
+
+            POST
+            /veileder/arbeidssoekerperioder
+            /veileder/opplysninger-om-arbeidssoeker
+            /veileder/profilering
+        ]]
+        id2[
+            Helse endepunkter
+            Opentelemetry tracing
+            Logging
+        ]
+        D[Services]
+        E[(Postgres database)]
+        I[Consumer: arbeidssøkerperiode] 
+        J[Consumer: opplysninger-om-arbeidssøker]
+        K[Consumer: profilering]
+    end
+    F[Kafka topic: arbeidssoekerperiode]
+    G[Kafka topic: opplysninger-om-arbeidssoeker]
+    H[Kafka topic: arbeidssoeker-profilering]
+
+    A --> B
+    B --> id1
+    E --> D
+    D --> id1
+    I --> E
+    J --> E
+    K --> E
+    F --> I
+    G --> J
+    H --> K
+```
 
 ## Teknologier
 
