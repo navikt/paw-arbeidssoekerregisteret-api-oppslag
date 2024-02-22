@@ -10,9 +10,9 @@ https://oppslag-arbeidssoekerregisteret.intern.dev.nav.no/docs
 
 ```mermaid
 flowchart RL
-    A(Frontend/backend løsninger)
+    A(Frontend/backend løsninger);
     subgraph paw-arbeidssoekerregisteret-api-oppslag
-        B[fa:fa-lock TOKENX/AZURE]
+        B[fa:fa-lock TOKENX/AZURE];
         id1[[
             REST API
 
@@ -25,32 +25,31 @@ flowchart RL
             /veileder/arbeidssoekerperioder
             /veileder/opplysninger-om-arbeidssoeker
             /veileder/profilering
-        ]]
+        ]];
         id2[
             Helse endepunkter
             Opentelemetry tracing
             Logging
-        ]
-        D[Services]
-        E[(Postgres database)]
-        I[Consumer: arbeidssøkerperiode] 
-        J[Consumer: opplysninger-om-arbeidssøker]
-        K[Consumer: profilering]
+        ];
+        D[Services];
+        E[(Postgres database)];
+        I[Consumer: arbeidssøkerperiode]; 
+        J[Consumer: opplysninger-om-arbeidssøker];
+        K[Consumer: profilering];
     end
-    F[Kafka topic: arbeidssoekerperiode]
-    G[Kafka topic: opplysninger-om-arbeidssoeker]
-    H[Kafka topic: arbeidssoeker-profilering]
-
-    A --> B
-    B --> id1
-    E --> D
-    D --> id1
-    I --> E
-    J --> E
-    K --> E
-    F --> I
-    G --> J
-    H --> K
+    F[Kafka topic: arbeidssoekerperiode];
+    G[Kafka topic: opplysninger-om-arbeidssoeker];
+    H[Kafka topic: arbeidssoeker-profilering];
+    A-->B;
+    B-->id1;
+    E-->D;
+    D-->id1;
+    I-->E;
+    J-->E;
+    K-->E;
+    F-->I;
+    G-->J;
+    H-->K;
 ```
 
 ## Teknologier
