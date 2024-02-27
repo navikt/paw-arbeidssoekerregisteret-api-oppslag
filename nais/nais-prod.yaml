@@ -24,12 +24,6 @@ spec:
   envFrom:
     - secret: paw-arbeidssoekerregisteret-api-oppslag-unleash-api-token
   env:
-    - name: OTEL_METRICS_EXPORTER
-      value: "none"
-    - name: OTEL_TRACES_EXPORTER
-      value: "maskert_oltp"
-    - name: OTEL_JAVAAGENT_DEBUG
-      value: "false"
     - name: UNLEASH_SERVER_API_URL
       value: https://paw-unleash-api.nav.cloud.nais.io/api
   replicas:
