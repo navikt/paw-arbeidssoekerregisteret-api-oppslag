@@ -14,7 +14,6 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.configureSerializa
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.arbeidssokerRoutes
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.healthRoutes
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.swaggerRoutes
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.cleanDatabase
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.loadConfiguration
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.migrateDatabase
@@ -40,7 +39,6 @@ fun Application.module(
     config: Config
 ) {
     // Kjør migration på database
-    cleanDatabase(dependencies.dataSource)
     migrateDatabase(dependencies.dataSource)
 
     // Konfigurerer plugins
