@@ -255,17 +255,8 @@ components:
     UtdanningResponse:
       type: "object"
       properties:
-        lengde:
+        nus:
           type: "string"
-          enum:
-          - "UKJENT_VERDI"
-          - "UDEFINERT"
-          - "INGEN_UTDANNING"
-          - "GRUNNSKOLE"
-          - "VIDEREGAENDE_GRUNNUTDANNING"
-          - "VIDEREGAENDE_FAGBREV_SVENNEBREV"
-          - "HOYERE_UTDANNING_1_TIL_4"
-          - "HOYERE_UTDANNING_5_ELLER_MER"
         bestaatt:
           type: "string"
           enum:
@@ -279,9 +270,7 @@ components:
           - "NEI"
           - "VET_IKKE"
       required:
-      - "lengde"
-      - "bestaatt"
-      - "godkjent"
+        - "nus"
     HelseResponse:
       type: "object"
       properties:
@@ -292,18 +281,7 @@ components:
           - "NEI"
           - "VET_IKKE"
       required:
-      - "helseTilstandHindrerArbeid"
-    ArbeidserfaringResponse:
-      type: "object"
-      properties:
-        harHattArbeid:
-          type: "string"
-          enum:
-          - "JA"
-          - "NEI"
-          - "VET_IKKE"
-      required:
-      - "harHattArbeid"
+        - "helseTilstandHindrerArbeid"
     AnnetResponse:
       type: "object"
       properties:
@@ -313,8 +291,9 @@ components:
           - "JA"
           - "NEI"
           - "VET_IKKE"
-      required:
-      - "andreForholdHindrerArbeid"
+    Map:
+      type: "object"
+      properties: {}
     BeskrivelseMedDetaljerResponse:
       type: "object"
       properties:
@@ -337,10 +316,10 @@ components:
           - "KONKURS"
           - "ANNET"
         detaljer:
-          type: "string"
+          $ref: "#/components/schemas/Map"
       required:
-      - "beskrivelse"
-      - "detaljer"
+        - "beskrivelse"
+        - "detaljer"
     OpplysningerOmArbeidssoekerResponse:
       type: "object"
       properties:
@@ -356,8 +335,6 @@ components:
           $ref: "#/components/schemas/UtdanningResponse"
         helse:
           $ref: "#/components/schemas/HelseResponse"
-        arbeidserfaring:
-          $ref: "#/components/schemas/ArbeidserfaringResponse"
         annet:
           $ref: "#/components/schemas/AnnetResponse"
         jobbsituasjon:
@@ -368,10 +345,6 @@ components:
       - "opplysningerOmArbeidssoekerId"
       - "periodeId"
       - "sendtInnAv"
-      - "utdanning"
-      - "helse"
-      - "arbeidserfaring"
-      - "annet"
       - "jobbsituasjon"
     ProfileringResponse:
       type: "object"
