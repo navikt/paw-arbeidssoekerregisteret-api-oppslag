@@ -30,10 +30,9 @@ data class OpplysningerOmArbeidssoekerResponse(
     val opplysningerOmArbeidssoekerId: UUID,
     val periodeId: UUID,
     val sendtInnAv: MetadataResponse,
-    val utdanning: UtdanningResponse,
-    val helse: HelseResponse,
-    val arbeidserfaring: ArbeidserfaringResponse,
-    val annet: AnnetResponse,
+    val utdanning: UtdanningResponse?,
+    val helse: HelseResponse?,
+    val annet: AnnetResponse?,
     val jobbsituasjon: List<BeskrivelseMedDetaljerResponse>
 )
 
@@ -47,12 +46,12 @@ data class HelseResponse(
 
 data class UtdanningResponse(
     val nus: String,
-    val bestaatt: JaNeiVetIkkeResponse,
-    val godkjent: JaNeiVetIkkeResponse
+    val bestaatt: JaNeiVetIkkeResponse?,
+    val godkjent: JaNeiVetIkkeResponse?
 )
 
 data class AnnetResponse(
-    val andreForholdHindrerArbeid: JaNeiVetIkkeResponse
+    val andreForholdHindrerArbeid: JaNeiVetIkkeResponse?
 )
 
 data class BeskrivelseMedDetaljerResponse(

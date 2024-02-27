@@ -67,8 +67,8 @@ CREATE TABLE utdanning
 (
     id BIGSERIAL PRIMARY KEY,
     nus VARCHAR(255) NOT NULL,
-    bestaatt JaNeiVetIkke NOT NULL,
-    godkjent JaNeiVetIkke NOT NULL
+    bestaatt JaNeiVetIkke,
+    godkjent JaNeiVetIkke
 );
 
 CREATE TABLE helse
@@ -77,16 +77,11 @@ CREATE TABLE helse
     helsetilstand_hindrer_arbeid JaNeiVetIkke NOT NULL
 );
 
-CREATE TABLE arbeidserfaring
-(
-    id BIGSERIAL PRIMARY KEY,
-    har_hatt_arbeid JaNeiVetIkke NOT NULL
-);
 
 CREATE TABLE annet
 (
     id BIGSERIAL PRIMARY KEY,
-    andre_forhold_hindrer_arbeid JaNeiVetIkke NOT NULL
+    andre_forhold_hindrer_arbeid JaNeiVetIkke
 );
 
 CREATE TABLE opplysninger_om_arbeidssoeker
@@ -96,7 +91,6 @@ CREATE TABLE opplysninger_om_arbeidssoeker
     sendt_inn_av_id BIGINT REFERENCES metadata(id),
     utdanning_id BIGINT REFERENCES utdanning(id),
     helse_id BIGINT REFERENCES helse(id),
-    arbeidserfaring_id BIGINT REFERENCES arbeidserfaring(id),
     annet_id BIGINT REFERENCES annet(id),
     UNIQUE (opplysninger_om_arbeidssoeker_id)
 );

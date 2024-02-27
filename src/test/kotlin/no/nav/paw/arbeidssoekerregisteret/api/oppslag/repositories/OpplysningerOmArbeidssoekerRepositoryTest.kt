@@ -6,8 +6,6 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.Arbeidssoeker
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.OpplysningerOmArbeidssoekerRepository
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.hentTestPeriode
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.initTestDatabase
-import no.nav.paw.arbeidssokerregisteret.api.v1.Annet
-import no.nav.paw.arbeidssokerregisteret.api.v1.Arbeidserfaring
 import no.nav.paw.arbeidssokerregisteret.api.v1.Beskrivelse
 import no.nav.paw.arbeidssokerregisteret.api.v1.BeskrivelseMedDetaljer
 import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
@@ -16,8 +14,9 @@ import no.nav.paw.arbeidssokerregisteret.api.v1.Helse
 import no.nav.paw.arbeidssokerregisteret.api.v1.JaNeiVetIkke
 import no.nav.paw.arbeidssokerregisteret.api.v1.Jobbsituasjon
 import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata
-import no.nav.paw.arbeidssokerregisteret.api.v3.OpplysningerOmArbeidssoeker
-import no.nav.paw.arbeidssokerregisteret.api.v3.Utdanning
+import no.nav.paw.arbeidssokerregisteret.api.v2.Annet
+import no.nav.paw.arbeidssokerregisteret.api.v4.OpplysningerOmArbeidssoeker
+import no.nav.paw.arbeidssokerregisteret.api.v4.Utdanning
 import org.jetbrains.exposed.sql.Database
 import java.time.Instant
 import java.util.*
@@ -138,9 +137,6 @@ fun hentTestOpplysningerOmArbeidssoeker(
         JaNeiVetIkke.VET_IKKE
     ),
     Helse(
-        JaNeiVetIkke.VET_IKKE
-    ),
-    Arbeidserfaring(
         JaNeiVetIkke.VET_IKKE
     ),
     Jobbsituasjon(

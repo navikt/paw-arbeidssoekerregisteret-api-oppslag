@@ -1,7 +1,5 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils
 
-import no.nav.paw.arbeidssokerregisteret.api.v1.Annet
-import no.nav.paw.arbeidssokerregisteret.api.v1.Arbeidserfaring
 import no.nav.paw.arbeidssokerregisteret.api.v1.Beskrivelse
 import no.nav.paw.arbeidssokerregisteret.api.v1.BeskrivelseMedDetaljer
 import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
@@ -13,8 +11,9 @@ import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.api.v1.Profilering
 import no.nav.paw.arbeidssokerregisteret.api.v1.ProfilertTil
-import no.nav.paw.arbeidssokerregisteret.api.v3.OpplysningerOmArbeidssoeker
-import no.nav.paw.arbeidssokerregisteret.api.v3.Utdanning
+import no.nav.paw.arbeidssokerregisteret.api.v2.Annet
+import no.nav.paw.arbeidssokerregisteret.api.v4.OpplysningerOmArbeidssoeker
+import no.nav.paw.arbeidssokerregisteret.api.v4.Utdanning
 import java.time.Instant
 import java.util.UUID
 
@@ -84,9 +83,6 @@ class LocalProducerUtils {
                     JaNeiVetIkke.JA
                 ),
                 Helse(
-                    JaNeiVetIkke.JA
-                ),
-                Arbeidserfaring(
                     JaNeiVetIkke.JA
                 ),
                 Jobbsituasjon(

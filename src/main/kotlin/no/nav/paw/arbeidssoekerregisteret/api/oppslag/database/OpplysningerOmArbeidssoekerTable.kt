@@ -8,10 +8,9 @@ import org.jetbrains.exposed.dao.id.LongIdTable
 object OpplysningerOmArbeidssoekerTable : LongIdTable("opplysninger_om_arbeidssoeker") {
     val opplysningerOmArbeidssoekerId = uuid("opplysninger_om_arbeidssoeker_id")
     val sendtInnAvId = long("sendt_inn_av_id").references(MetadataTable.utfoertAvId)
-    val utdanningId = long("utdanning_id").references(UtdanningTable.id)
-    val helseId = long("helse_id").references(HelseTable.id)
-    val arbeidserfaringId = long("arbeidserfaring_id").references(ArbeidserfaringTable.id)
-    val annetId = long("annet_id").references(AnnetTable.id)
+    val utdanningId = long("utdanning_id").references(UtdanningTable.id).nullable()
+    val helseId = long("helse_id").references(HelseTable.id).nullable()
+    val annetId = long("annet_id").references(AnnetTable.id).nullable()
 }
 
 object PeriodeOpplysningerTable : LongIdTable("periode_opplysninger") {
@@ -25,33 +24,36 @@ object PeriodeOpplysningerTable : LongIdTable("periode_opplysninger") {
 object UtdanningTable : LongIdTable("utdanning") {
     val nus = varchar("nus", 255)
     val bestaatt =
-        customEnumeration("bestaatt", "JaNeiVetIkke", { value -> JaNeiVetIkke.valueOf(value as String) }, { PGEnum("JaNeiVetIkke", it) })
+        customEnumeration(
+            name = "bestaatt",
+            sql = "JaNeiVetIkke",
+            fromDb = { value -> JaNeiVetIkke.valueOf(value as String) },
+            toDb = { PGEnum("JaNeiVetIkke", it) }
+        ).nullable()
     val godkjent =
-        customEnumeration("godkjent", "JaNeiVetIkke", { value -> JaNeiVetIkke.valueOf(value as String) }, { PGEnum("JaNeiVetIkke", it) })
+        customEnumeration("godkjent", "JaNeiVetIkke", { value -> JaNeiVetIkke.valueOf(value as String) }, { PGEnum("JaNeiVetIkke", it) }).nullable()
 }
 
 object HelseTable : LongIdTable("helse") {
     val helsetilstandHindrerArbeid =
-        customEnumeration("helsetilstand_hindrer_arbeid", "JaNeiVetIkke", { value -> JaNeiVetIkke.valueOf(value as String) }, {
-            PGEnum("JaNeiVetIkke", it)
-        })
-}
-
-object ArbeidserfaringTable : LongIdTable("arbeidserfaring") {
-    val harHattArbeid =
         customEnumeration(
-            "har_hatt_arbeid",
-            "JaNeiVetIkke",
-            { value -> JaNeiVetIkke.valueOf(value as String) },
-            { PGEnum("JaNeiVetIkke", it) }
+            name = "helsetilstand_hindrer_arbeid",
+            sql = "JaNeiVetIkke",
+            fromDb = { value -> JaNeiVetIkke.valueOf(value as String) },
+            toDb = {
+                PGEnum("JaNeiVetIkke", it)
+            }
         )
 }
 
 object AnnetTable : LongIdTable("annet") {
     val andreForholdHindrerArbeid =
-        customEnumeration("andre_forhold_hindrer_arbeid", "JaNeiVetIkke", { value -> JaNeiVetIkke.valueOf(value as String) }, {
-            PGEnum("JaNeiVetIkke", it)
-        })
+        customEnumeration(
+            name = "andre_forhold_hindrer_arbeid",
+            sql = "JaNeiVetIkke",
+            fromDb = { value -> JaNeiVetIkke.valueOf(value as String) },
+            toDb = { PGEnum("JaNeiVetIkke", it) }
+        )
 }
 
 object BeskrivelseMedDetaljerTable : LongIdTable("beskrivelse_med_detaljer") {
@@ -64,10 +66,10 @@ object BeskrivelseMedDetaljerTable : LongIdTable("beskrivelse_med_detaljer") {
 object BeskrivelseTable : LongIdTable("beskrivelse") {
     val beskrivelse =
         customEnumeration(
-            "beskrivelse",
-            "Beskrivelse",
-            { value -> Beskrivelse.valueOf(value as String) },
-            { PGEnum("BeskrivelseEnum", it) }
+            name = "beskrivelse",
+            sql = "Beskrivelse",
+            fromDb = { value -> Beskrivelse.valueOf(value as String) },
+            toDb = { PGEnum("BeskrivelseEnum", it) }
         )
     val beskrivelseMedDetaljerId = long("beskrivelse_med_detaljer_id").references(BeskrivelseMedDetaljerTable.id)
 }

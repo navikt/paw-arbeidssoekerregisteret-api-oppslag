@@ -106,18 +106,13 @@ select
     (andre_utfordringer)::JaNeiVetIkke andre_forhold_hindrer_arbeid
 from test_data_dev;
 
-insert into arbeidserfaring( har_hatt_arbeid)
-select
-    (jobbhistorikk)::JaNeiVetIkke har_hatt_arbeid
-from test_data_dev;
 
 -- Her er vi avhengig av samme rekkefølge hele veien
 insert into opplysninger_om_arbeidssoeker(opplysninger_om_arbeidssoeker_id, sendt_inn_av_id,
-                                          utdanning_id, helse_id, arbeidserfaring_id, annet_id)
+                                          utdanning_id, helse_id, annet_id)
 select
     gen_random_uuid() AS uuid,
     ROW_NUMBER() OVER (ORDER BY (SELECT NULL)),
-        ROW_NUMBER() OVER (ORDER BY (SELECT NULL)),
         ROW_NUMBER() OVER (ORDER BY (SELECT NULL)),
         ROW_NUMBER() OVER (ORDER BY (SELECT NULL)),
         id -- bare for å få 5 rader

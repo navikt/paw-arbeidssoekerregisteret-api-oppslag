@@ -1,7 +1,6 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories
 
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.AnnetTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.ArbeidserfaringTable
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.BeskrivelseMedDetaljerTable
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.BeskrivelseTable
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.BrukerTable
@@ -12,7 +11,6 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.OpplysningerOmArb
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.PeriodeOpplysningerTable
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.UtdanningTable
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.AnnetResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.ArbeidserfaringResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.BeskrivelseMedDetaljerResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.BeskrivelseResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.BrukerResponse
@@ -22,13 +20,12 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.JaNeiVetIk
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.MetadataResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.OpplysningerOmArbeidssoekerResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.UtdanningResponse
-import no.nav.paw.arbeidssokerregisteret.api.v1.Annet
-import no.nav.paw.arbeidssokerregisteret.api.v1.Arbeidserfaring
 import no.nav.paw.arbeidssokerregisteret.api.v1.Beskrivelse
 import no.nav.paw.arbeidssokerregisteret.api.v1.Helse
 import no.nav.paw.arbeidssokerregisteret.api.v1.JaNeiVetIkke
-import no.nav.paw.arbeidssokerregisteret.api.v3.OpplysningerOmArbeidssoeker
-import no.nav.paw.arbeidssokerregisteret.api.v3.Utdanning
+import no.nav.paw.arbeidssokerregisteret.api.v2.Annet
+import no.nav.paw.arbeidssokerregisteret.api.v4.OpplysningerOmArbeidssoeker
+import no.nav.paw.arbeidssokerregisteret.api.v4.Utdanning
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -104,10 +101,9 @@ class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
         val sendtInnAvId = ArbeidssoekerperiodeRepository(database).settInnMetadata(opplysningerOmArbeidssoeker.sendtInnAv)
         val utdanningId = settInnUtdanning(opplysningerOmArbeidssoeker.utdanning)
         val helseId = settInnHelse(opplysningerOmArbeidssoeker.helse)
-        val arbeidserfaringId = settInnArbeidserfaring(opplysningerOmArbeidssoeker.arbeidserfaring)
         val annetId = settInnAnnet(opplysningerOmArbeidssoeker.annet)
         val opplysningerOmArbeidssoekerId =
-            settInnOpplysningerOmArbeidssoeker(opplysningerOmArbeidssoeker, sendtInnAvId, utdanningId, helseId, arbeidserfaringId, annetId)
+            settInnOpplysningerOmArbeidssoeker(opplysningerOmArbeidssoeker, sendtInnAvId, utdanningId, helseId, annetId)
 
         opplysningerOmArbeidssoeker.jobbsituasjon.beskrivelser.forEach { beskrivelseMedDetaljer ->
             val beskrivelseMedDetaljerId = settInnBeskrivelseMedDetaljer(opplysningerOmArbeidssoekerId)
@@ -142,11 +138,6 @@ class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
             it[helsetilstandHindrerArbeid] = JaNeiVetIkke.valueOf(helse.helsetilstandHindrerArbeid.name)
         }.value
 
-    private fun settInnArbeidserfaring(arbeidserfaring: Arbeidserfaring): Long =
-        ArbeidserfaringTable.insertAndGetId {
-            it[harHattArbeid] = JaNeiVetIkke.valueOf(arbeidserfaring.harHattArbeid.name)
-        }.value
-
     private fun settInnAnnet(annet: Annet): Long =
         AnnetTable.insertAndGetId {
             it[andreForholdHindrerArbeid] = JaNeiVetIkke.valueOf(annet.andreForholdHindrerArbeid.name)
@@ -157,7 +148,6 @@ class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
         sendtInnAvId: Long,
         utdanningId: Long,
         helseId: Long,
-        arbeidserfaringId: Long,
         annetId: Long
     ): Long =
         OpplysningerOmArbeidssoekerTable.insertAndGetId {
@@ -165,7 +155,6 @@ class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
             it[OpplysningerOmArbeidssoekerTable.sendtInnAvId] = sendtInnAvId
             it[OpplysningerOmArbeidssoekerTable.utdanningId] = utdanningId
             it[OpplysningerOmArbeidssoekerTable.helseId] = helseId
-            it[OpplysningerOmArbeidssoekerTable.arbeidserfaringId] = arbeidserfaringId
             it[OpplysningerOmArbeidssoekerTable.annetId] = annetId
         }.value
 
@@ -206,10 +195,13 @@ class OpplysningerOmArbeidssoekerConverter {
         val utdanningId = resultRow[OpplysningerOmArbeidssoekerTable.utdanningId]
 
         val sendtInnAvMetadata = hentMetadataResponse(sendtInnAvId)
-        val utdanning = hentUtdanningResponse(utdanningId)
-        val helse = hentHelseResponse(resultRow[OpplysningerOmArbeidssoekerTable.helseId])
-        val arbeidserfaring = hentArbeidserfaringResponse(resultRow[OpplysningerOmArbeidssoekerTable.arbeidserfaringId])
-        val annet = hentAnnetResponse(resultRow[OpplysningerOmArbeidssoekerTable.annetId])
+        val utdanning = utdanningId?.let(::hentUtdanningResponse)
+        val helse =
+            resultRow[OpplysningerOmArbeidssoekerTable.helseId]
+                ?.let(::hentHelseResponse)
+        val annet =
+            resultRow[OpplysningerOmArbeidssoekerTable.annetId]
+                ?.let(::hentAnnetResponse)
         val beskrivelseMedDetaljer = hentBeskrivelseMedDetaljerResponse(situasjonIdPK.value)
 
         return OpplysningerOmArbeidssoekerResponse(
@@ -218,7 +210,6 @@ class OpplysningerOmArbeidssoekerConverter {
             sendtInnAv = sendtInnAvMetadata,
             utdanning = utdanning,
             helse = helse,
-            arbeidserfaring = arbeidserfaring,
             annet = annet,
             jobbsituasjon = beskrivelseMedDetaljer
         )
@@ -250,8 +241,8 @@ class OpplysningerOmArbeidssoekerConverter {
             .singleOrNull()?.let { utdanningResultRow ->
                 UtdanningResponse(
                     nus = utdanningResultRow[UtdanningTable.nus],
-                    bestaatt = JaNeiVetIkkeResponse.valueOf(utdanningResultRow[UtdanningTable.bestaatt].name),
-                    godkjent = JaNeiVetIkkeResponse.valueOf(utdanningResultRow[UtdanningTable.godkjent].name)
+                    bestaatt = utdanningResultRow[UtdanningTable.bestaatt]?.let { JaNeiVetIkkeResponse.valueOf(it.name) },
+                    godkjent = utdanningResultRow[UtdanningTable.godkjent]?.let { JaNeiVetIkkeResponse.valueOf(it.name) }
                 )
             } ?: throw RuntimeException("Fant ikke utdanning: $utdanningId")
     }
@@ -263,15 +254,6 @@ class OpplysningerOmArbeidssoekerConverter {
                     helseTilstandHindrerArbeid = JaNeiVetIkkeResponse.valueOf(helseResultRow[HelseTable.helsetilstandHindrerArbeid].name)
                 )
             } ?: throw RuntimeException("Fant ikke helse: $helseId")
-    }
-
-    private fun hentArbeidserfaringResponse(arbeidserfaringId: Long): ArbeidserfaringResponse {
-        return ArbeidserfaringTable.selectAll().where { ArbeidserfaringTable.id eq arbeidserfaringId }
-            .singleOrNull()?.let { arbeidserfaringResultRow ->
-                ArbeidserfaringResponse(
-                    harHattArbeid = JaNeiVetIkkeResponse.valueOf(arbeidserfaringResultRow[ArbeidserfaringTable.harHattArbeid].name)
-                )
-            } ?: throw RuntimeException("Fant ikke arbeidserfaring: $arbeidserfaringId")
     }
 
     private fun hentAnnetResponse(annetId: Long): AnnetResponse {

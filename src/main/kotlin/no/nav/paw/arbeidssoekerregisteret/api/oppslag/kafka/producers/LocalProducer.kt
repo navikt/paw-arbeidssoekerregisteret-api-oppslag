@@ -8,7 +8,7 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.LocalProducerUtils
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.loadLocalConfiguration
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.api.v1.Profilering
-import no.nav.paw.arbeidssokerregisteret.api.v3.OpplysningerOmArbeidssoeker
+import no.nav.paw.arbeidssokerregisteret.api.v4.OpplysningerOmArbeidssoeker
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerConfig

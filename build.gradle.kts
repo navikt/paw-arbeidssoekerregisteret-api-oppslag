@@ -8,7 +8,7 @@ plugins {
     application
 }
 
-val arbeidssoekerregisteretSchemaVersion = "1.7897041424.18-1"
+val arbeidssoekerregisteretSchemaVersion = "1.8062260419.22-1"
 val logbackVersion = "1.4.14"
 val logstashVersion = "7.4"
 val navCommonModulesVersion = "2.2023.01.02_13.51-1c6adeb1653b"
@@ -94,6 +94,10 @@ tasks.named("generateAvroProtocol", GenerateAvroProtocolTask::class.java) {
 
 tasks.named("compileTestKotlin") {
     dependsOn("generateTestAvroJava")
+}
+
+tasks.named("compileKotlin") {
+    dependsOn("generateAvroJava")
 }
 
 task<JavaExec>("produceLocalMessagesForTopics") {
