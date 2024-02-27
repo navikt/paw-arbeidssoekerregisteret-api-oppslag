@@ -27,11 +27,11 @@ from registreringer reg inner join profilering_long prof
 
 -- Kod om fra vet ikke til ingen svar
 update test_data_dev
-set utdanning_godkjent_norge = 'VET_IKKE'
+set utdanning_godkjent_norge = null
 where utdanning_godkjent_norge = 'INGEN_SVAR';
 
 update test_data_dev
-set utdanning_bestatt = 'VET_IKKE'
+set utdanning_bestatt = null
 where utdanning_bestatt = 'INGEN_SVAR';
 
 
@@ -55,7 +55,7 @@ where resultat_profilering = 'BKART';
 
 
 update test_data_dev
-set jobbhistorikk = 'VET_IKKE'
+set jobbhistorikk = null
 where jobbhistorikk = 'INGEN_SVAR';
 
 update test_data_dev
@@ -163,12 +163,7 @@ from periode inner join periode_opplysninger po on periode.periode_id = po.perio
              inner join opplysninger_om_arbeidssoeker ooa on po.opplysninger_om_arbeidssoeker_id = ooa.id
              inner join test_data_dev on test_data_dev.foedselsnummer = periode.identitetsnummer
 
-
-    from periode inner join periode_opplysninger po on periode.periode_id = po.periode_id
-    inner join opplysninger_om_arbeidssoeker ooa on po.opplysninger_om_arbeidssoeker_id = ooa.id
-    inner join test_data_dev on test_data_dev.foedselsnummer = periode.identitetsnummer;
-
-insert into detaljer(beskrivelse_id, noekkel, verdi)
+    insert into detaljer(beskrivelse_id, noekkel, verdi)
 select
     id,
     'stilling' noekkel,
