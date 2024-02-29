@@ -179,3 +179,29 @@ from beskrivelse;
 
 delete from detaljer
 where beskrivelse_id in (4,5);
+
+--- Obsobs her må man sjekke at alle de manuelle tallene blir riktige
+-- Avslutte og starte ny periode
+insert into metadata (utfoert_av_id, tidspunkt, kilde, aarsak)
+select 1,  NOW(), 'SLUTTBRUKER', 'manuell_avsluttning' ;
+
+update periode
+set avsluttet_id = 18
+where id = 1;
+
+-- avslutt og start
+insert into metadata (utfoert_av_id, tidspunkt, kilde, aarsak)
+select 2,  NOW(), 'SLUTTBRUKER', 'manuell_avsluttning' ;
+
+update periode
+set avsluttet_id = 19
+where id = 2;
+
+insert into metadata (utfoert_av_id, tidspunkt, kilde, aarsak)
+select 2,  NOW(), 'SLUTTBRUKER', 'manuell_start' ;
+
+insert into periode (periode_id, identitetsnummer, startet_id, avsluttet_id)
+SELECT gen_random_uuid() AS uuid,
+       23917399581,
+       20,
+       null avsluttet_id
