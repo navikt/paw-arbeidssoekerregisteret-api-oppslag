@@ -26,10 +26,10 @@ database:
   password: admin
   name: arbeidssoekerregisteretapioppslag
 kafka:
-  gruppeId: paw.arbeidsseokerregisteret-api-oppslag-v2
-  periodeTopic: paw.arbeidssokerperioder-beta-v7
-  opplysningerOmArbeidssoekerTopic: paw.opplysninger-om-arbeidssoeker-beta-v7
-  profileringTopic: paw.arbeidssoker-profilering-beta-v2
+  gruppeId: paw.arbeidsseokerregisteret-api-oppslag-v4
+  periodeTopic: paw.arbeidssokerperioder-beta-v11
+  opplysningerOmArbeidssoekerTopic: paw.opplysninger-om-arbeidssoeker-beta-v11
+  profileringTopic: paw.arbeidssoker-profilering-beta-v11
   serverConfig:
     autentisering: PLAIN
     kafkaBrokers: localhost:9092

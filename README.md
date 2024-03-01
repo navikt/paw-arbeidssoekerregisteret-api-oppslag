@@ -47,8 +47,6 @@ flowchart RL;
 - [**Flyway**](https://flywaydb.org/)
 - [**Gradle**](https://gradle.org/)
 
-Kjør `./gradlew installKotlinterPrePushHook` før du starter
-
 ## Dev oppsett
 
 1) Opprett dolly bruker
@@ -178,33 +176,33 @@ Kafka UI ligger i docker-compose, og finnes på http://localhost:9000
 
 Kjør `./gradlew produceLocalMessagesForTopics`
 
-Denne tasken sender to meldinger til `arbeidssokerperioder-beta-v7`, en melding til `opplysninger-om-arbeidssoeker-beta-v7` og en melding til `arbeidssoker-profilering-beta-v2`.
+Denne tasken sender to meldinger til `arbeidssokerperioder-beta-v11`, en melding til `opplysninger-om-arbeidssoeker-beta-v11` og en melding til `arbeidssoker-profilering-beta-v11`.
 
 ### Consumer
 
-Konsumer meldinger fra `arbeidssokerperioder-beta-v7`
+Konsumer meldinger fra `arbeidssokerperioder-beta-v11`
 
 ```sh
-docker exec -it paw-arbeidssoekerregisteret-api-oppslag_kafka_1 /usr/bin/kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic arbeidssokerperioder-beta-v7
+docker exec -it paw-arbeidssoekerregisteret-api-oppslag_kafka_1 /usr/bin/kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic arbeidssokerperioder-beta-v11
 ```
 
-Konsumer meldinger fra `opplysninger-om-arbeidssoeker-beta-v7`
+Konsumer meldinger fra `opplysninger-om-arbeidssoeker-beta-v11`
 
 ```sh
-docker exec -it paw-arbeidssoekerregisteret-api-oppslag_kafka_1 /usr/bin/kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic opplysninger-om-arbeidssoeker-beta-v7
+docker exec -it paw-arbeidssoekerregisteret-api-oppslag_kafka_1 /usr/bin/kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic opplysninger-om-arbeidssoeker-beta-v11
 ```
 
 Konsumer meldinger fra `arbeidssoker-profilering-beta-v2`
 
 ```sh
-docker exec -it paw-arbeidssoekerregisteret-api-oppslag_kafka_1 /usr/bin/kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic arbeidssoker-profilering-beta-v2
+docker exec -it paw-arbeidssoekerregisteret-api-oppslag_kafka_1 /usr/bin/kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic arbeidssoker-profilering-beta-v11
 ```
 
 ## Formatering
 
 Prosjektet bruker kotlinter
-
-Kjør `./gradlew formatKotlin` for autoformatering eller `./gradlew lintKotlin` for å se lint-feil.
+Kjør `./gradlew installKotlinterPrePushHook` før du starter, så vil koden bli formatert pre-push.
+Eller kjør `./gradlew formatKotlin` for autoformatering eller `./gradlew lintKotlin` for å se lint-feil.
 
 ## Deploye kun til dev
 

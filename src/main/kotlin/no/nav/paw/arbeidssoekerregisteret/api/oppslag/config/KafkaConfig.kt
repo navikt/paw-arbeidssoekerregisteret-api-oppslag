@@ -10,7 +10,7 @@ import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.config.SslConfigs
-import org.apache.kafka.common.serialization.StringDeserializer
+import org.apache.kafka.common.serialization.LongDeserializer
 
 data class KafkaConfig(
     val periodeTopic: String,
@@ -29,7 +29,7 @@ val KafkaConfig.properties
             ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to serverConfig.kafkaBrokers,
             KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG to schemaRegistryConfig.url,
             KafkaAvroSerializerConfig.AUTO_REGISTER_SCHEMAS to schemaRegistryConfig.autoRegistrerSchema,
-            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java.name,
+            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to LongDeserializer::class.java.name,
             ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to KafkaAvroDeserializer::class.java,
             ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
             KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG to true,
@@ -54,6 +54,6 @@ val KafkaConfig.properties
                 emptyMap()
             }
 
-fun <T : SpecificRecord> KafkaConfig.createKafkaConsumer(): KafkaConsumer<String, T> {
-    return KafkaConsumer<String, T>(properties)
+fun <T : SpecificRecord> KafkaConfig.createKafkaConsumer(): KafkaConsumer<Long, T> {
+    return KafkaConsumer<Long, T>(properties)
 }

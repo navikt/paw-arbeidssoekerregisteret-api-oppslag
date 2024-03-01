@@ -10,7 +10,7 @@ import java.time.Duration
 
 class OpplysningerOmArbeidssoekerConsumer(
     private val topic: String,
-    private val consumer: KafkaConsumer<String, OpplysningerOmArbeidssoeker>,
+    private val consumer: KafkaConsumer<Long, OpplysningerOmArbeidssoeker>,
     private val opplysningerOmArbeidssoekerService: OpplysningerOmArbeidssoekerService,
     private val unleashClient: Unleash
 ) {

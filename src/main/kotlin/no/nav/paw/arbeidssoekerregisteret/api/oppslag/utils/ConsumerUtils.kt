@@ -4,7 +4,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.slf4j.Logger
 
 fun pauseOrResumeConsumer(
-    consumer: KafkaConsumer<String, *>,
+    consumer: KafkaConsumer<Long, *>,
     isConsumerToggleActive: Boolean,
     wasConsumerToggleActive: Boolean,
     logger: Logger,

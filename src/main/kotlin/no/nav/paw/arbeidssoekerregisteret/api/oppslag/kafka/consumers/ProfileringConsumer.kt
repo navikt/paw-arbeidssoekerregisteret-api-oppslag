@@ -10,7 +10,7 @@ import java.time.Duration
 
 class ProfileringConsumer(
     private val topic: String,
-    private val consumer: KafkaConsumer<String, Profilering>,
+    private val consumer: KafkaConsumer<Long, Profilering>,
     private val profileringService: ProfileringService,
     private val unleashClient: Unleash
 ) {

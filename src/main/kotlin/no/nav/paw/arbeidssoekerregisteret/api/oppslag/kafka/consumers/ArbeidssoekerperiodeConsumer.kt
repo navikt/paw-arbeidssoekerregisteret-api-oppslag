@@ -10,7 +10,7 @@ import java.time.Duration
 
 class ArbeidssoekerperiodeConsumer(
     private val topic: String,
-    private val consumer: KafkaConsumer<String, Periode>,
+    private val consumer: KafkaConsumer<Long, Periode>,
     private val arbeidssoekerperiodeService: ArbeidssoekerperiodeService,
     private val unleashClient: Unleash
 ) {
