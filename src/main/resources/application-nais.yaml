@@ -25,10 +25,10 @@ poaoClientConfig:
   url: http://poao-tilgang.poao.svc.cluster.local
   scope: api://${NAIS_CLUSTER_NAME}.poao.poao-tilgang/.default
 kafka:
-  gruppeId: paw.arbeidssoekerregisteret-api-oppslag-v3
-  periodeTopic: paw.arbeidssokerperioder-beta-v8
-  opplysningerOmArbeidssoekerTopic: paw.opplysninger-om-arbeidssoeker-beta-v8
-  profileringTopic: paw.arbeidssoker-profilering-beta-v3
+  gruppeId: paw.arbeidssoekerregisteret-api-oppslag-v4
+  periodeTopic: paw.arbeidssokerperioder-beta-v11
+  opplysningerOmArbeidssoekerTopic: paw.opplysninger-om-arbeidssoeker-beta-v11
+  profileringTopic: paw.arbeidssoker-profilering-beta-v11
   serverConfig:
       autentisering: SSL
       kafkaBrokers: ${KAFKA_BROKERS}
