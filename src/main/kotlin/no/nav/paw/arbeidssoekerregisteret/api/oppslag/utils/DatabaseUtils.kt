@@ -14,6 +14,7 @@ fun main() {
 }
 
 fun migrateDatabase(dataSource: DataSource) {
+    cleanDatabase(dataSource) // TODO: fjern før neste commit
     Flyway.configure().baselineOnMigrate(true).dataSource(dataSource).load().migrate()
 }
 
