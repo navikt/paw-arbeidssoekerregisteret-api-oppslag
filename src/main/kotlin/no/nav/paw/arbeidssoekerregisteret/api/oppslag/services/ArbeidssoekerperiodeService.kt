@@ -17,15 +17,9 @@ class ArbeidssoekerperiodeService(private val arbeidssoekerperiodeRepository: Ar
         }
     }*/
 
-    fun beginTransaction() {
+    fun lagreBatch(batch: List<Periode>) {
         arbeidssoekerperiodeRepository.beginTransaction()
-    }
-
-    fun storeBatch(arbeidssoekerperioder: List<Periode>) {
-        arbeidssoekerperiodeRepository.storeBatch(arbeidssoekerperioder)
-    }
-
-    fun commitTransaction() {
+        arbeidssoekerperiodeRepository.storeBatch(batch)
         arbeidssoekerperiodeRepository.commitTransaction()
     }
 

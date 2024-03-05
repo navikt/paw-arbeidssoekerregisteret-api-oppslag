@@ -49,13 +49,12 @@ class ArbeidssoekerperiodeConsumer(
             Thread.sleep(1000)
         }
     }
+
     private fun processAndCommitBatch(batch: List<Periode>) {
         try {
             logger.info("Lagrer batch med ${batch.size} meldinger fra $topic")
 
-            arbeidssoekerperiodeService.beginTransaction()
-            arbeidssoekerperiodeService.storeBatch(batch)
-            arbeidssoekerperiodeService.commitTransaction()
+            arbeidssoekerperiodeService.lagreBatch(batch)
 
             logger.info("Batch med ${batch.size} meldinger fra $topic lagret")
 
