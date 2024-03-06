@@ -50,7 +50,7 @@ class ArbeidssoekerperiodeConsumer(
         }
     }
 
-    private fun processAndCommitBatch(batch: List<Periode>) {
+    private fun processAndCommitBatch(batch: List<Periode>) =
         try {
             logger.info("Lagrer batch med ${batch.size} meldinger fra $topic")
 
@@ -63,5 +63,4 @@ class ArbeidssoekerperiodeConsumer(
             arbeidssoekerperiodeService.rollbackTransaction()
             throw Exception("Feil ved konsumering av melding fra $topic", error)
         }
-    }
 }
