@@ -6,7 +6,6 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.configureAuthentic
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.loadConfiguration
 import no.nav.security.mock.oauth2.MockOAuth2Server
 
-
 fun Application.configureAuthentication(oAuth2Server: MockOAuth2Server) {
     val config = loadConfiguration<Config>()
     val authProviders =
