@@ -22,26 +22,8 @@ import java.sql.SQLException
 import java.util.UUID
 
 class ArbeidssoekerperiodeRepository(private val database: Database) {
-    fun beginTransaction() {
-        transaction(database) {
-            repetitionAttempts = 2
-            minRepetitionDelay = 200
-        }
-    }
-
-    fun rollbackTransaction() {
-        transaction(database) {
-            rollback()
-        }
-    }
-
-    fun commitTransaction() {
-        transaction(database) {
-            commit()
-        }
-    }
-
     fun storeBatch(arbeidssoekerperioder: List<Periode>) {
+        beginTransaction()
         arbeidssoekerperioder.forEach { periode ->
             if (finnesArbeidssoekerperiode(periode.id)) {
                 oppdaterArbeidssoekerperiode(periode)
@@ -49,7 +31,24 @@ class ArbeidssoekerperiodeRepository(private val database: Database) {
                 opprettArbeidssoekerperiode(periode)
             }
         }
+        commitTransaction()
     }
+
+    fun rollbackTransaction() =
+        transaction(database) {
+            rollback()
+        }
+
+    private fun beginTransaction() =
+        transaction(database) {
+            repetitionAttempts = 2
+            minRepetitionDelay = 200
+        }
+
+    private fun commitTransaction() =
+        transaction(database) {
+            commit()
+        }
 
     fun finnesArbeidssoekerperiode(periodeId: UUID): Boolean =
         transaction(database) {

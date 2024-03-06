@@ -8,22 +8,7 @@ import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 class ArbeidssoekerperiodeService(private val arbeidssoekerperiodeRepository: ArbeidssoekerperiodeRepository) {
     fun hentArbeidssoekerperioder(identitetsnummer: Identitetsnummer): List<ArbeidssoekerperiodeResponse> = arbeidssoekerperiodeRepository.hentArbeidssoekerperioder(identitetsnummer)
 
-    /*fun opprettEllerOppdaterArbeidssoekerperiode(arbeidssoekerperiode: Periode) {
-        val finnesArbeidssoekerperiode = arbeidssoekerperiodeRepository.finnesArbeidssoekerperiode(arbeidssoekerperiode.id)
-        if (finnesArbeidssoekerperiode) {
-            arbeidssoekerperiodeRepository.oppdaterArbeidssoekerperiode(arbeidssoekerperiode)
-        } else {
-            arbeidssoekerperiodeRepository.opprettArbeidssoekerperiode(arbeidssoekerperiode)
-        }
-    }*/
+    fun lagreBatch(batch: List<Periode>) = arbeidssoekerperiodeRepository.storeBatch(batch)
 
-    fun lagreBatch(batch: List<Periode>) {
-        arbeidssoekerperiodeRepository.beginTransaction()
-        arbeidssoekerperiodeRepository.storeBatch(batch)
-        arbeidssoekerperiodeRepository.commitTransaction()
-    }
-
-    fun rollbackTransaction() {
-        arbeidssoekerperiodeRepository.rollbackTransaction()
-    }
+    fun rollbackTransaction() = arbeidssoekerperiodeRepository.rollbackTransaction()
 }

@@ -21,6 +21,33 @@ class ProfileringRepository(private val database: Database) {
         }
     }
 
+    fun storeBatch(batch: List<Profilering>) {
+        beginTransaction()
+        batch.forEach { profilering ->
+            opprettProfileringForArbeidssoeker(profilering)
+        }
+        commitTransaction()
+    }
+
+    fun rollbackTransaction() {
+        transaction(database) {
+            rollback()
+        }
+    }
+
+    private fun beginTransaction() {
+        transaction(database) {
+            repetitionAttempts = 2
+            minRepetitionDelay = 200
+        }
+    }
+
+    private fun commitTransaction() {
+        transaction(database) {
+            commit()
+        }
+    }
+
     fun opprettProfileringForArbeidssoeker(profilering: Profilering) {
         transaction(database) {
             repetitionAttempts = 2
