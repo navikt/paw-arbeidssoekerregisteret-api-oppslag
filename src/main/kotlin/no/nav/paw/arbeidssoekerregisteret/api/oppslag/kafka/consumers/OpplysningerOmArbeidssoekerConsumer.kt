@@ -22,7 +22,7 @@ class OpplysningerOmArbeidssoekerConsumer(
 
         while (true) {
             val isConsumerToggleActive = unleashClient.isEnabled("aktiver-kafka-konsumere")
-            pauseOrResumeConsumer(consumer, isConsumerToggleActive, wasConsumerToggleActive, logger, topic)
+            pauseOrResumeConsumer(consumer, topic, isConsumerToggleActive, wasConsumerToggleActive)
             wasConsumerToggleActive = isConsumerToggleActive
 
             if (isConsumerToggleActive) {
