@@ -7,7 +7,5 @@ import java.util.*
 class ProfileringService(private val profileringRepository: ProfileringRepository) {
     fun hentProfileringForArbeidssoekerMedPeriodeId(periodeId: UUID) = profileringRepository.hentProfileringForArbeidssoekerMedPeriodeId(periodeId)
 
-    fun lagreBatch(batch: List<Profilering>) = profileringRepository.storeBatch(batch)
-
-    fun rollbackTransaction() = profileringRepository.rollbackTransaction()
+    fun lagreBatch(batch: Iterable<Profilering>) = profileringRepository.storeBatch(batch)
 }

@@ -47,29 +47,15 @@ class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
             }
         }
 
-    fun storeBatch(batch: List<OpplysningerOmArbeidssoeker>) {
-        beginTransaction()
-        batch.forEach { opplysninger ->
-            lagreOpplysningerOmArbeidssoeker(opplysninger)
-        }
-        commitTransaction()
-    }
-
-    fun rollbackTransaction() =
-        transaction(database) {
-            rollback()
-        }
-
-    private fun beginTransaction() =
+    fun storeBatch(batch: Iterable<OpplysningerOmArbeidssoeker>) {
         transaction(database) {
             repetitionAttempts = 2
             minRepetitionDelay = 200
+            batch.forEach { opplysninger ->
+                lagreOpplysningerOmArbeidssoeker(opplysninger)
+            }
         }
-
-    private fun commitTransaction() =
-        transaction(database) {
-            commit()
-        }
+    }
 
     fun lagreOpplysningerOmArbeidssoeker(opplysningerOmArbeidssoeker: OpplysningerOmArbeidssoeker) {
         transaction(database) {

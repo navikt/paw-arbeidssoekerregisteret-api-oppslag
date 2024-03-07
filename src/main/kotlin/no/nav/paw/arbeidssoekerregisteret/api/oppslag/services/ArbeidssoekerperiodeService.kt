@@ -8,7 +8,5 @@ import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 class ArbeidssoekerperiodeService(private val arbeidssoekerperiodeRepository: ArbeidssoekerperiodeRepository) {
     fun hentArbeidssoekerperioder(identitetsnummer: Identitetsnummer): List<ArbeidssoekerperiodeResponse> = arbeidssoekerperiodeRepository.hentArbeidssoekerperioder(identitetsnummer)
 
-    fun lagreBatch(batch: List<Periode>) = arbeidssoekerperiodeRepository.storeBatch(batch)
-
-    fun rollbackTransaction() = arbeidssoekerperiodeRepository.rollbackTransaction()
+    fun lagreBatch(batch: Iterable<Periode>) = arbeidssoekerperiodeRepository.storeBatch(batch)
 }
