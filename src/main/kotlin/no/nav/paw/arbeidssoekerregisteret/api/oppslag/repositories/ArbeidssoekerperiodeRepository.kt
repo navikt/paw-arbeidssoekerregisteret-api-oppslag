@@ -22,6 +22,20 @@ import java.sql.SQLException
 import java.util.UUID
 
 class ArbeidssoekerperiodeRepository(private val database: Database) {
+    fun storeBatch(arbeidssoekerperioder: Iterable<Periode>) {
+        transaction(database) {
+            repetitionAttempts = 2
+            minRepetitionDelay = 200
+            arbeidssoekerperioder.forEach { periode ->
+                if (finnesArbeidssoekerperiode(periode.id)) {
+                    oppdaterArbeidssoekerperiode(periode)
+                } else {
+                    opprettArbeidssoekerperiode(periode)
+                }
+            }
+        }
+    }
+
     fun finnesArbeidssoekerperiode(periodeId: UUID): Boolean =
         transaction(database) {
             PeriodeTable.selectAll().where { PeriodeTable.periodeId eq periodeId }.singleOrNull() != null

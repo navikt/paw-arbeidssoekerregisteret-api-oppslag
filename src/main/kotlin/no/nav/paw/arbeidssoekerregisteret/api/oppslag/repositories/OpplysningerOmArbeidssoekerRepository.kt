@@ -47,6 +47,16 @@ class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
             }
         }
 
+    fun storeBatch(batch: Iterable<OpplysningerOmArbeidssoeker>) {
+        transaction(database) {
+            repetitionAttempts = 2
+            minRepetitionDelay = 200
+            batch.forEach { opplysninger ->
+                lagreOpplysningerOmArbeidssoeker(opplysninger)
+            }
+        }
+    }
+
     fun lagreOpplysningerOmArbeidssoeker(opplysningerOmArbeidssoeker: OpplysningerOmArbeidssoeker) {
         transaction(database) {
             repetitionAttempts = 2

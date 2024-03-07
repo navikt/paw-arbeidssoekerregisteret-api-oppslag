@@ -21,6 +21,16 @@ class ProfileringRepository(private val database: Database) {
         }
     }
 
+    fun storeBatch(batch: Iterable<Profilering>) {
+        transaction(database) {
+            repetitionAttempts = 2
+            minRepetitionDelay = 200
+            batch.forEach { profilering ->
+                opprettProfileringForArbeidssoeker(profilering)
+            }
+        }
+    }
+
     fun opprettProfileringForArbeidssoeker(profilering: Profilering) {
         transaction(database) {
             repetitionAttempts = 2
