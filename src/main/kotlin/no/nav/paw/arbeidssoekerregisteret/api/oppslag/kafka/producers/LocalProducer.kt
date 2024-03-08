@@ -4,7 +4,7 @@ import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.KafkaConfig
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.properties
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.LocalProducerUtils
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.TopicUtils
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.loadLocalConfiguration
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.api.v1.Profilering
@@ -24,7 +24,7 @@ fun main() {
 fun produserPeriodeMeldinger(kafkaConfig: KafkaConfig) {
     val localProducer = LocalProducer(kafkaConfig)
     try {
-        LocalProducerUtils().lagTestPerioder().forEach { periode ->
+        TopicUtils().lagTestPerioder().forEach { periode ->
             localProducer.producePeriodeMessage(kafkaConfig.periodeTopic, periode.id.toString(), periode)
         }
     } catch (e: Exception) {
@@ -36,7 +36,7 @@ fun produserPeriodeMeldinger(kafkaConfig: KafkaConfig) {
 fun produserOpplysningerOmArbeidssoekerMeldinger(kafkaConfig: KafkaConfig) {
     val localProducer = LocalProducer(kafkaConfig)
     try {
-        LocalProducerUtils().lagTestOpplysningerOmArbeidssoeker().forEach { opplysninger ->
+        TopicUtils().lagTestOpplysningerOmArbeidssoeker().forEach { opplysninger ->
             localProducer.produceOpplysningerOmArbeidssoekerMessage(
                 kafkaConfig.opplysningerOmArbeidssoekerTopic,
                 opplysninger.id.toString(),
@@ -52,7 +52,7 @@ fun produserOpplysningerOmArbeidssoekerMeldinger(kafkaConfig: KafkaConfig) {
 fun produserProfileringMeldinger(kafkaConfig: KafkaConfig) {
     val localProducer = LocalProducer(kafkaConfig)
     try {
-        LocalProducerUtils().lagTestProfilering().let { profilering ->
+        TopicUtils().lagTestProfilering().let { profilering ->
             localProducer.produceProfileringMessage(kafkaConfig.profileringTopic, profilering.id.toString(), profilering)
         }
     } catch (e: Exception) {

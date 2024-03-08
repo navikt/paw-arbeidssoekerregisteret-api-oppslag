@@ -17,11 +17,13 @@ class BatchConsumer<K, V>(
 ) {
     private val pollingInterval = Duration.ofMillis(1000)
     private var wasConsumerToggleActive: Boolean = false
+    private var isConsumerActive: Boolean = false
 
     fun start() {
+        isConsumerActive = true
         logger.info("Lytter på topic $topic")
         consumer.subscribe(listOf(topic))
-        while (true) {
+        while (isConsumerActive) {
             val isConsumerToggleActive = unleashClient.isEnabled("aktiver-kafka-konsumere")
             pauseOrResumeConsumer(consumer, topic, isConsumerToggleActive, wasConsumerToggleActive)
             wasConsumerToggleActive = isConsumerToggleActive
@@ -31,6 +33,10 @@ class BatchConsumer<K, V>(
                 Thread.sleep(1000)
             }
         }
+    }
+
+    fun stop() {
+        isConsumerActive = false
     }
 
     @WithSpan(

@@ -17,7 +17,7 @@ import no.nav.paw.arbeidssokerregisteret.api.v4.Utdanning
 import java.time.Instant
 import java.util.UUID
 
-class LocalProducerUtils {
+class TopicUtils {
     val testPeriodeId1 = UUID.fromString("00000000-0000-0000-0000-000000000001")
     val testPeriodeId2 = UUID.fromString("00000000-0000-0000-0000-000000000002")
     val testOpplysningerId1 = UUID.fromString("00000000-0000-0000-0000-000000000003")
