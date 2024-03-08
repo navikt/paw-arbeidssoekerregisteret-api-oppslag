@@ -38,7 +38,6 @@ class BatchConsumer<K, V>(
         kind = SpanKind.CONSUMER
     )
     private fun getAndProcessBatch(
-        @Suppress("UNUSED_PARAMETER")
         @SpanAttribute("topics") topic: String = this.topic
     ) {
         consumer
