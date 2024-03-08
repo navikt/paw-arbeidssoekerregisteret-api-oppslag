@@ -36,6 +36,7 @@ dependencies {
     implementation("com.sksamuel.hoplite:hoplite-core:$hopliteVersion")
     implementation("com.sksamuel.hoplite:hoplite-yaml:$hopliteVersion")
     implementation("com.github.navikt.poao-tilgang:client:$poaoVersion")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.1.0")
 
     // Kafka
     implementation("org.apache.kafka:kafka-clients:3.6.0")
