@@ -22,7 +22,7 @@ class OpplysningerOmArbeidssoekerConsumer(
         logger.info("Lytter på topic $topic")
         consumer.subscribe(listOf(topic))
 
-        val pollingInterval = Duration.ofMillis(100)
+        val pollingInterval = Duration.ofMillis(1000)
 
         while (true) {
             val isConsumerToggleActive = unleashClient.isEnabled("aktiver-kafka-konsumere")
@@ -40,9 +40,9 @@ class OpplysningerOmArbeidssoekerConsumer(
                         record.value()
                     }
                 processAndCommitBatch(opplysninger)
+            } else {
+                Thread.sleep(1000)
             }
-
-            Thread.sleep(1000)
         }
     }
 
