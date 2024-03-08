@@ -5,8 +5,6 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.Arbeidssoekerperi
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.pauseOrResumeConsumer
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
-import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import java.time.Duration
 
@@ -30,16 +28,11 @@ class ArbeidssoekerperiodeConsumer(
             wasConsumerToggleActive = isConsumerToggleActive
 
             if (isConsumerToggleActive) {
-                val records: ConsumerRecords<Long, Periode> =
-                    consumer.poll(pollingInterval)
-                        .onEach {
-                            logger.info("Mottok melding fra $topic med offset ${it.offset()} partition ${it.partition()}")
-                        }
-                val perioder =
-                    records.map { record: ConsumerRecord<Long, Periode> ->
-                        record.value()
-                    }
-                processAndCommitBatch(perioder)
+                getAndProcessBatch(
+                    source = consumer,
+                    pollingInterval = pollingInterval,
+                    receiver = ::processAndCommitBatch
+                )
             } else {
                 Thread.sleep(1000)
             }

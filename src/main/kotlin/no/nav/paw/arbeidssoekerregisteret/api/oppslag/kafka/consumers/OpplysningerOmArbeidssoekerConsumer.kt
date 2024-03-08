@@ -5,8 +5,6 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.OpplysningerOmArb
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.pauseOrResumeConsumer
 import no.nav.paw.arbeidssokerregisteret.api.v4.OpplysningerOmArbeidssoeker
-import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import java.time.Duration
 
@@ -30,16 +28,11 @@ class OpplysningerOmArbeidssoekerConsumer(
             wasConsumerToggleActive = isConsumerToggleActive
 
             if (isConsumerToggleActive) {
-                val records: ConsumerRecords<Long, OpplysningerOmArbeidssoeker> =
-                    consumer.poll(pollingInterval)
-                        .onEach {
-                            logger.info("Mottok melding fra $topic med offset ${it.offset()} partition ${it.partition()}")
-                        }
-                val opplysninger =
-                    records.map { record: ConsumerRecord<Long, OpplysningerOmArbeidssoeker> ->
-                        record.value()
-                    }
-                processAndCommitBatch(opplysninger)
+                getAndProcessBatch(
+                    source = consumer,
+                    pollingInterval = pollingInterval,
+                    receiver = ::processAndCommitBatch
+                )
             } else {
                 Thread.sleep(1000)
             }

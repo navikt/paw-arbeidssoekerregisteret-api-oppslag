@@ -1,14 +1,10 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.consumers
 
 import io.getunleash.Unleash
-import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ProfileringService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.pauseOrResumeConsumer
 import no.nav.paw.arbeidssokerregisteret.api.v1.Profilering
-import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import java.time.Duration
 
@@ -32,28 +28,15 @@ class ProfileringConsumer(
             wasConsumerToggleActive = isConsumerToggleActive
 
             if (isConsumerToggleActive) {
-                getAndProcessBatch(pollingInterval)
+                getAndProcessBatch(
+                    source = consumer,
+                    pollingInterval = pollingInterval,
+                    receiver = ::processAndCommitBatch
+                )
             } else {
                 Thread.sleep(1000)
             }
         }
-    }
-
-    @WithSpan(
-        value = "get_and_process_batch",
-        kind = SpanKind.CONSUMER
-    )
-    private fun getAndProcessBatch(pollingInterval: Duration) {
-        val records: ConsumerRecords<Long, Profilering> =
-            consumer.poll(pollingInterval)
-                .onEach {
-                    logger.info("Mottok melding fra $topic med offset ${it.offset()} partition ${it.partition()}")
-                }
-        val profileringer =
-            records.map { record: ConsumerRecord<Long, Profilering> ->
-                record.value()
-            }
-        processAndCommitBatch(profileringer)
     }
 
     private fun processAndCommitBatch(batch: Iterable<Profilering>) =
