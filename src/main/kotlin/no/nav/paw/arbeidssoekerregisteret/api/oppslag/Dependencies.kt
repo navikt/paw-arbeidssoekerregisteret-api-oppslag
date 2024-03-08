@@ -6,9 +6,7 @@ import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.Config
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.createKafkaConsumer
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.consumers.ArbeidssoekerperiodeConsumer
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.consumers.OpplysningerOmArbeidssoekerConsumer
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.consumers.ProfileringConsumer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.consumers.BatchConsumer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.metrics.ScheduleGetAktivePerioderGaugeService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.ArbeidssoekerperiodeRepository
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.OpplysningerOmArbeidssoekerRepository
@@ -21,6 +19,9 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.TokenService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.generateDatasource
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getUnleashMock
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.isLocalEnvironment
+import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
+import no.nav.paw.arbeidssokerregisteret.api.v1.Profilering
+import no.nav.paw.arbeidssokerregisteret.api.v4.OpplysningerOmArbeidssoeker
 import no.nav.poao_tilgang.client.PoaoTilgangCachedClient
 import no.nav.poao_tilgang.client.PoaoTilgangHttpClient
 import org.jetbrains.exposed.sql.Database
@@ -68,10 +69,10 @@ fun createDependencies(config: Config): Dependencies {
     val scheduleGetAktivePerioderGaugeService = ScheduleGetAktivePerioderGaugeService(registry, arbeidssoekerperiodeRepository)
     val arbeidssoekerperiodeService = ArbeidssoekerperiodeService(arbeidssoekerperiodeRepository)
     val arbeidssoekerperiodeConsumer =
-        ArbeidssoekerperiodeConsumer(
+        BatchConsumer(
             config.kafka.periodeTopic,
             config.kafka.createKafkaConsumer(),
-            arbeidssoekerperiodeService,
+            arbeidssoekerperiodeService::lagreBatch,
             unleashClient
         )
 
@@ -79,10 +80,10 @@ fun createDependencies(config: Config): Dependencies {
     val opplysningerOmArbeidssoekerRepository = OpplysningerOmArbeidssoekerRepository(database)
     val opplysningerOmArbeidssoekerService = OpplysningerOmArbeidssoekerService(opplysningerOmArbeidssoekerRepository)
     val opplysningerOmArbeidssoekerConsumer =
-        OpplysningerOmArbeidssoekerConsumer(
+        BatchConsumer(
             config.kafka.opplysningerOmArbeidssoekerTopic,
             config.kafka.createKafkaConsumer(),
-            opplysningerOmArbeidssoekerService,
+            opplysningerOmArbeidssoekerService::lagreBatch,
             unleashClient
         )
 
@@ -90,10 +91,10 @@ fun createDependencies(config: Config): Dependencies {
     val profileringRepository = ProfileringRepository(database)
     val profileringService = ProfileringService(profileringRepository)
     val profileringConsumer =
-        ProfileringConsumer(
+        BatchConsumer(
             config.kafka.profileringTopic,
             config.kafka.createKafkaConsumer(),
-            profileringService,
+            profileringService::lagreBatch,
             unleashClient
         )
 
@@ -115,11 +116,11 @@ data class Dependencies(
     val registry: PrometheusMeterRegistry,
     val dataSource: DataSource,
     val arbeidssoekerperiodeService: ArbeidssoekerperiodeService,
-    val arbeidssoekerperiodeConsumer: ArbeidssoekerperiodeConsumer,
+    val arbeidssoekerperiodeConsumer: BatchConsumer<Long, Periode>,
     val opplysningerOmArbeidssoekerService: OpplysningerOmArbeidssoekerService,
-    val opplysningerOmArbeidssoekerConsumer: OpplysningerOmArbeidssoekerConsumer,
+    val opplysningerOmArbeidssoekerConsumer: BatchConsumer<Long, OpplysningerOmArbeidssoeker>,
     val profileringService: ProfileringService,
-    val profileringConsumer: ProfileringConsumer,
+    val profileringConsumer: BatchConsumer<Long, Profilering>,
     val autorisasjonService: AutorisasjonService,
     val scheduleGetAktivePerioderGaugeService: ScheduleGetAktivePerioderGaugeService
 )

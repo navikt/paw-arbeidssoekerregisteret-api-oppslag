@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
 inline val logger: Logger get() = LoggerFactory.getLogger("ConsumerLogger")
 
 fun pauseOrResumeConsumer(
-    consumer: KafkaConsumer<Long, *>,
+    consumer: KafkaConsumer<*, *>,
     topic: String,
     isConsumerToggleActive: Boolean,
     wasConsumerToggleActive: Boolean
