@@ -109,9 +109,9 @@ class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
 
     private fun settInnOpplysningerOmArbeidssoeker(opplysningerOmArbeidssoeker: OpplysningerOmArbeidssoeker) {
         val sendtInnAvId = ArbeidssoekerperiodeRepository(database).settInnMetadata(opplysningerOmArbeidssoeker.sendtInnAv)
-        val utdanningId = settInnUtdanning(opplysningerOmArbeidssoeker.utdanning)
-        val helseId = settInnHelse(opplysningerOmArbeidssoeker.helse)
-        val annetId = settInnAnnet(opplysningerOmArbeidssoeker.annet)
+        val utdanningId = opplysningerOmArbeidssoeker.utdanning?.let { settInnUtdanning(it) }
+        val helseId = opplysningerOmArbeidssoeker.helse?.let { settInnHelse(it) }
+        val annetId = opplysningerOmArbeidssoeker.annet?.let { settInnAnnet(it) }
         val opplysningerOmArbeidssoekerId =
             settInnOpplysningerOmArbeidssoeker(opplysningerOmArbeidssoeker, sendtInnAvId, utdanningId, helseId, annetId)
 
@@ -139,8 +139,8 @@ class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
     private fun settInnUtdanning(utdanning: Utdanning): Long =
         UtdanningTable.insertAndGetId {
             it[nus] = utdanning.nus
-            it[bestaatt] = JaNeiVetIkke.valueOf(utdanning.bestaatt.name)
-            it[godkjent] = JaNeiVetIkke.valueOf(utdanning.godkjent.name)
+            it[bestaatt] = utdanning.bestaatt?.let { bestaatt -> JaNeiVetIkke.valueOf(bestaatt.name) }
+            it[godkjent] = utdanning.godkjent?.let { godkjent -> JaNeiVetIkke.valueOf(godkjent.name) }
         }.value
 
     private fun settInnHelse(helse: Helse): Long =
@@ -150,15 +150,15 @@ class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
 
     private fun settInnAnnet(annet: Annet): Long =
         AnnetTable.insertAndGetId {
-            it[andreForholdHindrerArbeid] = JaNeiVetIkke.valueOf(annet.andreForholdHindrerArbeid.name)
+            it[andreForholdHindrerArbeid] = annet.andreForholdHindrerArbeid?.let { andreForholdHindrerArbeid -> JaNeiVetIkke.valueOf(andreForholdHindrerArbeid.name) }
         }.value
 
     private fun settInnOpplysningerOmArbeidssoeker(
         opplysningerOmArbeidssoeker: OpplysningerOmArbeidssoeker,
         sendtInnAvId: Long,
-        utdanningId: Long,
-        helseId: Long,
-        annetId: Long
+        utdanningId: Long?,
+        helseId: Long?,
+        annetId: Long?
     ): Long =
         OpplysningerOmArbeidssoekerTable.insertAndGetId {
             it[opplysningerOmArbeidssoekerId] = opplysningerOmArbeidssoeker.id
@@ -246,7 +246,7 @@ class OpplysningerOmArbeidssoekerConverter {
             } ?: throw RuntimeException("Fant ikke metadata $metadataId")
     }
 
-    private fun hentUtdanningResponse(utdanningId: Long): UtdanningResponse {
+    private fun hentUtdanningResponse(utdanningId: Long): UtdanningResponse? {
         return UtdanningTable.selectAll().where { UtdanningTable.id eq utdanningId }
             .singleOrNull()?.let { utdanningResultRow ->
                 UtdanningResponse(
@@ -254,25 +254,25 @@ class OpplysningerOmArbeidssoekerConverter {
                     bestaatt = utdanningResultRow[UtdanningTable.bestaatt]?.let { JaNeiVetIkkeResponse.valueOf(it.name) },
                     godkjent = utdanningResultRow[UtdanningTable.godkjent]?.let { JaNeiVetIkkeResponse.valueOf(it.name) }
                 )
-            } ?: throw RuntimeException("Fant ikke utdanning: $utdanningId")
+            }
     }
 
-    private fun hentHelseResponse(helseId: Long): HelseResponse {
+    private fun hentHelseResponse(helseId: Long): HelseResponse? {
         return HelseTable.selectAll().where { HelseTable.id eq helseId }
             .singleOrNull()?.let { helseResultRow ->
                 HelseResponse(
                     helseTilstandHindrerArbeid = JaNeiVetIkkeResponse.valueOf(helseResultRow[HelseTable.helsetilstandHindrerArbeid].name)
                 )
-            } ?: throw RuntimeException("Fant ikke helse: $helseId")
+            }
     }
 
-    private fun hentAnnetResponse(annetId: Long): AnnetResponse {
+    private fun hentAnnetResponse(annetId: Long): AnnetResponse? {
         return AnnetTable.selectAll().where { AnnetTable.id eq annetId }
             .singleOrNull()?.let { annetResultRow ->
                 AnnetResponse(
-                    andreForholdHindrerArbeid = JaNeiVetIkkeResponse.valueOf(annetResultRow[AnnetTable.andreForholdHindrerArbeid].name)
+                    andreForholdHindrerArbeid = annetResultRow[AnnetTable.andreForholdHindrerArbeid]?.let { JaNeiVetIkkeResponse.valueOf(it.name) }
                 )
-            } ?: throw RuntimeException("Fant ikke annet: $annetId")
+            }
     }
 
     private fun hentBeskrivelseMedDetaljerResponse(opplysningerOmArbeidssoekerId: Long): List<BeskrivelseMedDetaljerResponse> {

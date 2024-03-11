@@ -36,10 +36,6 @@ data class OpplysningerOmArbeidssoekerResponse(
     val jobbsituasjon: List<BeskrivelseMedDetaljerResponse>
 )
 
-data class ArbeidserfaringResponse(
-    val harHattArbeid: JaNeiVetIkkeResponse
-)
-
 data class HelseResponse(
     val helseTilstandHindrerArbeid: JaNeiVetIkkeResponse
 )

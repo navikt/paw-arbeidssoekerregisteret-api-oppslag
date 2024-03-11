@@ -53,7 +53,7 @@ object AnnetTable : LongIdTable("annet") {
             sql = "JaNeiVetIkke",
             fromDb = { value -> JaNeiVetIkke.valueOf(value as String) },
             toDb = { PGEnum("JaNeiVetIkke", it) }
-        )
+        ).nullable()
 }
 
 object BeskrivelseMedDetaljerTable : LongIdTable("beskrivelse_med_detaljer") {

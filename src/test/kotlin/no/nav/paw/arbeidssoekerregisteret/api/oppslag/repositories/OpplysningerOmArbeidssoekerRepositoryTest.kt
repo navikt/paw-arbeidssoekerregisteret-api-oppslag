@@ -42,9 +42,33 @@ class OpplysningerOmArbeidssoekerRepositoryTest : StringSpec({
         dataSource.connection.close()
     }
 
-    "Opprett og hent ut en opplysninger om arbeidssøker" {
+    "Opprett og hent ut opplysninger om arbeidssøker" {
         val repository = OpplysningerOmArbeidssoekerRepository(database)
         val opplysninger = hentTestOpplysningerOmArbeidssoeker(periodeId1, opplysningerOmArbeidssoekerId1)
+        repository.lagreOpplysningerOmArbeidssoeker(opplysninger)
+
+        val retrievedOpplysninger = repository.hentOpplysningerOmArbeidssoeker(opplysninger.periodeId)
+        val retrievedPeriodeOpplysninger = repository.hentPeriodeOpplysninger(periodeId1)
+
+        retrievedOpplysninger.size shouldBe 1
+        retrievedPeriodeOpplysninger.size shouldBe 1
+    }
+
+    "Opprett og hent ut opplysninger om arbeidssøker med utdanning, helse og annet lik null" {
+        val repository = OpplysningerOmArbeidssoekerRepository(database)
+        val opplysninger = hentTestOpplysningerOmArbeidssoekerMedUtdanningHelseOgAnnetLikNull(periodeId1, opplysningerOmArbeidssoekerId1)
+        repository.lagreOpplysningerOmArbeidssoeker(opplysninger)
+
+        val retrievedOpplysninger = repository.hentOpplysningerOmArbeidssoeker(opplysninger.periodeId)
+        val retrievedPeriodeOpplysninger = repository.hentPeriodeOpplysninger(periodeId1)
+
+        retrievedOpplysninger.size shouldBe 1
+        retrievedPeriodeOpplysninger.size shouldBe 1
+    }
+
+    "Opprett og hent ut opplysninger om arbeidssøker med utdanning og annet felter lik null" {
+        val repository = OpplysningerOmArbeidssoekerRepository(database)
+        val opplysninger = hentTestOpplysningerOmArbeidssoekerMedUtdanningOgAnnetFelterLikNull(periodeId1, opplysningerOmArbeidssoekerId1)
         repository.lagreOpplysningerOmArbeidssoeker(opplysninger)
 
         val retrievedOpplysninger = repository.hentOpplysningerOmArbeidssoeker(opplysninger.periodeId)
@@ -155,6 +179,94 @@ fun hentTestOpplysningerOmArbeidssoeker(
         JaNeiVetIkke.VET_IKKE
     )
 )
+
+fun hentTestOpplysningerOmArbeidssoekerMedUtdanningHelseOgAnnetLikNull(
+    periodeId: UUID,
+    opplysningerOmArbeidssoekerId: UUID
+): OpplysningerOmArbeidssoeker {
+    return OpplysningerOmArbeidssoeker(
+        opplysningerOmArbeidssoekerId,
+        periodeId,
+        Metadata(
+            Instant.now(),
+            Bruker(
+                BrukerType.UKJENT_VERDI,
+                "12345678911"
+            ),
+            "test",
+            "test"
+        ),
+        null,
+        null,
+        Jobbsituasjon(
+            listOf(
+                BeskrivelseMedDetaljer(
+                    Beskrivelse.AKKURAT_FULLFORT_UTDANNING,
+                    mapOf(
+                        Pair("test", "test"),
+                        Pair("test2", "test2")
+                    )
+                ),
+                BeskrivelseMedDetaljer(
+                    Beskrivelse.DELTIDSJOBB_VIL_MER,
+                    mapOf(
+                        Pair("test3", "test3"),
+                        Pair("test4", "test4")
+                    )
+                )
+            )
+        ),
+        null
+    )
+}
+
+fun hentTestOpplysningerOmArbeidssoekerMedUtdanningOgAnnetFelterLikNull(
+    periodeId: UUID,
+    opplysningerOmArbeidssoekerId: UUID
+): OpplysningerOmArbeidssoeker {
+    return OpplysningerOmArbeidssoeker(
+        opplysningerOmArbeidssoekerId,
+        periodeId,
+        Metadata(
+            Instant.now(),
+            Bruker(
+                BrukerType.UKJENT_VERDI,
+                "12345678911"
+            ),
+            "test",
+            "test"
+        ),
+        Utdanning(
+            "NUS_KODE",
+            null,
+            null
+        ),
+        Helse(
+            JaNeiVetIkke.JA
+        ),
+        Jobbsituasjon(
+            listOf(
+                BeskrivelseMedDetaljer(
+                    Beskrivelse.AKKURAT_FULLFORT_UTDANNING,
+                    mapOf(
+                        Pair("test", "test"),
+                        Pair("test2", "test2")
+                    )
+                ),
+                BeskrivelseMedDetaljer(
+                    Beskrivelse.DELTIDSJOBB_VIL_MER,
+                    mapOf(
+                        Pair("test3", "test3"),
+                        Pair("test4", "test4")
+                    )
+                )
+            )
+        ),
+        Annet(
+            null
+        )
+    )
+}
 
 fun hentMapAvDetaljer(): Map<String, String> {
     val map = mutableMapOf<String, String>()
