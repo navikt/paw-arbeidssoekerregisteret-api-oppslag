@@ -50,7 +50,7 @@ class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
     fun storeBatch(batch: Iterable<OpplysningerOmArbeidssoeker>) {
         transaction(database) {
             repetitionAttempts = 2
-            minRepetitionDelay = 200
+            minRepetitionDelay = 20
             batch.forEach { opplysninger ->
                 lagreOpplysningerOmArbeidssoeker(opplysninger)
             }
@@ -60,7 +60,7 @@ class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
     fun lagreOpplysningerOmArbeidssoeker(opplysningerOmArbeidssoeker: OpplysningerOmArbeidssoeker) {
         transaction(database) {
             repetitionAttempts = 2
-            minRepetitionDelay = 200
+            minRepetitionDelay = 20
 
             val eksisterendeOpplysningerOmArbeidssoeker =
                 OpplysningerOmArbeidssoekerTable

@@ -25,7 +25,7 @@ class ArbeidssoekerperiodeRepository(private val database: Database) {
     fun storeBatch(arbeidssoekerperioder: Iterable<Periode>) {
         transaction(database) {
             repetitionAttempts = 2
-            minRepetitionDelay = 200
+            minRepetitionDelay = 20
             arbeidssoekerperioder.forEach { periode ->
                 if (finnesArbeidssoekerperiode(periode.id)) {
                     oppdaterArbeidssoekerperiode(periode)
@@ -92,7 +92,7 @@ class ArbeidssoekerperiodeRepository(private val database: Database) {
     fun opprettArbeidssoekerperiode(arbeidssoekerperiode: Periode) {
         transaction(database) {
             repetitionAttempts = 2
-            minRepetitionDelay = 200
+            minRepetitionDelay = 20
             val startetId = settInnMetadata(arbeidssoekerperiode.startet)
             val avsluttetId = arbeidssoekerperiode.avsluttet?.let { settInnMetadata(it) }
 

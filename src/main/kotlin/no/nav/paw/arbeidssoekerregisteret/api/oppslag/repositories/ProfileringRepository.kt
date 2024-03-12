@@ -24,7 +24,7 @@ class ProfileringRepository(private val database: Database) {
     fun storeBatch(batch: Iterable<Profilering>) {
         transaction(database) {
             repetitionAttempts = 2
-            minRepetitionDelay = 200
+            minRepetitionDelay = 20
             batch.forEach { profilering ->
                 opprettProfileringForArbeidssoeker(profilering)
             }
@@ -34,7 +34,7 @@ class ProfileringRepository(private val database: Database) {
     fun opprettProfileringForArbeidssoeker(profilering: Profilering) {
         transaction(database) {
             repetitionAttempts = 2
-            minRepetitionDelay = 200
+            minRepetitionDelay = 20
             val sendtInnAvId = ArbeidssoekerperiodeRepository(database).settInnMetadata(profilering.sendtInnAv)
             ProfileringTable.insert {
                 it[profileringId] = profilering.id

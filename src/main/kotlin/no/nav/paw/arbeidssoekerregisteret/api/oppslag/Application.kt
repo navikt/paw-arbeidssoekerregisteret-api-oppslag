@@ -23,32 +23,11 @@ fun main() {
     val config = loadConfiguration<Config>()
     // Avhengigheter
     val dependencies = createDependencies(config)
-    val server =
-        embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = { module(dependencies, config) })
-            .start(wait = true)
-
-    server.addShutdownHook {
-        server.stop(300, 300)
-    }
-}
-
-fun Application.module(
-    dependencies: Dependencies,
-    config: Config
-) {
+    // Konsumer periode meldinger fra Kafka
     // Clean database pga versjon oppdatering
     // cleanDatabase(dependencies.dataSource) // TODO: Fjern denne ved neste commit
     // Kjør migration på database
     migrateDatabase(dependencies.dataSource)
-
-    // Konfigurerer plugins
-    configureMetrics(dependencies.registry)
-    configureHTTP()
-    configureAuthentication(config.authProviders)
-    configureLogging()
-    configureSerialization()
-
-    // Konsumer periode meldinger fra Kafka
     thread {
         try {
             dependencies.arbeidssoekerperiodeConsumer.subscribe()
@@ -62,11 +41,29 @@ fun Application.module(
             exitProcess(1)
         }
     }
-
     // Oppdaterer grafana gauge for antall aktive perioder
     thread {
         dependencies.scheduleGetAktivePerioderGaugeService.scheduleGetAktivePerioderTask()
     }
+    val server =
+        embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = { module(dependencies, config) })
+            .start(wait = true)
+
+    server.addShutdownHook {
+        server.stop(300, 300)
+    }
+}
+
+fun Application.module(
+    dependencies: Dependencies,
+    config: Config
+) {
+    // Konfigurerer plugins
+    configureMetrics(dependencies.registry)
+    configureHTTP()
+    configureAuthentication(config.authProviders)
+    configureLogging()
+    configureSerialization()
 
     // Ruter
     routing {
