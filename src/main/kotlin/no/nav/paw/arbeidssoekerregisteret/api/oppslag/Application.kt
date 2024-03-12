@@ -40,7 +40,7 @@ fun Application.module(
     config: Config
 ) {
     // Clean database pga versjon oppdatering
-    cleanDatabase(dependencies.dataSource) // TODO: Fjern denne ved neste commit
+    //cleanDatabase(dependencies.dataSource) // TODO: Fjern denne ved neste commit
     // Kjør migration på database
     migrateDatabase(dependencies.dataSource)
 
