@@ -1,20 +1,14 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag
 
-import io.ktor.server.application.Application
-import io.ktor.server.engine.addShutdownHook
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
-import io.ktor.server.routing.routing
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.server.routing.*
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.Config
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.configureAuthentication
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.configureHTTP
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.configureLogging
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.configureMetrics
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.configureSerialization
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.*
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.arbeidssokerRoutes
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.healthRoutes
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.swaggerRoutes
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.cleanDatabase
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.loadConfiguration
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.migrateDatabase
@@ -40,7 +34,7 @@ fun Application.module(
     config: Config
 ) {
     // Clean database pga versjon oppdatering
-    //cleanDatabase(dependencies.dataSource) // TODO: Fjern denne ved neste commit
+    // cleanDatabase(dependencies.dataSource) // TODO: Fjern denne ved neste commit
     // Kjør migration på database
     migrateDatabase(dependencies.dataSource)
 
