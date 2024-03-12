@@ -59,7 +59,12 @@ fun Application.module(
     config: Config
 ) {
     // Konfigurerer plugins
-    configureMetrics(dependencies.registry)
+    configureMetrics(
+        dependencies.registry,
+        dependencies.profileringConsumer.consumer,
+        dependencies.arbeidssoekerperiodeConsumer.consumer,
+        dependencies.opplysningerOmArbeidssoekerConsumer.consumer
+    )
     configureHTTP()
     configureAuthentication(config.authProviders)
     configureLogging()

@@ -11,7 +11,7 @@ import java.time.Duration
 
 class BatchConsumer<K, V>(
     private val topic: String,
-    private val consumer: KafkaConsumer<K, V>,
+    val consumer: KafkaConsumer<K, V>,
     private val receiver: (Iterable<V>) -> Unit,
     private val unleashClient: Unleash
 ) {
