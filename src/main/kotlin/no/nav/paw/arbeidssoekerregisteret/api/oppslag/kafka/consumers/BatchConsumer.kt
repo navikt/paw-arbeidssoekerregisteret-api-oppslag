@@ -57,10 +57,18 @@ class BatchConsumer<K, V>(
                 )
             }.map { it.value() }
             .runCatching(receiver)
-            .mapCatching { consumer.commitSync() }
+            .mapCatching { commitSync() }
             .fold(
                 onSuccess = { logger.debug("Batch behandlet og commitet") },
                 onFailure = { error -> throw Exception("Feil ved konsumering av melding fra $topic", error) }
             )
+    }
+
+    @WithSpan(
+        value = "commit_sync",
+        kind = SpanKind.CLIENT
+    )
+    private fun commitSync() {
+        consumer.commitSync()
     }
 }
