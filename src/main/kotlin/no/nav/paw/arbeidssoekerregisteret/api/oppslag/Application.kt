@@ -4,6 +4,8 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.routing.*
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.Config
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.*
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.arbeidssokerRoutes
@@ -12,6 +14,7 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.swaggerRoutes
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.loadConfiguration
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.migrateDatabase
+import java.util.concurrent.CompletableFuture.runAsync
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
@@ -52,9 +55,7 @@ fun Application.module(
             dependencies.opplysningerOmArbeidssoekerConsumer.subscribe()
             dependencies.profileringConsumer.subscribe()
             while (true) {
-                dependencies.arbeidssoekerperiodeConsumer.getAndProcessBatch(config.kafka.periodeTopic)
-                dependencies.opplysningerOmArbeidssoekerConsumer.getAndProcessBatch(config.kafka.opplysningerOmArbeidssoekerTopic)
-                dependencies.profileringConsumer.getAndProcessBatch(config.kafka.profileringTopic)
+                consume(dependencies, config)
             }
         } catch (e: Exception) {
             logger.error("Arbeidssøkerperiode consumer error: ${e.message}", e)
@@ -78,4 +79,25 @@ fun Application.module(
             dependencies.profileringService
         )
     }
+}
+
+@WithSpan(
+    value = "consume",
+    kind = SpanKind.INTERNAL
+)
+fun consume(
+    dependencies: Dependencies,
+    config: Config
+) {
+    listOf(
+        runAsync {
+            dependencies.arbeidssoekerperiodeConsumer.getAndProcessBatch(config.kafka.periodeTopic)
+        },
+        runAsync {
+            dependencies.opplysningerOmArbeidssoekerConsumer.getAndProcessBatch(config.kafka.opplysningerOmArbeidssoekerTopic)
+        },
+        runAsync {
+            dependencies.profileringConsumer.getAndProcessBatch(config.kafka.profileringTopic)
+        }
+    ).forEach { it.join() }
 }
