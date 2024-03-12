@@ -27,6 +27,7 @@ val KafkaConfig.properties
             ConsumerConfig.GROUP_ID_CONFIG to gruppeId,
             ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
             ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to serverConfig.kafkaBrokers,
+            ConsumerConfig.MAX_POLL_RECORDS_CONFIG to 100,
             KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG to schemaRegistryConfig.url,
             KafkaAvroSerializerConfig.AUTO_REGISTER_SCHEMAS to schemaRegistryConfig.autoRegistrerSchema,
             ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to LongDeserializer::class.java.name,
