@@ -25,7 +25,7 @@ poaoClientConfig:
   url: http://poao-tilgang.poao.svc.cluster.local
   scope: api://${NAIS_CLUSTER_NAME}.poao.poao-tilgang/.default
 kafka:
-  gruppeId: paw.arbeidssoekerregisteret-api-oppslag-v6
+  gruppeId: paw.arbeidssoekerregisteret-api-oppslag-v7
   periodeTopic: paw.arbeidssokerperioder-beta-v14
   opplysningerOmArbeidssoekerTopic: paw.opplysninger-om-arbeidssoeker-beta-v14
   profileringTopic: paw.arbeidssoker-profilering-beta-v14
