@@ -22,7 +22,7 @@ class BatchConsumer<K, V>(
     fun start() {
         isConsumerActive = true
         logger.info("Lytter på topic $topic")
-        consumer.subscribe(listOf(topic))
+        subscribe()
         while (isConsumerActive) {
             val isConsumerToggleActive = unleashClient.isEnabled("aktiver-kafka-konsumere")
             pauseOrResumeConsumer(consumer, topic, isConsumerToggleActive, wasConsumerToggleActive)
@@ -37,6 +37,10 @@ class BatchConsumer<K, V>(
 
     fun stop() {
         isConsumerActive = false
+    }
+
+    fun subscribe() {
+        consumer.subscribe(listOf(topic))
     }
 
     @WithSpan(

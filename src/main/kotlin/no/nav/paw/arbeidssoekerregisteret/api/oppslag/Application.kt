@@ -48,6 +48,9 @@ fun Application.module(
     // Konsumer periode meldinger fra Kafka
     thread {
         try {
+            dependencies.arbeidssoekerperiodeConsumer.subscribe()
+            dependencies.opplysningerOmArbeidssoekerConsumer.subscribe()
+            dependencies.profileringConsumer.subscribe()
             while (true) {
                 dependencies.arbeidssoekerperiodeConsumer.getAndProcessBatch(config.kafka.periodeTopic)
                 dependencies.opplysningerOmArbeidssoekerConsumer.getAndProcessBatch(config.kafka.opplysningerOmArbeidssoekerTopic)
