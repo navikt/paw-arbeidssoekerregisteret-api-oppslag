@@ -48,29 +48,13 @@ fun Application.module(
     // Konsumer periode meldinger fra Kafka
     thread {
         try {
-            dependencies.arbeidssoekerperiodeConsumer.start()
+            while (true) {
+                dependencies.arbeidssoekerperiodeConsumer.getAndProcessBatch(config.kafka.periodeTopic)
+                dependencies.opplysningerOmArbeidssoekerConsumer.getAndProcessBatch(config.kafka.opplysningerOmArbeidssoekerTopic)
+                dependencies.profileringConsumer.getAndProcessBatch(config.kafka.profileringTopic)
+            }
         } catch (e: Exception) {
             logger.error("Arbeidssøkerperiode consumer error: ${e.message}", e)
-            exitProcess(1)
-        }
-    }
-
-    // Konsumer opplysninger-om-arbeidssøker meldinger fra Kafka
-    thread {
-        try {
-            dependencies.opplysningerOmArbeidssoekerConsumer.start()
-        } catch (e: Exception) {
-            logger.error("Opplysninger-om-arbeidssøker consumer error: ${e.message}", e)
-            exitProcess(1)
-        }
-    }
-
-    // Konsumer profilering meldinger fra Kafka
-    thread {
-        try {
-            dependencies.profileringConsumer.start()
-        } catch (e: Exception) {
-            logger.error("Profilering consumer error: ${e.message}", e)
             exitProcess(1)
         }
     }

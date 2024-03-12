@@ -15,7 +15,7 @@ class BatchConsumer<K, V>(
     private val receiver: (Iterable<V>) -> Unit,
     private val unleashClient: Unleash
 ) {
-    private val pollingInterval = Duration.ofMillis(1000)
+    private val pollingInterval = Duration.ofMillis(100)
     private var wasConsumerToggleActive: Boolean = false
     private var isConsumerActive: Boolean = false
 
@@ -43,7 +43,7 @@ class BatchConsumer<K, V>(
         value = "get_and_process_batch",
         kind = SpanKind.CONSUMER
     )
-    private fun getAndProcessBatch(
+    fun getAndProcessBatch(
         @SpanAttribute("topics") topic: String = this.topic
     ) {
         consumer
