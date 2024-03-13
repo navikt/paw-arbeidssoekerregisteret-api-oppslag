@@ -8,5 +8,5 @@ import java.util.*
 class OpplysningerOmArbeidssoekerService(private val opplysningerOmArbeidssoekerRepository: OpplysningerOmArbeidssoekerRepository) {
     fun hentOpplysningerOmArbeidssoeker(periodeId: UUID): List<OpplysningerOmArbeidssoekerResponse> = opplysningerOmArbeidssoekerRepository.hentOpplysningerOmArbeidssoeker(periodeId)
 
-    fun lagreBatch(batch: Iterable<OpplysningerOmArbeidssoeker>) = opplysningerOmArbeidssoekerRepository.storeBatch(batch)
+    fun lagreBatch(batch: Sequence<OpplysningerOmArbeidssoeker>) = opplysningerOmArbeidssoekerRepository.storeBatch(batch)
 }

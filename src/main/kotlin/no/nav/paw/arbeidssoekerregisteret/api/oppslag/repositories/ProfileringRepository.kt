@@ -21,7 +21,7 @@ class ProfileringRepository(private val database: Database) {
         }
     }
 
-    fun storeBatch(batch: Iterable<Profilering>) {
+    fun storeBatch(batch: Sequence<Profilering>) {
         transaction(database) {
             repetitionAttempts = 2
             minRepetitionDelay = 20

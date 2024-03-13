@@ -22,7 +22,7 @@ import java.sql.SQLException
 import java.util.UUID
 
 class ArbeidssoekerperiodeRepository(private val database: Database) {
-    fun storeBatch(arbeidssoekerperioder: Iterable<Periode>) {
+    fun storeBatch(arbeidssoekerperioder: Sequence<Periode>) {
         transaction(database) {
             repetitionAttempts = 2
             minRepetitionDelay = 20

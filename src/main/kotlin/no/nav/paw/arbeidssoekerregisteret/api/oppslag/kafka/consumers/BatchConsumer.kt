@@ -12,7 +12,7 @@ import java.time.Duration
 class BatchConsumer<K, V>(
     private val topic: String,
     val consumer: KafkaConsumer<K, V>,
-    private val receiver: (Iterable<V>) -> Unit,
+    private val receiver: (Sequence<V>) -> Unit,
     private val unleashClient: Unleash
 ) {
     private val pollingInterval = Duration.ofMillis(100)
@@ -52,6 +52,7 @@ class BatchConsumer<K, V>(
     ) {
         consumer
             .poll(pollingInterval)
+            .asSequence()
             .onEach {
                 logger.trace(
                     "Mottok melding fra {} med offset {} partition {}",

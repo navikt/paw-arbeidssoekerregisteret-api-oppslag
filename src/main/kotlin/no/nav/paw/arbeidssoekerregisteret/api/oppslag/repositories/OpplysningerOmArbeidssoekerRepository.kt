@@ -29,6 +29,7 @@ import no.nav.paw.arbeidssokerregisteret.api.v4.Utdanning
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
+import kotlin.sequences.Sequence
 
 class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
     fun hentOpplysningerOmArbeidssoeker(periodeId: UUID): List<OpplysningerOmArbeidssoekerResponse> =
@@ -47,7 +48,7 @@ class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
             }
         }
 
-    fun storeBatch(batch: Iterable<OpplysningerOmArbeidssoeker>) {
+    fun storeBatch(batch: Sequence<OpplysningerOmArbeidssoeker>) {
         transaction(database) {
             repetitionAttempts = 2
             minRepetitionDelay = 20
