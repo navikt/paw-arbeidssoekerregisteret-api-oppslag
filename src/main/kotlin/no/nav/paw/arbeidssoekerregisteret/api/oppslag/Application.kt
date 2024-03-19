@@ -25,7 +25,7 @@ fun main() {
     // Avhengigheter
     val dependencies = createDependencies(config)
     // Clean database pga versjon oppdatering
-    cleanDatabase(dependencies.dataSource) // TODO: Fjern denne ved neste commit
+    // cleanDatabase(dependencies.dataSource) // TODO: Fjern denne ved neste commit
     // Kjør migration på database
     migrateDatabase(dependencies.dataSource)
     // Konsumer periode meldinger fra Kafka
