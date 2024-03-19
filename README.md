@@ -176,26 +176,26 @@ Kafka UI ligger i docker-compose, og finnes på http://localhost:9000
 
 Kjør `./gradlew produceLocalMessagesForTopics`
 
-Denne tasken sender to meldinger til `arbeidssokerperioder-beta-v11`, en melding til `opplysninger-om-arbeidssoeker-beta-v11` og en melding til `arbeidssoker-profilering-beta-v11`.
+Denne tasken sender to meldinger til `arbeidssokerperioder-v1`, en melding til `opplysninger-om-arbeidssoeker-v1` og en melding til `arbeidssoker-profilering-v1`.
 
 ### Consumer
 
-Konsumer meldinger fra `arbeidssokerperioder-beta-v11`
+Konsumer meldinger fra `arbeidssokerperioder-v1`
 
 ```sh
-docker exec -it paw-arbeidssoekerregisteret-api-oppslag_kafka_1 /usr/bin/kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic arbeidssokerperioder-beta-v11
+docker exec -it paw-arbeidssoekerregisteret-api-oppslag_kafka_1 /usr/bin/kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic arbeidssokerperioder-v1
 ```
 
-Konsumer meldinger fra `opplysninger-om-arbeidssoeker-beta-v11`
+Konsumer meldinger fra `opplysninger-om-arbeidssoeker-v1`
 
 ```sh
-docker exec -it paw-arbeidssoekerregisteret-api-oppslag_kafka_1 /usr/bin/kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic opplysninger-om-arbeidssoeker-beta-v11
+docker exec -it paw-arbeidssoekerregisteret-api-oppslag_kafka_1 /usr/bin/kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic opplysninger-om-arbeidssoeker-v1
 ```
 
-Konsumer meldinger fra `arbeidssoker-profilering-beta-v2`
+Konsumer meldinger fra `arbeidssoker-profilering-v1`
 
 ```sh
-docker exec -it paw-arbeidssoekerregisteret-api-oppslag_kafka_1 /usr/bin/kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic arbeidssoker-profilering-beta-v11
+docker exec -it paw-arbeidssoekerregisteret-api-oppslag_kafka_1 /usr/bin/kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic arbeidssoker-profilering-v1
 ```
 
 ## Formatering
