@@ -62,6 +62,14 @@ spec:
         - application: aia-backend
           namespace: paw
           cluster: prod-gcp
+        - application: dp-oppslag-arbeidssoker
+          namespace: teamdagpenger
+        - application: dp-dagpenger
+          namespace: teamdagpenger
+        - application: dp-soknadsdialog
+          namespace: teamdagpenger
+        - application: dp-saksbehandling-frontend
+          namespace: teamdagpenger
     outbound:
       rules:
         - application: poao-tilgang
