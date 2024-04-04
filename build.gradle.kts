@@ -2,7 +2,7 @@ import com.github.davidmc24.gradle.plugin.avro.GenerateAvroProtocolTask
 
 plugins {
     kotlin("jvm") version "1.9.20"
-    id("io.ktor.plugin") version "2.3.5"
+    id("io.ktor.plugin") version "2.3.9"
     id("com.github.davidmc24.gradle.plugin.avro") version "1.9.1"
     id("org.jmailen.kotlinter") version "4.0.0"
     application
