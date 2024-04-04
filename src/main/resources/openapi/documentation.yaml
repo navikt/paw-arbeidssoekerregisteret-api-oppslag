@@ -4,7 +4,7 @@ info:
   description: "paw_arbeidssoekerregisteret_api_oppslag API"
   version: "1.0.0"
 servers:
-- url: "https://paw_arbeidssoekerregisteret_api_oppslag"
+  - url: "https://paw_arbeidssoekerregisteret_api_oppslag"
 paths:
   /api/v1/arbeidssoekerperioder:
     get:
@@ -34,11 +34,11 @@ paths:
     get:
       description: ""
       parameters:
-      - name: "periodeId"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
+        - name: "periodeId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
       responses:
         "500":
           description: "Internal Server Error"
@@ -58,11 +58,11 @@ paths:
     get:
       description: ""
       parameters:
-      - name: "periodeId"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
+        - name: "periodeId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
       responses:
         "500":
           description: "Internal Server Error"
@@ -207,21 +207,22 @@ paths:
 components:
   schemas:
     Instant:
-      type: "object"
-      properties: {}
+      type: "string"
+      format: "date-time"
+      example: "'2021-09-29T11:22:33.444Z'"
     BrukerResponse:
       type: "object"
       properties:
         type:
           type: "string"
           enum:
-          - "UKJENT_VERDI"
-          - "UDEFINERT"
-          - "VEILEDER"
-          - "SYSTEM"
-          - "SLUTTBRUKER"
+            - "UKJENT_VERDI"
+            - "UDEFINERT"
+            - "VEILEDER"
+            - "SYSTEM"
+            - "SLUTTBRUKER"
       required:
-      - "type"
+        - "type"
     MetadataResponse:
       type: "object"
       properties:
@@ -234,10 +235,10 @@ components:
         aarsak:
           type: "string"
       required:
-      - "tidspunkt"
-      - "utfoertAv"
-      - "kilde"
-      - "aarsak"
+        - "tidspunkt"
+        - "utfoertAv"
+        - "kilde"
+        - "aarsak"
     ArbeidssoekerperiodeResponse:
       type: "object"
       properties:
@@ -249,8 +250,8 @@ components:
         avsluttet:
           $ref: "#/components/schemas/MetadataResponse"
       required:
-      - "periodeId"
-      - "startet"
+        - "periodeId"
+        - "startet"
     UtdanningResponse:
       type: "object"
       properties:
@@ -259,63 +260,66 @@ components:
         bestaatt:
           type: "string"
           enum:
-          - "JA"
-          - "NEI"
-          - "VET_IKKE"
+            - "JA"
+            - "NEI"
+            - "VET_IKKE"
         godkjent:
           type: "string"
           enum:
-          - "JA"
-          - "NEI"
-          - "VET_IKKE"
+            - "JA"
+            - "NEI"
+            - "VET_IKKE"
       required:
-      - "nus"
+        - "nus"
     HelseResponse:
       type: "object"
       properties:
         helseTilstandHindrerArbeid:
           type: "string"
           enum:
-          - "JA"
-          - "NEI"
-          - "VET_IKKE"
+            - "JA"
+            - "NEI"
+            - "VET_IKKE"
       required:
-      - "helseTilstandHindrerArbeid"
+        - "helseTilstandHindrerArbeid"
     AnnetResponse:
       type: "object"
       properties:
         andreForholdHindrerArbeid:
           type: "string"
           enum:
-          - "JA"
-          - "NEI"
-          - "VET_IKKE"
+            - "JA"
+            - "NEI"
+            - "VET_IKKE"
+    Map:
+      type: "object"
+      properties: { }
     BeskrivelseMedDetaljerResponse:
       type: "object"
       properties:
         beskrivelse:
           type: "string"
           enum:
-          - "UKJENT_VERDI"
-          - "UDEFINERT"
-          - "HAR_SAGT_OPP"
-          - "HAR_BLITT_SAGT_OPP"
-          - "ER_PERMITTERT"
-          - "ALDRI_HATT_JOBB"
-          - "IKKE_VAERT_I_JOBB_SISTE_2_AAR"
-          - "AKKURAT_FULLFORT_UTDANNING"
-          - "VIL_BYTTE_JOBB"
-          - "USIKKER_JOBBSITUASJON"
-          - "MIDLERTIDIG_JOBB"
-          - "DELTIDSJOBB_VIL_MER"
-          - "NY_JOBB"
-          - "KONKURS"
-          - "ANNET"
+            - "UKJENT_VERDI"
+            - "UDEFINERT"
+            - "HAR_SAGT_OPP"
+            - "HAR_BLITT_SAGT_OPP"
+            - "ER_PERMITTERT"
+            - "ALDRI_HATT_JOBB"
+            - "IKKE_VAERT_I_JOBB_SISTE_2_AAR"
+            - "AKKURAT_FULLFORT_UTDANNING"
+            - "VIL_BYTTE_JOBB"
+            - "USIKKER_JOBBSITUASJON"
+            - "MIDLERTIDIG_JOBB"
+            - "DELTIDSJOBB_VIL_MER"
+            - "NY_JOBB"
+            - "KONKURS"
+            - "ANNET"
         detaljer:
-          type: "string"
+          $ref: "#/components/schemas/Map"
       required:
-      - "beskrivelse"
-      - "detaljer"
+        - "beskrivelse"
+        - "detaljer"
     OpplysningerOmArbeidssoekerResponse:
       type: "object"
       properties:
@@ -338,10 +342,10 @@ components:
           items:
             $ref: "#/components/schemas/BeskrivelseMedDetaljerResponse"
       required:
-      - "opplysningerOmArbeidssoekerId"
-      - "periodeId"
-      - "sendtInnAv"
-      - "jobbsituasjon"
+        - "opplysningerOmArbeidssoekerId"
+        - "periodeId"
+        - "sendtInnAv"
+        - "jobbsituasjon"
     ProfileringResponse:
       type: "object"
       properties:
@@ -359,29 +363,29 @@ components:
         profilertTil:
           type: "string"
           enum:
-          - "UKJENT_VERDI"
-          - "UDEFINERT"
-          - "ANTATT_GODE_MULIGHETER"
-          - "ANTATT_BEHOV_FOR_VEILEDNING"
-          - "OPPGITT_HINDRINGER"
+            - "UKJENT_VERDI"
+            - "UDEFINERT"
+            - "ANTATT_GODE_MULIGHETER"
+            - "ANTATT_BEHOV_FOR_VEILEDNING"
+            - "OPPGITT_HINDRINGER"
         jobbetSammenhengendeSeksAvTolvSisteManeder:
           type: "boolean"
         alder:
           type: "integer"
           format: "int32"
       required:
-      - "profileringId"
-      - "periodeId"
-      - "opplysningerOmArbeidssoekerId"
-      - "sendtInnAv"
-      - "profilertTil"
+        - "profileringId"
+        - "periodeId"
+        - "opplysningerOmArbeidssoekerId"
+        - "sendtInnAv"
+        - "profilertTil"
     ArbeidssoekerperiodeRequest:
       type: "object"
       properties:
         identitetsnummer:
           type: "string"
       required:
-      - "identitetsnummer"
+        - "identitetsnummer"
     OpplysningerOmArbeidssoekerRequest:
       type: "object"
       properties:
@@ -391,8 +395,8 @@ components:
           type: "string"
           format: "uuid"
       required:
-      - "identitetsnummer"
-      - "periodeId"
+        - "identitetsnummer"
+        - "periodeId"
     ProfileringRequest:
       type: "object"
       properties:
@@ -402,5 +406,5 @@ components:
           type: "string"
           format: "uuid"
       required:
-      - "identitetsnummer"
-      - "periodeId"
+        - "identitetsnummer"
+        - "periodeId"
