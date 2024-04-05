@@ -274,14 +274,14 @@ components:
     HelseResponse:
       type: "object"
       properties:
-        helseTilstandHindrerArbeid:
+        helsetilstandHindrerArbeid:
           type: "string"
           enum:
             - "JA"
             - "NEI"
             - "VET_IKKE"
       required:
-        - "helseTilstandHindrerArbeid"
+        - "helsetilstandHindrerArbeid"
     AnnetResponse:
       type: "object"
       properties:

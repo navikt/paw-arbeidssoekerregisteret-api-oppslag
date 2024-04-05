@@ -262,7 +262,7 @@ class OpplysningerOmArbeidssoekerConverter {
         return HelseTable.selectAll().where { HelseTable.id eq helseId }
             .singleOrNull()?.let { helseResultRow ->
                 HelseResponse(
-                    helseTilstandHindrerArbeid = JaNeiVetIkkeResponse.valueOf(helseResultRow[HelseTable.helsetilstandHindrerArbeid].name)
+                    helsetilstandHindrerArbeid = JaNeiVetIkkeResponse.valueOf(helseResultRow[HelseTable.helsetilstandHindrerArbeid].name)
                 )
             }
     }

@@ -37,7 +37,7 @@ data class OpplysningerOmArbeidssoekerResponse(
 )
 
 data class HelseResponse(
-    val helseTilstandHindrerArbeid: JaNeiVetIkkeResponse
+    val helsetilstandHindrerArbeid: JaNeiVetIkkeResponse
 )
 
 data class UtdanningResponse(
