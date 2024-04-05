@@ -1,4 +1,4 @@
-openapi: "3.0.3"
+openapi: "3.1.0"
 info:
   title: "paw_arbeidssoekerregisteret_api_oppslag API"
   description: "paw_arbeidssoekerregisteret_api_oppslag API"
@@ -83,7 +83,7 @@ paths:
       description: ""
       requestBody:
         content:
-          '*/*':
+          application/json:
             schema:
               $ref: "#/components/schemas/ArbeidssoekerperiodeRequest"
         required: true
@@ -113,7 +113,7 @@ paths:
       description: ""
       requestBody:
         content:
-          '*/*':
+          application/json:
             schema:
               $ref: "#/components/schemas/OpplysningerOmArbeidssoekerRequest"
         required: true
@@ -143,7 +143,7 @@ paths:
       description: ""
       requestBody:
         content:
-          '*/*':
+          application/json:
             schema:
               $ref: "#/components/schemas/ProfileringRequest"
         required: true
