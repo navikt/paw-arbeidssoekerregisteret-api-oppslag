@@ -11,7 +11,6 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.*
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.arbeidssokerRoutes
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.healthRoutes
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.swaggerRoutes
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.cleanDatabase
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.loadConfiguration
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.migrateDatabase
