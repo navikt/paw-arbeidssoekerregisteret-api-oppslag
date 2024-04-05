@@ -13,19 +13,19 @@ paths:
         "403":
           description: "Forbidden"
           content:
-            '*/*':
+            text/plain:
               schema:
-                type: "object"
+                type: "string"
         "500":
           description: "Internal Server Error"
           content:
-            '*/*':
+            text/plain:
               schema:
                 type: "string"
         "200":
           description: "OK"
           content:
-            '*/*':
+            application/json:
               schema:
                 type: "array"
                 items:
@@ -43,13 +43,13 @@ paths:
         "500":
           description: "Internal Server Error"
           content:
-            '*/*':
+            text/plain:
               schema:
                 type: "string"
         "200":
           description: "OK"
           content:
-            '*/*':
+            application/json:
               schema:
                 type: "array"
                 items:
@@ -67,13 +67,13 @@ paths:
         "500":
           description: "Internal Server Error"
           content:
-            '*/*':
+            text/plain:
               schema:
                 type: "string"
         "200":
           description: "OK"
           content:
-            '*/*':
+            application/json:
               schema:
                 type: "array"
                 items:
@@ -91,19 +91,19 @@ paths:
         "500":
           description: "Internal Server Error"
           content:
-            '*/*':
+            text/plain:
               schema:
                 type: "string"
         "403":
           description: "Forbidden"
           content:
-            '*/*':
+            text/plain:
               schema:
-                type: "object"
+                type: "string"
         "200":
           description: "OK"
           content:
-            '*/*':
+            application/json:
               schema:
                 type: "array"
                 items:
@@ -121,19 +121,19 @@ paths:
         "500":
           description: "Internal Server Error"
           content:
-            '*/*':
+            text/plain:
               schema:
                 type: "string"
         "403":
           description: "Forbidden"
           content:
-            '*/*':
+            text/plain:
               schema:
-                type: "object"
+                type: "string"
         "200":
           description: "OK"
           content:
-            '*/*':
+            application/json:
               schema:
                 type: "array"
                 items:
@@ -151,19 +151,19 @@ paths:
         "500":
           description: "Internal Server Error"
           content:
-            '*/*':
+            text/plain:
               schema:
                 type: "string"
         "403":
           description: "Forbidden"
           content:
-            '*/*':
+            text/plain:
               schema:
-                type: "object"
+                type: "string"
         "200":
           description: "OK"
           content:
-            '*/*':
+            application/json:
               schema:
                 type: "array"
                 items:
@@ -201,7 +201,7 @@ paths:
         "200":
           description: "OK"
           content:
-            '*/*':
+            application/json:
               schema:
                 type: "string"
 components:
@@ -291,9 +291,6 @@ components:
             - "JA"
             - "NEI"
             - "VET_IKKE"
-    Map:
-      type: "object"
-      properties: { }
     BeskrivelseMedDetaljerResponse:
       type: "object"
       properties:
@@ -316,10 +313,14 @@ components:
             - "KONKURS"
             - "ANNET"
         detaljer:
-          $ref: "#/components/schemas/Map"
+          type: "object"
+          additionalProperties:
+            type: string
+          example:
+            "prosent": "25"
       required:
-        - "beskrivelse"
-        - "detaljer"
+      - "beskrivelse"
+      - "detaljer"
     OpplysningerOmArbeidssoekerResponse:
       type: "object"
       properties:

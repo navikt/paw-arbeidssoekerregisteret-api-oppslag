@@ -5,7 +5,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.server.response.respond
+import io.ktor.server.response.*
 import io.ktor.server.routing.IgnoreTrailingSlash
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
 
@@ -14,13 +14,16 @@ fun Application.configureHTTP() {
     install(StatusPages) {
         exception<StatusException> { call, cause ->
             logger.error("Request failed with status: ${cause.status}. Description: ${cause.description}")
-            call.respond(cause.status, cause.status)
+            call.respondText(
+                status = cause.status,
+                text = cause.status.description
+            )
         }
         exception<Throwable> { call, cause ->
             logger.info("Feil ved kall", cause)
-            call.respond(
-                HttpStatusCode.InternalServerError,
-                cause.message ?: HttpStatusCode.InternalServerError.description
+            call.respondText(
+                status = HttpStatusCode.InternalServerError,
+                text = cause.message ?: HttpStatusCode.InternalServerError.description
             )
         }
     }

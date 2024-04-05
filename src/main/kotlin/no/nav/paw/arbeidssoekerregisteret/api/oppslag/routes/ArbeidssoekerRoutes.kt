@@ -4,7 +4,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.*
-import io.ktor.server.response.respond
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.routing.get
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.Identitetsnummer
@@ -86,7 +86,8 @@ fun Route.arbeidssokerRoutes(
 
                     if (!harNavAnsattTilgangTilBruker) {
                         logger.warn("NAV-ansatt har ikke tilgang til bruker")
-                        return@post call.respond(HttpStatusCode.Forbidden)
+                        call.respondText(status = HttpStatusCode.Forbidden, text = HttpStatusCode.Forbidden.description)
+                        return@post
                     }
 
                     val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(Identitetsnummer(identitesnummer))
@@ -114,7 +115,8 @@ fun Route.arbeidssokerRoutes(
 
                     if (!harNavAnsattTilgangTilBruker) {
                         logger.warn("NAV-ansatt har ikke tilgang til bruker")
-                        return@post call.respond(HttpStatusCode.Forbidden)
+                        call.respondText(status = HttpStatusCode.Forbidden, text = HttpStatusCode.Forbidden.description)
+                        return@post
                     }
 
                     val opplysningerOmArbeidssoeker = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(periodeId)
@@ -142,7 +144,8 @@ fun Route.arbeidssokerRoutes(
 
                     if (!harNavAnsattTilgangTilBruker) {
                         logger.warn("NAV-ansatt har ikke tilgang til bruker")
-                        return@post call.respond(HttpStatusCode.Forbidden)
+                        call.respondText(status = HttpStatusCode.Forbidden, text = HttpStatusCode.Forbidden.description)
+                        return@post
                     }
 
                     val profilering = profileringService.hentProfileringForArbeidssoekerMedPeriodeId(periodeId)
