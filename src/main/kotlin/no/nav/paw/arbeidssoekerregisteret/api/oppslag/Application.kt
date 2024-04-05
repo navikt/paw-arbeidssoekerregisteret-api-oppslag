@@ -11,6 +11,7 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.*
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.arbeidssokerRoutes
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.healthRoutes
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.swaggerRoutes
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.cleanDatabase
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.loadConfiguration
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.migrateDatabase
@@ -24,7 +25,7 @@ fun main() {
     // Avhengigheter
     val dependencies = createDependencies(config)
     // Clean database pga versjon oppdatering
-    // cleanDatabase(dependencies.dataSource) // TODO: Fjern denne ved neste commit
+    cleanDatabase(dependencies.dataSource)
     // Kjør migration på database
     migrateDatabase(dependencies.dataSource)
     // Konsumer periode meldinger fra Kafka
