@@ -209,7 +209,7 @@ components:
     Instant:
       type: "string"
       format: "date-time"
-      example: "'2021-09-29T11:22:33.444Z'"
+      example: "2021-09-29T11:22:33.444Z"
     BrukerResponse:
       type: "object"
       properties:
