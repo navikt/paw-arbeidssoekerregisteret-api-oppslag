@@ -36,7 +36,7 @@ jobs:
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }} # Provided as Organization Variable
 
   deploy-til-dev:
-    name: Deploy to NAIS
+    name: Deploy to dev
     permissions:
       contents: read
       id-token: write
@@ -52,7 +52,7 @@ jobs:
           VAR: image=${{ needs.build.outputs.image }}
 
   deploy-til-prod:
-    name: Deploy to NAIS
+    name: Deploy to prod
     permissions:
       contents: read
       id-token: write
