@@ -115,6 +115,9 @@ openApiGenerate {
         "apis" to "none",
         "models" to ""
     )
+    importMappings = mapOf(
+        "Instant" to "java.time.Instant"
+    )
 }
 
 java {
