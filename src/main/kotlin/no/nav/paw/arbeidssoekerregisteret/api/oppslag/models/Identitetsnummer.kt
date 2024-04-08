@@ -1,4 +1,4 @@
-package no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain
+package no.nav.paw.arbeidssoekerregisteret.api.oppslag.models
 
 @JvmInline
 value class Identitetsnummer(val verdi: String) {

@@ -5,11 +5,11 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.Identitetsnummer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
 import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
 import no.nav.paw.arbeidssokerregisteret.api.v1.BrukerType
-import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
+import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata
 import org.jetbrains.exposed.sql.Database
 import java.time.Instant
 import java.util.UUID

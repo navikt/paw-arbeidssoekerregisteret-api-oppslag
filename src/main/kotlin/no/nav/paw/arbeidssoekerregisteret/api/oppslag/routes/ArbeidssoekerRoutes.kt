@@ -7,10 +7,10 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.routing.get
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.Identitetsnummer
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.request.ArbeidssoekerperiodeRequest
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.request.OpplysningerOmArbeidssoekerRequest
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.request.ProfileringRequest
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ArbeidssoekerperiodeRequest
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.OpplysningerOmArbeidssoekerRequest
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ProfileringRequest
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ArbeidssoekerperiodeService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.AutorisasjonService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.OpplysningerOmArbeidssoekerService

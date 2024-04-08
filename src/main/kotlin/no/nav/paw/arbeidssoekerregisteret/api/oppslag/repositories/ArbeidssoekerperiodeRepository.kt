@@ -3,12 +3,12 @@ package no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.BrukerTable
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.MetadataTable
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.PeriodeTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.Identitetsnummer
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.ArbeidssoekerperiodeResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.toMetadataResponse
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ArbeidssoekerperiodeResponse
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.toMetadataResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
-import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
 import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata
+import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.ResultRow
@@ -62,7 +62,7 @@ class ArbeidssoekerperiodeRepository(private val database: Database) {
             }
         }
 
-    fun hentMetadata(id: Long): Metadata? {
+    fun hentMetadata(id: Long): no.nav.paw.arbeidssokerregisteret.api.v1.Metadata? {
         return MetadataTable.selectAll().where { MetadataTable.id eq id }.singleOrNull()?.let { metadata ->
             val brukerId = metadata[MetadataTable.utfoertAvId]
             val bruker = hentBruker(brukerId)

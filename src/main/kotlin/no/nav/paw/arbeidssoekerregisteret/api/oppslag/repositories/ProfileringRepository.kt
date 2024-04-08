@@ -1,9 +1,9 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories
 
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.ProfileringTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.ProfileringResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.toMetadataResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.toProfilertTilResponse
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ProfileringResponse
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.toMetadataResponse
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.toProfilertTilResponse
 import no.nav.paw.arbeidssokerregisteret.api.v1.Profilering
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.ResultRow

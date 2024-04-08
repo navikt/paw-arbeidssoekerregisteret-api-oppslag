@@ -81,7 +81,7 @@ dependencies {
 }
 sourceSets {
     main {
-        java {
+        kotlin {
             srcDir("${layout.buildDirectory.get()}/generated/src/main/kotlin")
         }
     }
@@ -89,7 +89,7 @@ sourceSets {
 
 
 val opneApiDocFile = "${layout.projectDirectory}/src/main/resources/openapi/documentation.yaml"
-val generatedCodePackageName = "no.nav.paw.arbeidssoekerregister.api.oppslag"
+val generatedCodePackageName = "no.nav.paw.arbeidssoekerregisteret.api.oppslag"
 val generatedCodeOutputDir = "${layout.buildDirectory.get()}/generated/"
 
 openApiValidate {
@@ -107,6 +107,9 @@ openApiGenerate {
             "serializationLibrary" to "jackson",
             "enumPropertyNaming" to "original",
         ),
+    )
+    typeMappings = mapOf(
+        "DateTime" to "Instant"
     )
     globalProperties = mapOf(
         "apis" to "none",

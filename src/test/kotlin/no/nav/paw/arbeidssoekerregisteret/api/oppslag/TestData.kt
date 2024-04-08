@@ -1,6 +1,6 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag
 
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.Identitetsnummer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.NavAnsatt
 import java.util.*
 
