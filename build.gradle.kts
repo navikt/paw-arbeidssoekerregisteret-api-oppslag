@@ -4,7 +4,8 @@ plugins {
     kotlin("jvm") version "1.9.20"
     id("io.ktor.plugin") version "2.3.9"
     id("com.github.davidmc24.gradle.plugin.avro") version "1.9.1"
-    id("org.jmailen.kotlinter") version "4.0.0"
+//    id("org.jmailen.kotlinter") version "4.0.0"
+    id("org.openapi.generator") version "7.4.0"
     application
 }
 
@@ -78,6 +79,40 @@ dependencies {
     testImplementation("org.testcontainers:postgresql:1.19.1")
     testImplementation("no.nav.security:mock-oauth2-server:2.0.0")
 }
+sourceSets {
+    main {
+        java {
+            srcDir("${layout.buildDirectory.get()}/generated/src/main/kotlin")
+        }
+    }
+}
+
+
+val opneApiDocFile = "${layout.projectDirectory}/src/main/resources/openapi/documentation.yaml"
+val generatedCodePackageName = "no.nav.paw.arbeidssoekerregister.api.oppslag"
+val generatedCodeOutputDir = "${layout.buildDirectory.get()}/generated/"
+
+openApiValidate {
+    inputSpec = opneApiDocFile
+}
+
+openApiGenerate {
+    generatorName.set("kotlin-server")
+    library = "ktor"
+    inputSpec = opneApiDocFile
+    outputDir = generatedCodeOutputDir
+    packageName = generatedCodePackageName
+    configOptions.set(
+        mapOf(
+            "serializationLibrary" to "jackson",
+            "enumPropertyNaming" to "original",
+        ),
+    )
+    globalProperties = mapOf(
+        "apis" to "none",
+        "models" to ""
+    )
+}
 
 java {
     toolchain {
@@ -94,11 +129,11 @@ tasks.named("generateAvroProtocol", GenerateAvroProtocolTask::class.java) {
 }
 
 tasks.named("compileTestKotlin") {
-    dependsOn("generateTestAvroJava")
+    dependsOn("generateTestAvroJava", "openApiValidate", "openApiGenerate")
 }
 
 tasks.named("compileKotlin") {
-    dependsOn("generateAvroJava")
+    dependsOn("generateAvroJava", "openApiValidate", "openApiGenerate")
 }
 
 task<JavaExec>("produceLocalMessagesForTopics") {
