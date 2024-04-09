@@ -79,7 +79,7 @@ fun Route.arbeidssokerRoutes(
 
                     val (identitetsnummer) = call.receive<ArbeidssoekerperiodeRequest>()
 
-                    val harTilgang = call.verifyAccess(autorisasjonService, Identitetsnummer(identitetsnummer))
+                    val harTilgang = call.verifyAccessFromToken(autorisasjonService, Identitetsnummer(identitetsnummer))
                     if (!harTilgang) return@post
 
                     val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(Identitetsnummer(identitetsnummer))
@@ -95,7 +95,7 @@ fun Route.arbeidssokerRoutes(
 
                     logger.info("Veileder henter opplysninger-om-arbeidssøker for bruker med periodeId: $periodeId")
 
-                    val harTilgang = call.verifyAccess(autorisasjonService, Identitetsnummer(identitetsnummer))
+                    val harTilgang = call.verifyAccessFromToken(autorisasjonService, Identitetsnummer(identitetsnummer))
                     if (!harTilgang) return@post
 
                     val opplysningerOmArbeidssoeker = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(periodeId)
@@ -111,7 +111,7 @@ fun Route.arbeidssokerRoutes(
 
                     logger.info("Veileder henter profilering for bruker med periodeId: $periodeId")
 
-                    val harTilgang = call.verifyAccess(autorisasjonService, Identitetsnummer(identitetsnummer))
+                    val harTilgang = call.verifyAccessFromToken(autorisasjonService, Identitetsnummer(identitetsnummer))
                     if (!harTilgang) return@post
 
                     val profilering = profileringService.hentProfileringForArbeidssoekerMedPeriodeId(periodeId)
@@ -125,24 +125,19 @@ fun Route.arbeidssokerRoutes(
     }
 }
 
-suspend fun ApplicationCall.verifyAccess(
+suspend fun ApplicationCall.verifyAccessFromToken(
     autorisasjonService: AutorisasjonService,
     identitetsnummer: Identitetsnummer
 ): Boolean {
-    val navAnsatt = getNavAnsattFromToken() ?: return true
-
-    val harNavAnsattTilgangTilBruker =
-        autorisasjonService.verifiserTilgangTilBruker(
-            navAnsatt,
-            identitetsnummer
-        )
-
-    if (!harNavAnsattTilgangTilBruker) {
-        logger.warn("NAV-ansatt har ikke tilgang til bruker")
-        respondText(status = HttpStatusCode.Forbidden, text = HttpStatusCode.Forbidden.description)
-    }
+    val navAnsatt =
+        getNavAnsattFromToken()
+            ?: return true
 
     logger.info("Sjekker om NAV-ansatt har tilgang til bruker")
-
-    return harNavAnsattTilgangTilBruker
+    return autorisasjonService.verifiserTilgangTilBruker(navAnsatt, identitetsnummer).also { harTilgang ->
+        if (!harTilgang) {
+            logger.warn("NAV-ansatt har ikke tilgang til bruker")
+            respondText(status = HttpStatusCode.Forbidden, text = HttpStatusCode.Forbidden.description)
+        }
+    }
 }
