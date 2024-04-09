@@ -1,17 +1,7 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories
 
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.AnnetTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.BeskrivelseMedDetaljerTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.BeskrivelseTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.BrukerTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.DetaljerTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.HelseTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.MetadataTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.OpplysningerOmArbeidssoekerTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.PeriodeOpplysningerTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.UtdanningTable
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.*
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.*
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.JaNeiVetIkke as RestJaNeiVetIkke
 import no.nav.paw.arbeidssokerregisteret.api.v1.Beskrivelse
 import no.nav.paw.arbeidssokerregisteret.api.v1.Helse
 import no.nav.paw.arbeidssokerregisteret.api.v1.JaNeiVetIkke
@@ -22,6 +12,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 import kotlin.sequences.Sequence
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.JaNeiVetIkke as RestJaNeiVetIkke
 
 class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
     fun hentOpplysningerOmArbeidssoeker(periodeId: UUID): List<OpplysningerOmArbeidssoekerResponse> =

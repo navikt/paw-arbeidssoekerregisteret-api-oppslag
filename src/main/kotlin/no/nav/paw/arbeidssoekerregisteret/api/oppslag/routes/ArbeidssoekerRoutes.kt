@@ -1,14 +1,13 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
-import io.ktor.server.auth.authenticate
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.server.routing.get
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ArbeidssoekerperiodeRequest
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.OpplysningerOmArbeidssoekerRequest
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ProfileringRequest
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ArbeidssoekerperiodeService
@@ -18,7 +17,7 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ProfileringServic
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getNavAnsattFromToken
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getPidClaim
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
-import java.util.UUID
+import java.util.*
 
 fun Route.arbeidssokerRoutes(
     autorisasjonService: AutorisasjonService,

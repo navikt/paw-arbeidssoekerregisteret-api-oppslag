@@ -3,23 +3,19 @@ package no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.BrukerTable
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.MetadataTable
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.PeriodeTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ArbeidssoekerperiodeResponse
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.toMetadataResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
-import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata
 import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
+import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
 import java.sql.SQLException
-import java.util.UUID
+import java.util.*
+import kotlin.sequences.Sequence
+import kotlin.sequences.forEach
 
 class ArbeidssoekerperiodeRepository(private val database: Database) {
     fun storeBatch(arbeidssoekerperioder: Sequence<Periode>) {

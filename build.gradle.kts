@@ -1,10 +1,12 @@
 import com.github.davidmc24.gradle.plugin.avro.GenerateAvroProtocolTask
+import org.gradle.internal.impldep.org.junit.experimental.categories.Categories.CategoryFilter.exclude
+import org.jmailen.gradle.kotlinter.tasks.LintTask
 
 plugins {
     kotlin("jvm") version "1.9.20"
     id("io.ktor.plugin") version "2.3.9"
     id("com.github.davidmc24.gradle.plugin.avro") version "1.9.1"
-//    id("org.jmailen.kotlinter") version "4.0.0"
+    id("org.jmailen.kotlinter") version "4.0.0"
     id("org.openapi.generator") version "7.4.0"
     application
 }
@@ -92,6 +94,11 @@ val opneApiDocFile = "${layout.projectDirectory}/src/main/resources/openapi/docu
 val generatedCodePackageName = "no.nav.paw.arbeidssoekerregisteret.api.oppslag"
 val generatedCodeOutputDir = "${layout.buildDirectory.get()}/generated/"
 
+tasks.withType<LintTask>() {
+    dependsOn("openApiGenerate")
+    source = (source - fileTree("build")).asFileTree
+}
+
 openApiValidate {
     inputSpec = opneApiDocFile
 }
@@ -119,6 +126,8 @@ openApiGenerate {
         "Instant" to "java.time.Instant"
     )
 }
+
+
 
 java {
     toolchain {
