@@ -3,13 +3,15 @@ package no.nav.paw.arbeidssoekerregisteret.api.oppslag.auth
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.ktor.client.request.*
+import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.server.testing.*
+import io.ktor.server.application.call
+import io.ktor.server.auth.authenticate
+import io.ktor.server.response.respond
+import io.ktor.server.routing.get
+import io.ktor.server.testing.testApplication
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getNavAnsattFromToken
 import no.nav.security.mock.oauth2.MockOAuth2Server
 
@@ -44,8 +46,8 @@ class AzureAuthenticationTest : FunSpec({
                     get(testAuthUrl) {
                         val navAnsatt = call.getNavAnsattFromToken()
                         navAnsatt shouldNotBe null
-                        navAnsatt.azureId shouldBe tokenMap["oid"]
-                        navAnsatt.navIdent shouldBe tokenMap["NAVident"]
+                        navAnsatt?.azureId shouldBe tokenMap["oid"]
+                        navAnsatt?.navIdent shouldBe tokenMap["NAVident"]
 
                         call.respond(HttpStatusCode.OK)
                     }
@@ -59,7 +61,7 @@ class AzureAuthenticationTest : FunSpec({
             response.status shouldBe HttpStatusCode.OK
         }
     }
-    test("For a m2m authenticated Azure request, return OK") {
+    test("For a m2m authenticated Azure with On-Behalf-Of request, return OK") {
         testApplication {
             application { configureAuthentication(oauth) }
             val tokenMap =
@@ -78,8 +80,8 @@ class AzureAuthenticationTest : FunSpec({
                         if (call.request.headers["Nav-Ident"] != null) {
                             val navAnsatt = call.getNavAnsattFromToken()
                             navAnsatt shouldNotBe null
-                            navAnsatt.azureId shouldBe tokenMap["oid"]
-                            navAnsatt.navIdent shouldBe call.request.headers["Nav-Ident"]
+                            navAnsatt?.azureId shouldBe tokenMap["oid"]
+                            navAnsatt?.navIdent shouldBe call.request.headers["Nav-Ident"]
 
                             call.respond(HttpStatusCode.OK)
                         } else {
@@ -93,6 +95,33 @@ class AzureAuthenticationTest : FunSpec({
                 client.get(testAuthUrl) {
                     bearerAuth(token.serialize())
                     header("Nav-Ident", "test")
+                }
+            response.status shouldBe HttpStatusCode.OK
+        }
+    }
+    test("For a m2m authenticated Azure with Client Credentials request, return OK") {
+        testApplication {
+            application { configureAuthentication(oauth) }
+            val tokenMap =
+                mapOf(
+                    "roles" to listOf("access_as_application")
+                )
+            val token =
+                oauth.issueToken(
+                    claims = tokenMap
+                )
+
+            routing {
+                authenticate("azure") {
+                    get(testAuthUrl) {
+                        call.respond(HttpStatusCode.OK)
+                    }
+                }
+            }
+
+            val response =
+                client.get(testAuthUrl) {
+                    bearerAuth(token.serialize())
                 }
             response.status shouldBe HttpStatusCode.OK
         }

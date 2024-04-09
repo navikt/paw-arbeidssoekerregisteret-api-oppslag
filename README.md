@@ -149,7 +149,9 @@ For veileder:
 }
 ```
 
-For veileder med system-token (husk å legge til `Nav-Ident` i header på request):
+For veileder med system-token:
+Hvis du skal teste verifisering av tilgang for NavIdent, kan du legge til `Nav-Ident` i header på request.
+
 ```json
 {
   "oid": "989f736f-14db-45dc-b8d1-94d621dbf2bb",

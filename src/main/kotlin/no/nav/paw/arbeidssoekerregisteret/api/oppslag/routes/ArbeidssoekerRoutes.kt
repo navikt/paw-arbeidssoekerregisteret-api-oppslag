@@ -1,11 +1,16 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.call
+import io.ktor.server.auth.authenticate
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ArbeidssoekerperiodeRequest
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.OpplysningerOmArbeidssoekerRequest
@@ -72,24 +77,12 @@ fun Route.arbeidssokerRoutes(
                 post {
                     logger.info("Veileder henter arbeidssøkerperioder for bruker")
 
-                    val (identitesnummer) = call.receive<ArbeidssoekerperiodeRequest>()
-                    val navAnsatt = call.getNavAnsattFromToken()
+                    val (identitetsnummer) = call.receive<ArbeidssoekerperiodeRequest>()
 
-                    logger.info("Sjekker om NAV-ansatt har tilgang til bruker")
+                    val harTilgang = call.verifyAccess(autorisasjonService, Identitetsnummer(identitetsnummer))
+                    if (!harTilgang) return@post
 
-                    val harNavAnsattTilgangTilBruker =
-                        autorisasjonService.verifiserTilgangTilBruker(
-                            navAnsatt,
-                            Identitetsnummer(identitesnummer)
-                        )
-
-                    if (!harNavAnsattTilgangTilBruker) {
-                        logger.warn("NAV-ansatt har ikke tilgang til bruker")
-                        call.respondText(status = HttpStatusCode.Forbidden, text = HttpStatusCode.Forbidden.description)
-                        return@post
-                    }
-
-                    val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(Identitetsnummer(identitesnummer))
+                    val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(Identitetsnummer(identitetsnummer))
 
                     logger.info("Veileder hentet arbeidssøkerperioder for bruker")
 
@@ -102,21 +95,8 @@ fun Route.arbeidssokerRoutes(
 
                     logger.info("Veileder henter opplysninger-om-arbeidssøker for bruker med periodeId: $periodeId")
 
-                    val navAnsatt = call.getNavAnsattFromToken()
-
-                    logger.info("Sjekker om NAV-ansatt har tilgang til bruker")
-
-                    val harNavAnsattTilgangTilBruker =
-                        autorisasjonService.verifiserTilgangTilBruker(
-                            navAnsatt,
-                            Identitetsnummer(identitetsnummer)
-                        )
-
-                    if (!harNavAnsattTilgangTilBruker) {
-                        logger.warn("NAV-ansatt har ikke tilgang til bruker")
-                        call.respondText(status = HttpStatusCode.Forbidden, text = HttpStatusCode.Forbidden.description)
-                        return@post
-                    }
+                    val harTilgang = call.verifyAccess(autorisasjonService, Identitetsnummer(identitetsnummer))
+                    if (!harTilgang) return@post
 
                     val opplysningerOmArbeidssoeker = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(periodeId)
 
@@ -131,21 +111,8 @@ fun Route.arbeidssokerRoutes(
 
                     logger.info("Veileder henter profilering for bruker med periodeId: $periodeId")
 
-                    val navAnsatt = call.getNavAnsattFromToken()
-
-                    logger.info("Sjekker om NAV-ansatt har tilgang til bruker")
-
-                    val harNavAnsattTilgangTilBruker =
-                        autorisasjonService.verifiserTilgangTilBruker(
-                            navAnsatt,
-                            Identitetsnummer(identitetsnummer)
-                        )
-
-                    if (!harNavAnsattTilgangTilBruker) {
-                        logger.warn("NAV-ansatt har ikke tilgang til bruker")
-                        call.respondText(status = HttpStatusCode.Forbidden, text = HttpStatusCode.Forbidden.description)
-                        return@post
-                    }
+                    val harTilgang = call.verifyAccess(autorisasjonService, Identitetsnummer(identitetsnummer))
+                    if (!harTilgang) return@post
 
                     val profilering = profileringService.hentProfileringForArbeidssoekerMedPeriodeId(periodeId)
 
@@ -156,4 +123,26 @@ fun Route.arbeidssokerRoutes(
             }
         }
     }
+}
+
+suspend fun ApplicationCall.verifyAccess(
+    autorisasjonService: AutorisasjonService,
+    identitetsnummer: Identitetsnummer
+): Boolean {
+    val navAnsatt = getNavAnsattFromToken() ?: return true
+
+    val harNavAnsattTilgangTilBruker =
+        autorisasjonService.verifiserTilgangTilBruker(
+            navAnsatt,
+            identitetsnummer
+        )
+
+    if (!harNavAnsattTilgangTilBruker) {
+        logger.warn("NAV-ansatt har ikke tilgang til bruker")
+        respondText(status = HttpStatusCode.Forbidden, text = HttpStatusCode.Forbidden.description)
+    }
+
+    logger.info("Sjekker om NAV-ansatt har tilgang til bruker")
+
+    return harNavAnsattTilgangTilBruker
 }

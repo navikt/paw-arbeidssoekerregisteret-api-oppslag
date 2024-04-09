@@ -1,7 +1,7 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.*
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authentication
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.toIdentitetsnummer
@@ -38,17 +38,18 @@ fun ApplicationCall.getNavAnsattWithNavIdentFromHeader(navIdent: String): NavAns
         navIdent
     )
 
-fun ApplicationCall.isMachineToMachineToken(): Boolean? =
+fun ApplicationCall.isMachineToMachineToken(): Boolean =
     authentication.principal<TokenValidationContextPrincipal>()
         ?.context
         ?.getClaims("azure")
         ?.getAsList("roles")
         ?.contains("access_as_application")
+        ?: false
 
-fun ApplicationCall.getNavAnsattFromToken(): NavAnsatt =
-    if (this.isMachineToMachineToken() == true) {
-        val navIdentFraHeader = this.request.headers["Nav-Ident"] ?: throw RuntimeException("Nav-Ident mangler i header")
-        this.getNavAnsattWithNavIdentFromHeader(navIdentFraHeader)
+fun ApplicationCall.getNavAnsattFromToken(): NavAnsatt? =
+    if (this.isMachineToMachineToken()) {
+        this.request.headers["Nav-Ident"]
+            ?.let { navIdent -> getNavAnsattWithNavIdentFromHeader(navIdent) }
     } else {
         this.getNavAnsatt()
     }
