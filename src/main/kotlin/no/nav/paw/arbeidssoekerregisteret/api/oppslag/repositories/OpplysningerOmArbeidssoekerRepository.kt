@@ -1,25 +1,7 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories
 
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.AnnetTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.BeskrivelseMedDetaljerTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.BeskrivelseTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.BrukerTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.DetaljerTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.HelseTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.MetadataTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.OpplysningerOmArbeidssoekerTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.PeriodeOpplysningerTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.UtdanningTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.AnnetResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.BeskrivelseMedDetaljerResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.BeskrivelseResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.BrukerResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.BrukerTypeResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.HelseResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.JaNeiVetIkkeResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.MetadataResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.OpplysningerOmArbeidssoekerResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.response.UtdanningResponse
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.*
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.*
 import no.nav.paw.arbeidssokerregisteret.api.v1.Beskrivelse
 import no.nav.paw.arbeidssokerregisteret.api.v1.Helse
 import no.nav.paw.arbeidssokerregisteret.api.v1.JaNeiVetIkke
@@ -30,6 +12,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 import kotlin.sequences.Sequence
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.JaNeiVetIkke as RestJaNeiVetIkke
 
 class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
     fun hentOpplysningerOmArbeidssoeker(periodeId: UUID): List<OpplysningerOmArbeidssoekerResponse> =
@@ -234,7 +217,7 @@ class OpplysningerOmArbeidssoekerConverter {
                     BrukerTable.selectAll().where { BrukerTable.id eq utfoertAvId }
                         .singleOrNull()?.let { brukerResultRow ->
                             BrukerResponse(
-                                type = BrukerTypeResponse.valueOf(brukerResultRow[BrukerTable.type].name)
+                                type = BrukerType.valueOf(brukerResultRow[BrukerTable.type].name)
                             )
                         } ?: throw RuntimeException("Fant ikke bruker: $utfoertAvId")
 
@@ -252,8 +235,8 @@ class OpplysningerOmArbeidssoekerConverter {
             .singleOrNull()?.let { utdanningResultRow ->
                 UtdanningResponse(
                     nus = utdanningResultRow[UtdanningTable.nus],
-                    bestaatt = utdanningResultRow[UtdanningTable.bestaatt]?.let { JaNeiVetIkkeResponse.valueOf(it.name) },
-                    godkjent = utdanningResultRow[UtdanningTable.godkjent]?.let { JaNeiVetIkkeResponse.valueOf(it.name) }
+                    bestaatt = utdanningResultRow[UtdanningTable.bestaatt]?.let { RestJaNeiVetIkke.valueOf(it.name) },
+                    godkjent = utdanningResultRow[UtdanningTable.godkjent]?.let { RestJaNeiVetIkke.valueOf(it.name) }
                 )
             }
     }
@@ -262,7 +245,7 @@ class OpplysningerOmArbeidssoekerConverter {
         return HelseTable.selectAll().where { HelseTable.id eq helseId }
             .singleOrNull()?.let { helseResultRow ->
                 HelseResponse(
-                    helsetilstandHindrerArbeid = JaNeiVetIkkeResponse.valueOf(helseResultRow[HelseTable.helsetilstandHindrerArbeid].name)
+                    helsetilstandHindrerArbeid = RestJaNeiVetIkke.valueOf(helseResultRow[HelseTable.helsetilstandHindrerArbeid].name)
                 )
             }
     }
@@ -271,7 +254,7 @@ class OpplysningerOmArbeidssoekerConverter {
         return AnnetTable.selectAll().where { AnnetTable.id eq annetId }
             .singleOrNull()?.let { annetResultRow ->
                 AnnetResponse(
-                    andreForholdHindrerArbeid = annetResultRow[AnnetTable.andreForholdHindrerArbeid]?.let { JaNeiVetIkkeResponse.valueOf(it.name) }
+                    andreForholdHindrerArbeid = annetResultRow[AnnetTable.andreForholdHindrerArbeid]?.let { RestJaNeiVetIkke.valueOf(it.name) }
                 )
             }
     }
@@ -291,10 +274,10 @@ class OpplysningerOmArbeidssoekerConverter {
             }
     }
 
-    private fun hentBeskrivelseResponse(beskrivelseMedDetaljerId: Long): BeskrivelseResponse {
+    private fun hentBeskrivelseResponse(beskrivelseMedDetaljerId: Long): JobbSituasjonBeskrivelse {
         return BeskrivelseTable.selectAll().where { BeskrivelseTable.beskrivelseMedDetaljerId eq beskrivelseMedDetaljerId }
             .singleOrNull()?.let { beskrivelse ->
-                BeskrivelseResponse.valueOf(beskrivelse[BeskrivelseTable.beskrivelse].name)
+                JobbSituasjonBeskrivelse.valueOf(beskrivelse[BeskrivelseTable.beskrivelse].name)
             } ?: throw RuntimeException("Fant ikke beskrivelse: $beskrivelseMedDetaljerId")
     }
 

@@ -3,8 +3,8 @@ package no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.auth.authentication
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.Identitetsnummer
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.toIdentitetsnummer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.toIdentitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.StatusException
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.NavAnsatt
 import no.nav.security.token.support.v2.TokenValidationContextPrincipal

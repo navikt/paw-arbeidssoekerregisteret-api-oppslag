@@ -1,6 +1,6 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.services
 
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.domain.Identitetsnummer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.auditLogMelding
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.auditLogger
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger

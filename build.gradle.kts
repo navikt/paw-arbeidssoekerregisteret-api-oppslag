@@ -1,10 +1,13 @@
 import com.github.davidmc24.gradle.plugin.avro.GenerateAvroProtocolTask
+import org.gradle.internal.impldep.org.junit.experimental.categories.Categories.CategoryFilter.exclude
+import org.jmailen.gradle.kotlinter.tasks.LintTask
 
 plugins {
     kotlin("jvm") version "1.9.20"
     id("io.ktor.plugin") version "2.3.9"
     id("com.github.davidmc24.gradle.plugin.avro") version "1.9.1"
     id("org.jmailen.kotlinter") version "4.0.0"
+    id("org.openapi.generator") version "7.4.0"
     application
 }
 
@@ -78,6 +81,53 @@ dependencies {
     testImplementation("org.testcontainers:postgresql:1.19.1")
     testImplementation("no.nav.security:mock-oauth2-server:2.0.0")
 }
+sourceSets {
+    main {
+        kotlin {
+            srcDir("${layout.buildDirectory.get()}/generated/src/main/kotlin")
+        }
+    }
+}
+
+
+val opneApiDocFile = "${layout.projectDirectory}/src/main/resources/openapi/documentation.yaml"
+val generatedCodePackageName = "no.nav.paw.arbeidssoekerregisteret.api.oppslag"
+val generatedCodeOutputDir = "${layout.buildDirectory.get()}/generated/"
+
+tasks.withType<LintTask>() {
+    dependsOn("openApiGenerate")
+    source = (source - fileTree("build")).asFileTree
+}
+
+openApiValidate {
+    inputSpec = opneApiDocFile
+}
+
+openApiGenerate {
+    generatorName.set("kotlin-server")
+    library = "ktor"
+    inputSpec = opneApiDocFile
+    outputDir = generatedCodeOutputDir
+    packageName = generatedCodePackageName
+    configOptions.set(
+        mapOf(
+            "serializationLibrary" to "jackson",
+            "enumPropertyNaming" to "original",
+        ),
+    )
+    typeMappings = mapOf(
+        "DateTime" to "Instant"
+    )
+    globalProperties = mapOf(
+        "apis" to "none",
+        "models" to ""
+    )
+    importMappings = mapOf(
+        "Instant" to "java.time.Instant"
+    )
+}
+
+
 
 java {
     toolchain {
@@ -94,11 +144,11 @@ tasks.named("generateAvroProtocol", GenerateAvroProtocolTask::class.java) {
 }
 
 tasks.named("compileTestKotlin") {
-    dependsOn("generateTestAvroJava")
+    dependsOn("generateTestAvroJava", "openApiValidate", "openApiGenerate")
 }
 
 tasks.named("compileKotlin") {
-    dependsOn("generateAvroJava")
+    dependsOn("generateAvroJava", "openApiValidate", "openApiGenerate")
 }
 
 task<JavaExec>("produceLocalMessagesForTopics") {
