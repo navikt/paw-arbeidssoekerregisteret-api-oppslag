@@ -4,7 +4,10 @@ info:
   description: "paw_arbeidssoekerregisteret_api_oppslag API"
   version: "1.0.0"
 servers:
-  - url: "https://paw_arbeidssoekerregisteret_api_oppslag"
+  - url: "https://oppslag-arbeidssoekerregisteret.intern.nav.no"
+    description: "Production"
+  - url: "https://oppslag-arbeidssoekerregisteret.intern.dev.nav.no"
+    description: "Development"
 paths:
   /api/v1/arbeidssoekerperioder:
     get:
