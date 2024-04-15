@@ -26,12 +26,12 @@ class TopicUtils {
         return listOf(
             Periode(
                 testPeriodeId1,
-                "12345678911",
+                "12345678901",
                 Metadata(
                     Instant.now(),
                     Bruker(
                         BrukerType.UKJENT_VERDI,
-                        "12345678911"
+                        "12345678901"
                     ),
                     "test",
                     "test"
@@ -40,12 +40,12 @@ class TopicUtils {
             ),
             Periode(
                 testPeriodeId2,
-                "12345678911",
+                "12345678902",
                 Metadata(
                     Instant.now(),
                     Bruker(
                         BrukerType.UKJENT_VERDI,
-                        "12345678911"
+                        "12345678902"
                     ),
                     "test",
                     "test"
@@ -54,7 +54,7 @@ class TopicUtils {
                     Instant.now().plusSeconds(100),
                     Bruker(
                         BrukerType.UKJENT_VERDI,
-                        "12345678911"
+                        "12345678902"
                     ),
                     "test",
                     "test"
@@ -72,7 +72,7 @@ class TopicUtils {
                     Instant.now(),
                     Bruker(
                         BrukerType.UKJENT_VERDI,
-                        "12345678911"
+                        "12345678901"
                     ),
                     "test",
                     "test"
@@ -119,7 +119,7 @@ class TopicUtils {
                 Instant.now(),
                 Bruker(
                     BrukerType.UKJENT_VERDI,
-                    "12345678911"
+                    "12345678901"
                 ),
                 "test",
                 "test"

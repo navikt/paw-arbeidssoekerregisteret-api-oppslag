@@ -24,7 +24,7 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getPidClaim
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
 import java.util.*
 
-fun Route.arbeidssokerRoutes(
+fun Route.oppslagRoutes(
     autorisasjonService: AutorisasjonService,
     arbeidssoekerperiodeService: ArbeidssoekerperiodeService,
     opplysningerOmArbeidssoekerService: OpplysningerOmArbeidssoekerService,

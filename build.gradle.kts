@@ -1,5 +1,4 @@
 import com.github.davidmc24.gradle.plugin.avro.GenerateAvroProtocolTask
-import org.gradle.internal.impldep.org.junit.experimental.categories.Categories.CategoryFilter.exclude
 import org.jmailen.gradle.kotlinter.tasks.LintTask
 
 plugins {
@@ -47,9 +46,6 @@ dependencies {
     implementation("io.confluent:kafka-avro-serializer:7.5.1")
     implementation("io.confluent:kafka-streams-avro-serde:7.5.1")
 
-    //Unleash
-    implementation("io.getunleash:unleash-client-java:9.2.0")
-
     // Mockito
     implementation("org.mockito:mockito-core:3.12.4")
 
@@ -61,6 +57,10 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.2")
+
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion}")
 
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")

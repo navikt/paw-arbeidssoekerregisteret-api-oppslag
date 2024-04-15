@@ -8,25 +8,30 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.Config
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.*
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.arbeidssokerRoutes
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.healthRoutes
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.oppslagRoutes
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.swaggerRoutes
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.loadConfiguration
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.migrateDatabase
+import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture.runAsync
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
 fun main() {
+    val logger = LoggerFactory.getLogger("Application")
     // Konfigurasjon
     val config = loadConfiguration<Config>()
+
     // Avhengigheter
     val dependencies = createDependencies(config)
+
     // Clean database pga versjon oppdatering
     // cleanDatabase(dependencies.dataSource)
+
     // Kjør migration på database
     migrateDatabase(dependencies.dataSource)
+
     // Konsumer periode meldinger fra Kafka
     thread {
         try {
@@ -37,14 +42,16 @@ fun main() {
                 consume(dependencies, config)
             }
         } catch (e: Exception) {
-            logger.error("Arbeidssøkerperiode consumer error: ${e.message}", e)
+            logger.error("Consumer error: ${e.message}", e)
             exitProcess(1)
         }
     }
+
     // Oppdaterer grafana gauge for antall aktive perioder
     thread {
         dependencies.scheduleGetAktivePerioderGaugeService.scheduleGetAktivePerioderTask()
     }
+
     val server =
         embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = { module(dependencies, config) })
             .start(wait = true)
@@ -74,7 +81,7 @@ fun Application.module(
     routing {
         healthRoutes(dependencies.registry)
         swaggerRoutes()
-        arbeidssokerRoutes(
+        oppslagRoutes(
             dependencies.autorisasjonService,
             dependencies.arbeidssoekerperiodeService,
             dependencies.opplysningerOmArbeidssoekerService,

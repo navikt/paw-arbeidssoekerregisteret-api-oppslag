@@ -66,24 +66,3 @@ jobs:
           CLUSTER: prod-gcp
           RESOURCE: nais/nais-prod.yaml
           VAR: image=${{ needs.build.outputs.image }}
-
-  apply-apitoken-unleash:
-    name: Legger til ApiToken for Unleash
-    permissions:
-      contents: read
-      id-token: write
-    runs-on: ubuntu-latest
-    needs: [build]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: deploy to dev
-        uses: nais/deploy/actions/deploy@v2
-        env:
-          CLUSTER: dev-gcp
-          RESOURCE: nais/unleash-apitoken-dev.yaml
-      - name: deploy to prod
-        uses: nais/deploy/actions/deploy@v2
-        env:
-          CLUSTER: prod-gcp
-          RESOURCE: nais/unleash-apitoken-prod.yaml

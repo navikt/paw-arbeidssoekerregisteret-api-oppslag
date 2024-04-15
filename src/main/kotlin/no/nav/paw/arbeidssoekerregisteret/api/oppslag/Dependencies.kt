@@ -1,7 +1,5 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag
 
-import io.getunleash.DefaultUnleash
-import io.getunleash.util.UnleashConfig
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.Config
@@ -17,15 +15,12 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.OpplysningerOmArb
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ProfileringService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.TokenService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.generateDatasource
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getUnleashMock
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.isLocalEnvironment
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.api.v1.Profilering
 import no.nav.paw.arbeidssokerregisteret.api.v4.OpplysningerOmArbeidssoeker
 import no.nav.poao_tilgang.client.PoaoTilgangCachedClient
 import no.nav.poao_tilgang.client.PoaoTilgangHttpClient
 import org.jetbrains.exposed.sql.Database
-import java.lang.System.getenv
 import javax.sql.DataSource
 
 fun createDependencies(config: Config): Dependencies {
@@ -47,20 +42,6 @@ fun createDependencies(config: Config): Dependencies {
             )
         )
 
-    val unleashClient =
-        if (isLocalEnvironment()) {
-            getUnleashMock()
-        } else {
-            DefaultUnleash(
-                UnleashConfig.builder()
-                    .appName(getenv("NAIS_APP_NAME"))
-                    .instanceId(getenv("NAIS_APP_NAME"))
-                    .unleashAPI(getenv("UNLEASH_SERVER_API_URL"))
-                    .apiKey(getenv("UNLEASH_SERVER_API_TOKEN"))
-                    .build()
-            )
-        }
-
     // OBO vs StS token
     val autorisasjonService = AutorisasjonService(poaoTilgangHttpClient)
 
@@ -72,8 +53,7 @@ fun createDependencies(config: Config): Dependencies {
         BatchConsumer(
             config.kafka.periodeTopic,
             config.kafka.createKafkaConsumer(),
-            arbeidssoekerperiodeService::lagreBatch,
-            unleashClient
+            arbeidssoekerperiodeService::lagreBatch
         )
 
     // Situasjon avhengigheter
@@ -83,8 +63,7 @@ fun createDependencies(config: Config): Dependencies {
         BatchConsumer(
             config.kafka.opplysningerOmArbeidssoekerTopic,
             config.kafka.createKafkaConsumer(),
-            opplysningerOmArbeidssoekerService::lagreBatch,
-            unleashClient
+            opplysningerOmArbeidssoekerService::lagreBatch
         )
 
     // Profilering avhengigheter
@@ -94,8 +73,7 @@ fun createDependencies(config: Config): Dependencies {
         BatchConsumer(
             config.kafka.profileringTopic,
             config.kafka.createKafkaConsumer(),
-            profileringService::lagreBatch,
-            unleashClient
+            profileringService::lagreBatch
         )
 
     return Dependencies(
