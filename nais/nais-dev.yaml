@@ -40,6 +40,7 @@ spec:
   accessPolicy:
     inbound:
       rules:
+        - application: arbeidssokerregistrering-for-veileder
         - application: tokenx-token-generator
           namespace: aura
         - application: azure-token-generator
