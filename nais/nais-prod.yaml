@@ -66,6 +66,8 @@ spec:
           namespace: teamdagpenger
         - application: dp-saksbehandling-frontend
           namespace: teamdagpenger
+        - application: dp-mine-dagpenger-frontend
+          namespace: teamdagpenger
     outbound:
       rules:
         - application: poao-tilgang
