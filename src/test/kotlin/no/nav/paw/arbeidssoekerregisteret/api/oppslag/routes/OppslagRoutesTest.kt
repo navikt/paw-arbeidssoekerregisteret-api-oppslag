@@ -15,6 +15,8 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.auth.configureAuthentication
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ArbeidssoekerperiodeRequest
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.OpplysningerOmArbeidssoekerRequest
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ProfileringRequest
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.configureHTTP
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.configureSerialization
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.ArbeidssoekerperiodeRepository
@@ -26,7 +28,7 @@ import no.nav.security.mock.oauth2.MockOAuth2Server
 import java.util.*
 
 class OppslagRoutesTest : FreeSpec({
-    val id = UUID.randomUUID()
+    val periodeId = UUID.randomUUID()
     val oauth = MockOAuth2Server()
 
     beforeSpec {
@@ -90,10 +92,15 @@ class OppslagRoutesTest : FreeSpec({
 
     "/opplysninger-om-arbeidssoeker/{periodeId} should return OK" {
         val opplysningerOmArbeidssoekerService = mockk<OpplysningerOmArbeidssoekerService>(relaxed = true)
+        val arbeidssoekerperiodeService = mockk<ArbeidssoekerperiodeService>(relaxed = true)
 
         every {
             opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(any())
         } returns emptyList()
+
+        every {
+            arbeidssoekerperiodeService.periodeIdTilhoererIdentitetsnummer(any(), any())
+        } returns true
 
         testApplication {
             application {
@@ -101,7 +108,7 @@ class OppslagRoutesTest : FreeSpec({
                 configureSerialization()
                 configureHTTP()
                 routing {
-                    oppslagRoutes(mockk(relaxed = true), mockk(relaxed = true), opplysningerOmArbeidssoekerService, mockk(relaxed = true))
+                    oppslagRoutes(mockk(relaxed = true), arbeidssoekerperiodeService, opplysningerOmArbeidssoekerService, mockk(relaxed = true))
                 }
             }
 
@@ -116,7 +123,7 @@ class OppslagRoutesTest : FreeSpec({
                     claims = tokenMap
                 )
 
-            val response = client.get("api/v1/opplysninger-om-arbeidssoeker/$id") { bearerAuth(token.serialize()) }
+            val response = client.get("api/v1/opplysninger-om-arbeidssoeker/$periodeId") { bearerAuth(token.serialize()) }
             response.status shouldBe HttpStatusCode.OK
         }
     }
@@ -133,7 +140,7 @@ class OppslagRoutesTest : FreeSpec({
             }
 
             val noTokenResponse =
-                client.get("api/v1/opplysninger-om-arbeidssoeker/$id")
+                client.get("api/v1/opplysninger-om-arbeidssoeker/$periodeId")
 
             noTokenResponse.status shouldBe HttpStatusCode.Unauthorized
         }
@@ -141,16 +148,23 @@ class OppslagRoutesTest : FreeSpec({
 
     "/profilering/{periodeId} should return OK" {
         val profileringService = mockk<ProfileringService>(relaxed = true)
+        val arbeidssoekerperiodeService = mockk<ArbeidssoekerperiodeService>(relaxed = true)
+
         every {
             profileringService.hentProfileringForArbeidssoekerMedPeriodeId(any())
         } returns emptyList()
+
+        every {
+            arbeidssoekerperiodeService.periodeIdTilhoererIdentitetsnummer(any(), any())
+        } returns true
+
         testApplication {
             application {
                 configureAuthentication(oauth)
                 configureSerialization()
                 configureHTTP()
                 routing {
-                    oppslagRoutes(mockk(relaxed = true), mockk(relaxed = true), mockk(relaxed = true), profileringService)
+                    oppslagRoutes(mockk(relaxed = true), arbeidssoekerperiodeService, mockk(relaxed = true), profileringService)
                 }
             }
 
@@ -165,7 +179,7 @@ class OppslagRoutesTest : FreeSpec({
                     claims = tokenMap
                 )
 
-            val response = client.get("api/v1/profilering/$id") { bearerAuth(token.serialize()) }
+            val response = client.get("api/v1/profilering/$periodeId") { bearerAuth(token.serialize()) }
             response.status shouldBe HttpStatusCode.OK
         }
     }
@@ -182,7 +196,7 @@ class OppslagRoutesTest : FreeSpec({
             }
 
             val noTokenResponse =
-                client.get("api/v1/profilering/$id")
+                client.get("api/v1/profilering/$periodeId")
 
             noTokenResponse.status shouldBe HttpStatusCode.Unauthorized
         }
@@ -350,6 +364,244 @@ class OppslagRoutesTest : FreeSpec({
                     setBody(
                         ArbeidssoekerperiodeRequest(
                             identitetsnummer = "12345678911"
+                        )
+                    )
+                }
+            response.status shouldBe HttpStatusCode.OK
+        }
+    }
+    "/veileder/opplysninger-om-arbeidssoeker should return 403 Forbidden if periodeId does not exist for user" {
+        val opplysningerOmArbeidssoekerService = mockk<OpplysningerOmArbeidssoekerService>(relaxed = true)
+        val arbeidssoekerperiodeService = mockk<ArbeidssoekerperiodeService>(relaxed = true)
+
+        every {
+            opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(any())
+        } returns emptyList()
+
+        every {
+            arbeidssoekerperiodeService.periodeIdTilhoererIdentitetsnummer(any(), any())
+        } returns false
+
+        testApplication {
+            application {
+                configureAuthentication(oauth)
+                configureSerialization()
+                configureHTTP()
+                routing {
+                    oppslagRoutes(mockk(relaxed = true), arbeidssoekerperiodeService, opplysningerOmArbeidssoekerService, mockk(relaxed = true))
+                }
+            }
+
+            val tokenMap =
+                mapOf(
+                    "oid" to "989f736f-14db-45dc-b8d1-94d621dbf2bb",
+                    "roles" to listOf("access_as_application")
+                )
+            val token =
+                oauth.issueToken(
+                    claims = tokenMap
+                )
+
+            val client =
+                createClient {
+                    install(ContentNegotiation) {
+                        jackson {
+                            jackson {
+                                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                                registerModule(JavaTimeModule())
+                            }
+                        }
+                    }
+                }
+
+            val response =
+                client.post("api/v1/veileder/opplysninger-om-arbeidssoeker") {
+                    bearerAuth(token.serialize())
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        OpplysningerOmArbeidssoekerRequest(
+                            identitetsnummer = "12345678901",
+                            periodeId = periodeId
+                        )
+                    )
+                }
+
+            response.status shouldBe HttpStatusCode.Forbidden
+        }
+    }
+
+    "/veileder/opplysninger-om-arbeidssoeker should return 200 OK if periodeId exists for user" {
+        val opplysningerOmArbeidssoekerService = mockk<OpplysningerOmArbeidssoekerService>(relaxed = true)
+        val arbeidssoekerperiodeService = mockk<ArbeidssoekerperiodeService>(relaxed = true)
+
+        every {
+            opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(any())
+        } returns emptyList()
+
+        every {
+            arbeidssoekerperiodeService.periodeIdTilhoererIdentitetsnummer(any(), any())
+        } returns true
+
+        testApplication {
+            application {
+                configureAuthentication(oauth)
+                configureSerialization()
+                configureHTTP()
+                routing {
+                    oppslagRoutes(mockk(relaxed = true), arbeidssoekerperiodeService, opplysningerOmArbeidssoekerService, mockk(relaxed = true))
+                }
+            }
+
+            val tokenMap =
+                mapOf(
+                    "oid" to "989f736f-14db-45dc-b8d1-94d621dbf2bb",
+                    "roles" to listOf("access_as_application")
+                )
+            val token =
+                oauth.issueToken(
+                    claims = tokenMap
+                )
+
+            val client =
+                createClient {
+                    install(ContentNegotiation) {
+                        jackson {
+                            jackson {
+                                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                                registerModule(JavaTimeModule())
+                            }
+                        }
+                    }
+                }
+
+            val response =
+                client.post("api/v1/veileder/opplysninger-om-arbeidssoeker") {
+                    bearerAuth(token.serialize())
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        OpplysningerOmArbeidssoekerRequest(
+                            identitetsnummer = "12345678901",
+                            periodeId = periodeId
+                        )
+                    )
+                }
+            response.status shouldBe HttpStatusCode.OK
+        }
+    }
+    "/veileder/profilering should return 403 Forbidden if periodeId does not exist for user" {
+        val profileringService = mockk<ProfileringService>(relaxed = true)
+        val arbeidssoekerperiodeService = mockk<ArbeidssoekerperiodeService>(relaxed = true)
+
+        every {
+            profileringService.hentProfileringForArbeidssoekerMedPeriodeId(any())
+        } returns emptyList()
+
+        every {
+            arbeidssoekerperiodeService.periodeIdTilhoererIdentitetsnummer(any(), any())
+        } returns false
+
+        testApplication {
+            application {
+                configureAuthentication(oauth)
+                configureSerialization()
+                configureHTTP()
+                routing {
+                    oppslagRoutes(mockk(relaxed = true), arbeidssoekerperiodeService, mockk(relaxed = true), profileringService)
+                }
+            }
+
+            val tokenMap =
+                mapOf(
+                    "oid" to "989f736f-14db-45dc-b8d1-94d621dbf2bb",
+                    "roles" to listOf("access_as_application")
+                )
+            val token =
+                oauth.issueToken(
+                    claims = tokenMap
+                )
+
+            val client =
+                createClient {
+                    install(ContentNegotiation) {
+                        jackson {
+                            jackson {
+                                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                                registerModule(JavaTimeModule())
+                            }
+                        }
+                    }
+                }
+
+            val response =
+                client.post("api/v1/veileder/profilering") {
+                    bearerAuth(token.serialize())
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        ProfileringRequest(
+                            identitetsnummer = "12345678901",
+                            periodeId = periodeId
+                        )
+                    )
+                }
+            response.status shouldBe HttpStatusCode.Forbidden
+        }
+    }
+    "/veileder/profilering should return 200 OK if periodeId exists for user" {
+        val profileringService = mockk<ProfileringService>(relaxed = true)
+        val arbeidssoekerperiodeService = mockk<ArbeidssoekerperiodeService>(relaxed = true)
+
+        every {
+            profileringService.hentProfileringForArbeidssoekerMedPeriodeId(any())
+        } returns emptyList()
+
+        every {
+            arbeidssoekerperiodeService.periodeIdTilhoererIdentitetsnummer(any(), any())
+        } returns true
+
+        testApplication {
+            application {
+                configureAuthentication(oauth)
+                configureSerialization()
+                configureHTTP()
+                routing {
+                    oppslagRoutes(mockk(relaxed = true), arbeidssoekerperiodeService, mockk(relaxed = true), profileringService)
+                }
+            }
+
+            val tokenMap =
+                mapOf(
+                    "oid" to "989f736f-14db-45dc-b8d1-94d621dbf2bb",
+                    "roles" to listOf("access_as_application")
+                )
+            val token =
+                oauth.issueToken(
+                    claims = tokenMap
+                )
+
+            val client =
+                createClient {
+                    install(ContentNegotiation) {
+                        jackson {
+                            jackson {
+                                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                                registerModule(JavaTimeModule())
+                            }
+                        }
+                    }
+                }
+
+            val response =
+                client.post("api/v1/veileder/profilering") {
+                    bearerAuth(token.serialize())
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        ProfileringRequest(
+                            identitetsnummer = "12345678901",
+                            periodeId = periodeId
                         )
                     )
                 }
