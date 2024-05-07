@@ -110,23 +110,25 @@ class TopicUtils {
         )
     }
 
-    fun lagTestProfilering(): Profilering {
-        return Profilering(
-            UUID.randomUUID(),
-            testPeriodeId1,
-            testOpplysningerId1,
-            Metadata(
-                Instant.now(),
-                Bruker(
-                    BrukerType.UKJENT_VERDI,
-                    "12345678901"
+    fun lagTestProfilering(): List<Profilering> {
+        return listOf(
+            Profilering(
+                UUID.randomUUID(),
+                testPeriodeId1,
+                testOpplysningerId1,
+                Metadata(
+                    Instant.now(),
+                    Bruker(
+                        BrukerType.UKJENT_VERDI,
+                        "12345678901"
+                    ),
+                    "test",
+                    "test"
                 ),
-                "test",
-                "test"
-            ),
-            ProfilertTil.ANTATT_BEHOV_FOR_VEILEDNING,
-            true,
-            30
+                ProfilertTil.ANTATT_BEHOV_FOR_VEILEDNING,
+                true,
+                30
+            )
         )
     }
 }

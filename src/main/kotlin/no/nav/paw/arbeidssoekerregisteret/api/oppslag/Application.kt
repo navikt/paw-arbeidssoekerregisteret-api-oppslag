@@ -6,13 +6,16 @@ import io.ktor.server.netty.*
 import io.ktor.server.routing.*
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.Config
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.APPLICATION_CONFIG_FILE
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.ApplicationConfig
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.*
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.healthRoutes
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.oppslagRoutes
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.swaggerRoutes
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.loadConfiguration
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.migrateDatabase
+import no.nav.paw.config.hoplite.loadNaisOrLocalConfiguration
+import no.nav.paw.config.kafka.KAFKA_CONFIG_WITH_SCHEME_REG
+import no.nav.paw.config.kafka.KafkaConfig
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture.runAsync
 import kotlin.concurrent.thread
@@ -21,10 +24,11 @@ import kotlin.system.exitProcess
 fun main() {
     val logger = LoggerFactory.getLogger("Application")
     // Konfigurasjon
-    val config = loadConfiguration<Config>()
+    val kafkaConfig = loadNaisOrLocalConfiguration<KafkaConfig>(KAFKA_CONFIG_WITH_SCHEME_REG)
+    val applicationConfig = loadNaisOrLocalConfiguration<ApplicationConfig>(APPLICATION_CONFIG_FILE)
 
     // Avhengigheter
-    val dependencies = createDependencies(config)
+    val dependencies = createDependencies(applicationConfig, kafkaConfig)
 
     // Clean database pga versjon oppdatering
     // cleanDatabase(dependencies.dataSource)
@@ -39,7 +43,7 @@ fun main() {
             dependencies.opplysningerOmArbeidssoekerConsumer.subscribe()
             dependencies.profileringConsumer.subscribe()
             while (true) {
-                consume(dependencies, config)
+                consume(dependencies, applicationConfig)
             }
         } catch (e: Exception) {
             logger.error("Consumer error: ${e.message}", e)
@@ -53,7 +57,7 @@ fun main() {
     }
 
     val server =
-        embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = { module(dependencies, config) })
+        embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = { module(dependencies, applicationConfig) })
             .start(wait = true)
 
     server.addShutdownHook {
@@ -63,7 +67,7 @@ fun main() {
 
 fun Application.module(
     dependencies: Dependencies,
-    config: Config
+    config: ApplicationConfig
 ) {
     // Konfigurerer plugins
     configureMetrics(
@@ -96,17 +100,17 @@ fun Application.module(
 )
 fun consume(
     dependencies: Dependencies,
-    config: Config
+    config: ApplicationConfig
 ) {
     listOf(
         runAsync {
-            dependencies.arbeidssoekerperiodeConsumer.getAndProcessBatch(config.kafka.periodeTopic)
+            dependencies.arbeidssoekerperiodeConsumer.getAndProcessBatch(config.periodeTopic)
         },
         runAsync {
-            dependencies.opplysningerOmArbeidssoekerConsumer.getAndProcessBatch(config.kafka.opplysningerOmArbeidssoekerTopic)
+            dependencies.opplysningerOmArbeidssoekerConsumer.getAndProcessBatch(config.opplysningerOmArbeidssoekerTopic)
         },
         runAsync {
-            dependencies.profileringConsumer.getAndProcessBatch(config.kafka.profileringTopic)
+            dependencies.profileringConsumer.getAndProcessBatch(config.profileringTopic)
         }
     ).forEach { it.join() }
 }
