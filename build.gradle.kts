@@ -13,6 +13,7 @@ plugins {
 val arbeidssoekerregisteretSchemaVersion = "1.8062260419.22-1"
 val logbackVersion = "1.4.14"
 val logstashVersion = "7.4"
+val pawUtilsVersion = "24.01.11.9-1"
 val navCommonModulesVersion = "2.2023.01.02_13.51-1c6adeb1653b"
 val tokenSupportVersion = "4.1.0"
 val koTestVersion = "5.8.0"
@@ -26,30 +27,36 @@ val schema by configurations.creating {
 }
 
 dependencies {
+    // Arbeidssoekerregisteret schema
     schema("no.nav.paw.arbeidssokerregisteret.api:main-avro-schema:$arbeidssoekerregisteretSchemaVersion")
+
+    // OpenTelemetry
     implementation(pawObservability.bundles.ktorNettyOpentelemetryMicrometerPrometheus)
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.1.0")
+
+    // Token support
     implementation("no.nav.security:token-validation-ktor-v2:$tokenSupportVersion")
     implementation("no.nav.security:token-client-core:$tokenSupportVersion")
     implementation("no.nav.common:token-client:$navCommonModulesVersion")
+
+    // Logging
     implementation("no.nav.common:log:$navCommonModulesVersion")
     implementation("no.nav.common:audit-log:$navCommonModulesVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashVersion")
-    implementation("com.sksamuel.hoplite:hoplite-core:$hopliteVersion")
-    implementation("com.sksamuel.hoplite:hoplite-yaml:$hopliteVersion")
+
+    // Paw-utils
+    implementation("no.nav.paw.hoplite-config:hoplite-config:$pawUtilsVersion")
+    implementation("no.nav.paw.kafka:kafka:$pawUtilsVersion")
+
+    // Poao-tilgang
     implementation("com.github.navikt.poao-tilgang:client:$poaoVersion")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.1.0")
 
     // Kafka
-    implementation("org.apache.kafka:kafka-clients:3.6.0")
     implementation("org.apache.avro:avro:1.11.3")
     implementation("io.confluent:kafka-avro-serializer:7.5.1")
-    implementation("io.confluent:kafka-streams-avro-serde:7.5.1")
 
-    // Mockito
-    implementation("org.mockito:mockito-core:3.12.4")
-
-    // Ktor
+    // Ktor server
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-swagger:$ktorVersion")
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
@@ -58,6 +65,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.2")
 
+    // Ktor client
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion}")
@@ -73,6 +81,7 @@ dependencies {
     implementation("org.flywaydb:flyway-core:9.21.2")
 
     // Test
+    implementation("org.mockito:mockito-core:3.12.4")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
     testImplementation("io.kotest:kotest-runner-junit5:$koTestVersion")
     testImplementation("io.kotest:kotest-assertions-core:$koTestVersion")

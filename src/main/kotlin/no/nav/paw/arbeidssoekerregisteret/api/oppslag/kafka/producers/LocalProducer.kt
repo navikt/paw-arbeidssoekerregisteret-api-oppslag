@@ -1,134 +1,214 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.producers
 
-import io.confluent.kafka.serializers.KafkaAvroSerializer
-import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.KafkaConfig
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.properties
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.TopicUtils
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.loadLocalConfiguration
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.APPLICATION_CONFIG_FILE
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.ApplicationConfig
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.serdes.OpplysningerOmArbeidssoekerSerializer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.serdes.PeriodeSerializer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.serdes.ProfileringSerializer
+import no.nav.paw.arbeidssokerregisteret.api.v1.Beskrivelse
+import no.nav.paw.arbeidssokerregisteret.api.v1.BeskrivelseMedDetaljer
+import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
+import no.nav.paw.arbeidssokerregisteret.api.v1.BrukerType
+import no.nav.paw.arbeidssokerregisteret.api.v1.Helse
+import no.nav.paw.arbeidssokerregisteret.api.v1.JaNeiVetIkke
+import no.nav.paw.arbeidssokerregisteret.api.v1.Jobbsituasjon
+import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.api.v1.Profilering
+import no.nav.paw.arbeidssokerregisteret.api.v1.ProfilertTil
+import no.nav.paw.arbeidssokerregisteret.api.v2.Annet
 import no.nav.paw.arbeidssokerregisteret.api.v4.OpplysningerOmArbeidssoeker
-import org.apache.kafka.clients.producer.KafkaProducer
+import no.nav.paw.arbeidssokerregisteret.api.v4.Utdanning
+import no.nav.paw.config.hoplite.loadNaisOrLocalConfiguration
+import no.nav.paw.config.kafka.KAFKA_CONFIG_WITH_SCHEME_REG
+import no.nav.paw.config.kafka.KafkaConfig
+import no.nav.paw.config.kafka.KafkaFactory
+import org.apache.avro.specific.SpecificRecord
 import org.apache.kafka.clients.producer.Producer
-import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.serialization.LongSerializer
+import org.apache.kafka.common.serialization.Serializer
+import java.time.Instant
+import java.util.*
 
 fun main() {
-    val config = loadLocalConfiguration()
-    produserPeriodeMeldinger(config.kafka)
-    produserOpplysningerOmArbeidssoekerMeldinger(config.kafka)
-    produserProfileringMeldinger(config.kafka)
+    val kafkaConfig = loadNaisOrLocalConfiguration<KafkaConfig>(KAFKA_CONFIG_WITH_SCHEME_REG)
+    val applicationConfig = loadNaisOrLocalConfiguration<ApplicationConfig>(APPLICATION_CONFIG_FILE)
+
+    produserMeldinger(kafkaConfig, applicationConfig, TestMessages()::perioder, applicationConfig.periodeTopic, PeriodeSerializer())
+    produserMeldinger(kafkaConfig, applicationConfig, TestMessages()::opplysningerOmArbeidssoeker, applicationConfig.opplysningerOmArbeidssoekerTopic, OpplysningerOmArbeidssoekerSerializer())
+    produserMeldinger(kafkaConfig, applicationConfig, TestMessages()::profilering, applicationConfig.profileringTopic, ProfileringSerializer())
 }
 
-fun produserPeriodeMeldinger(kafkaConfig: KafkaConfig) {
-    val localProducer = LocalProducer(kafkaConfig)
+fun <T : SpecificRecord> produserMeldinger(
+    kafkaConfig: KafkaConfig,
+    applicationConfig: ApplicationConfig,
+    messages: () -> List<T>,
+    topic: String,
+    serializer: Serializer<T>
+) {
+    val localProducer = LocalProducer(kafkaConfig, applicationConfig, serializer)
     try {
-        TopicUtils().lagTestPerioder().forEach { periode ->
-            localProducer.producePeriodeMessage(kafkaConfig.periodeTopic, periode.id.toString(), periode)
+        messages().forEach { message ->
+            localProducer.produceMessage(topic, 1234L, message)
         }
     } catch (e: Exception) {
-        println("LocalProducer periode error: ${e.message}")
-        localProducer.closePeriodeProducer()
+        println("LocalProducer $topic error: ${e.message}")
+    } finally {
+        localProducer.closeProducer()
     }
 }
 
-fun produserOpplysningerOmArbeidssoekerMeldinger(kafkaConfig: KafkaConfig) {
-    val localProducer = LocalProducer(kafkaConfig)
-    try {
-        TopicUtils().lagTestOpplysningerOmArbeidssoeker().forEach { opplysninger ->
-            localProducer.produceOpplysningerOmArbeidssoekerMessage(
-                kafkaConfig.opplysningerOmArbeidssoekerTopic,
-                opplysninger.id.toString(),
-                opplysninger
+class LocalProducer<T : SpecificRecord>(
+    private val kafkaConfig: KafkaConfig,
+    private val applicationConfig: ApplicationConfig,
+    private val valueSerializer: Serializer<T>
+) {
+    private lateinit var producer: Producer<Long, T>
+
+    init {
+        initializeProducer()
+    }
+
+    private fun initializeProducer() {
+        val kafkaFactory = KafkaFactory(kafkaConfig)
+        producer =
+            kafkaFactory.createProducer<Long, T>(
+                clientId = applicationConfig.gruppeId,
+                keySerializer = LongSerializer::class,
+                valueSerializer = valueSerializer::class
             )
+    }
+
+    fun produceMessage(
+        topic: String,
+        key: Long,
+        value: T
+    ) {
+        val record = ProducerRecord(topic, key, value)
+        producer.send(record) { _, exception ->
+            if (exception != null) {
+                println("Failed to send message to topic $topic: $exception")
+            } else {
+                println("Message sent successfully to topic: $topic")
+            }
         }
-    } catch (e: Exception) {
-        println("LocalProducer opplysninger-om-arbeidssoeker error: ${e.message}")
-        localProducer.closeOpplysningerOmArbeidssoekerProducer()
+    }
+
+    fun closeProducer() {
+        producer.close()
     }
 }
 
-fun produserProfileringMeldinger(kafkaConfig: KafkaConfig) {
-    val localProducer = LocalProducer(kafkaConfig)
-    try {
-        TopicUtils().lagTestProfilering().let { profilering ->
-            localProducer.produceProfileringMessage(kafkaConfig.profileringTopic, profilering.id.toString(), profilering)
-        }
-    } catch (e: Exception) {
-        println("LocalProducer profilering error: ${e.message}")
-        localProducer.closeProfileringProducer()
-    }
-}
+class TestMessages {
+    val testPeriodeId1 = UUID.fromString("00000000-0000-0000-0000-000000000001")
+    val testPeriodeId2 = UUID.fromString("00000000-0000-0000-0000-000000000002")
+    val testOpplysningerId1 = UUID.fromString("00000000-0000-0000-0000-000000000003")
 
-class LocalProducer(private val kafkaConfig: KafkaConfig) {
-    private val periodeProducer: Producer<String, Periode> = createProducer()
-    private val opplysningerOmArbeidssoekerProducer: Producer<String, OpplysningerOmArbeidssoeker> = createProducer()
-    private val profileringProducer: Producer<String, Profilering> = createProducer()
+    fun perioder(): List<Periode> =
+        listOf(
+            Periode(
+                testPeriodeId1,
+                "12345678901",
+                Metadata(
+                    Instant.now(),
+                    Bruker(
+                        BrukerType.UKJENT_VERDI,
+                        "12345678901"
+                    ),
+                    "test",
+                    "test"
+                ),
+                null
+            ),
+            Periode(
+                testPeriodeId2,
+                "12345678902",
+                Metadata(
+                    Instant.now(),
+                    Bruker(
+                        BrukerType.UKJENT_VERDI,
+                        "12345678902"
+                    ),
+                    "test",
+                    "test"
+                ),
+                Metadata(
+                    Instant.now().plusSeconds(100),
+                    Bruker(
+                        BrukerType.UKJENT_VERDI,
+                        "12345678902"
+                    ),
+                    "test",
+                    "test"
+                )
+            )
+        )
 
-    private fun <T> createProducer(): Producer<String, T> {
-        val props = kafkaConfig.properties.toMutableMap()
-        props[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = "org.apache.kafka.common.serialization.StringSerializer"
-        props[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = KafkaAvroSerializer::class.java.name
-        props[KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG] = kafkaConfig.schemaRegistryConfig.url
+    fun opplysningerOmArbeidssoeker(): List<OpplysningerOmArbeidssoeker> =
+        listOf(
+            OpplysningerOmArbeidssoeker(
+                testOpplysningerId1,
+                testPeriodeId1,
+                Metadata(
+                    Instant.now(),
+                    Bruker(
+                        BrukerType.UKJENT_VERDI,
+                        "12345678901"
+                    ),
+                    "test",
+                    "test"
+                ),
+                Utdanning(
+                    "NUS_KODE",
+                    JaNeiVetIkke.JA,
+                    JaNeiVetIkke.JA
+                ),
+                Helse(
+                    JaNeiVetIkke.JA
+                ),
+                Jobbsituasjon(
+                    listOf(
+                        BeskrivelseMedDetaljer(
+                            Beskrivelse.AKKURAT_FULLFORT_UTDANNING,
+                            mapOf(
+                                Pair("test", "test"),
+                                Pair("test2", "test2")
+                            )
+                        ),
+                        BeskrivelseMedDetaljer(
+                            Beskrivelse.DELTIDSJOBB_VIL_MER,
+                            mapOf(
+                                Pair("test3", "test3"),
+                                Pair("test4", "test4")
+                            )
+                        )
+                    )
+                ),
+                Annet(
+                    JaNeiVetIkke.JA
+                )
+            )
+        )
 
-        return KafkaProducer(props)
-    }
-
-    fun producePeriodeMessage(
-        topic: String,
-        key: String,
-        value: Periode
-    ) {
-        val record = ProducerRecord(topic, key, value)
-        periodeProducer.send(record) { _, exception ->
-            if (exception != null) {
-                println("Failed to send periode message: $exception")
-            } else {
-                println("Message sent successfully to topic: $topic")
-            }
-        }.get()
-    }
-
-    fun produceOpplysningerOmArbeidssoekerMessage(
-        topic: String,
-        key: String,
-        value: OpplysningerOmArbeidssoeker
-    ) {
-        val record = ProducerRecord(topic, key, value)
-        opplysningerOmArbeidssoekerProducer.send(record) { _, exception ->
-            if (exception != null) {
-                println("Failed to send opplysninger-om-arbeidssoeker message: $exception")
-            } else {
-                println("Message sent successfully to topic: $topic")
-            }
-        }.get()
-    }
-
-    fun produceProfileringMessage(
-        topic: String,
-        key: String,
-        value: Profilering
-    ) {
-        val record = ProducerRecord(topic, key, value)
-        profileringProducer.send(record) { _, exception ->
-            if (exception != null) {
-                println("Failed to send profilering message: $exception")
-            } else {
-                println("Message sent successfully to topic: $topic")
-            }
-        }.get()
-    }
-
-    fun closePeriodeProducer() {
-        periodeProducer.close()
-    }
-
-    fun closeOpplysningerOmArbeidssoekerProducer() {
-        opplysningerOmArbeidssoekerProducer.close()
-    }
-
-    fun closeProfileringProducer() {
-        profileringProducer.close()
-    }
+    fun profilering(): List<Profilering> =
+        listOf(
+            Profilering(
+                UUID.randomUUID(),
+                testPeriodeId1,
+                testOpplysningerId1,
+                Metadata(
+                    Instant.now(),
+                    Bruker(
+                        BrukerType.UKJENT_VERDI,
+                        "12345678901"
+                    ),
+                    "test",
+                    "test"
+                ),
+                ProfilertTil.ANTATT_BEHOV_FOR_VEILEDNING,
+                true,
+                30
+            )
+        )
 }

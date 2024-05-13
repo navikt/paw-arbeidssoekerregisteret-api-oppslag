@@ -3,8 +3,8 @@ package no.nav.paw.arbeidssoekerregisteret.api.oppslag.consumers
 import io.kotest.core.spec.style.FreeSpec
 import io.mockk.*
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.consumers.BatchConsumer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.producers.TestMessages
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ArbeidssoekerperiodeService
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.TopicUtils
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
@@ -49,6 +49,6 @@ class BatchConsumerTest : FreeSpec({
 private fun createConsumerRecords(): ConsumerRecords<Long, Periode> {
     val records = mutableMapOf<TopicPartition, MutableList<ConsumerRecord<Long, Periode>>>()
     val topic = "test-topic"
-    records[TopicPartition(topic, 0)] = mutableListOf(ConsumerRecord(topic, 0, 0, 1L, TopicUtils().lagTestPerioder()[0]))
+    records[TopicPartition(topic, 0)] = mutableListOf(ConsumerRecord(topic, 0, 0, 1L, TestMessages().perioder()[0]))
     return ConsumerRecords(records)
 }

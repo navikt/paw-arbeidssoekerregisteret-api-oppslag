@@ -1,10 +1,15 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.config
 
-data class Config(
+const val APPLICATION_CONFIG_FILE = "application_config.toml"
+
+data class ApplicationConfig(
+    val gruppeId: String,
+    val periodeTopic: String,
+    val opplysningerOmArbeidssoekerTopic: String,
+    val profileringTopic: String,
     val authProviders: List<AuthProvider>,
-    val database: DatabaseConfig,
-    val kafka: KafkaConfig,
-    val poaoClientConfig: ServiceClientConfig
+    val poaoClientConfig: ServiceClientConfig,
+    val database: DatabaseConfig
 )
 
 data class AuthProvider(
