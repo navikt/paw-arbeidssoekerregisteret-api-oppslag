@@ -69,6 +69,9 @@ spec:
         - application: veilarbportefolje
           namespace: pto
           cluster: dev-fss
+        - application: veilarbdetaljerfs
+          namespace: obo
+          cluster: dev-gcp
         
     outbound:
       rules:
