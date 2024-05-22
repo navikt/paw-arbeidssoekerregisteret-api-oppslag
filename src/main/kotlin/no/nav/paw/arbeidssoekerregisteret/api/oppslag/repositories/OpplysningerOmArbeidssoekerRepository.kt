@@ -217,7 +217,8 @@ class OpplysningerOmArbeidssoekerConverter {
                     BrukerTable.selectAll().where { BrukerTable.id eq utfoertAvId }
                         .singleOrNull()?.let { brukerResultRow ->
                             BrukerResponse(
-                                type = BrukerType.valueOf(brukerResultRow[BrukerTable.type].name)
+                                type = BrukerType.valueOf(brukerResultRow[BrukerTable.type].name),
+                                id = brukerResultRow[BrukerTable.brukerId]
                             )
                         } ?: throw RuntimeException("Fant ikke bruker: $utfoertAvId")
 

@@ -8,7 +8,11 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.BrukerType as RestB
 
 fun Metadata.toMetadataResponse() = MetadataResponse(this.tidspunkt, this.utfoertAv.toBrukerResponse(), this.kilde, this.aarsak)
 
-fun Bruker.toBrukerResponse() = BrukerResponse(this.type.toBrukerTypeResponse())
+fun Bruker.toBrukerResponse() =
+    BrukerResponse(
+        this.type.toBrukerTypeResponse(),
+        this.id
+    )
 
 fun BrukerType.toBrukerTypeResponse() =
     when (this) {

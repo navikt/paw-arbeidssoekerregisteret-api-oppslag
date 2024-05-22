@@ -1,7 +1,7 @@
 openapi: "3.0.3"
 info:
   title: "paw_arbeidssoekerregisteret_api_oppslag API"
-  description: "paw_arbeidssoekerregisteret_api_oppslag API"
+  description: "API for synkront oppslag mot arbeidssoekerregisteret"
   version: "1.0.0"
 servers:
   - url: "https://oppslag-arbeidssoekerregisteret.intern.nav.no"
@@ -214,8 +214,12 @@ components:
       properties:
         type:
           $ref: "#/components/schemas/BrukerType"
+        id:
+          type: "string"
+          example: "12345678910"
       required:
         - "type"
+        - "id"
     MetadataResponse:
       type: "object"
       properties:
