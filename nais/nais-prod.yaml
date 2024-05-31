@@ -71,6 +71,12 @@ spec:
         - application: veilarbportefolje
           namespace: pto
           cluster: prod-fss
+        - application: veilarbpersonflate
+          namespace: poao
+          cluster: prod-gcp
+        - application: veilarbperson
+          namespace: pto
+          cluster: prod-fss
     outbound:
       rules:
         - application: poao-tilgang
