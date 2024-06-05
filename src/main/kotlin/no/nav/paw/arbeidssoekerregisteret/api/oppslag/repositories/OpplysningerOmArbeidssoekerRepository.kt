@@ -222,13 +222,27 @@ class OpplysningerOmArbeidssoekerConverter {
                             )
                         } ?: throw RuntimeException("Fant ikke bruker: $utfoertAvId")
 
+                val tidspunktFraKildeId = metadataResultRow[MetadataTable.tidspunktFraKildeId]
+                val tidspunktFraKilde = tidspunktFraKildeId?.let { hentTidspunktFraKildeResponse(it) }
+
                 MetadataResponse(
                     tidspunkt = metadataResultRow[MetadataTable.tidspunkt],
                     utfoertAv = bruker,
                     kilde = metadataResultRow[MetadataTable.kilde],
-                    aarsak = metadataResultRow[MetadataTable.aarsak]
+                    aarsak = metadataResultRow[MetadataTable.aarsak],
+                    tidspunktFraKilde = tidspunktFraKilde
                 )
             } ?: throw RuntimeException("Fant ikke metadata $metadataId")
+    }
+
+    private fun hentTidspunktFraKildeResponse(tidspunktFraKildeId: Long): TidspunktFraKildeResponse? {
+        return TidspunktFraKildeTable.selectAll().where { TidspunktFraKildeTable.id eq tidspunktFraKildeId }
+            .singleOrNull()?.let { tidspunktFraKildeResultRow ->
+                TidspunktFraKildeResponse(
+                    tidspunkt = tidspunktFraKildeResultRow[TidspunktFraKildeTable.tidspunkt],
+                    avviksType = AvviksTypeResponse.valueOf(tidspunktFraKildeResultRow[TidspunktFraKildeTable.avviksType].name)
+                )
+            }
     }
 
     private fun hentUtdanningResponse(utdanningId: Long): UtdanningResponse? {

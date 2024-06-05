@@ -3,6 +3,7 @@ package no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.BrukerTable
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.MetadataTable
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.PeriodeTable
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.TidspunktFraKildeTable
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ArbeidssoekerperiodeResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.toMetadataResponse
@@ -10,6 +11,7 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
 import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
 import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
+import no.nav.paw.arbeidssokerregisteret.api.v1.TidspunktFraKilde
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.SQLException
@@ -58,15 +60,18 @@ class ArbeidssoekerperiodeRepository(private val database: Database) {
             }
         }
 
-    fun hentMetadata(id: Long): no.nav.paw.arbeidssokerregisteret.api.v1.Metadata? {
+    fun hentMetadata(id: Long): Metadata? {
         return MetadataTable.selectAll().where { MetadataTable.id eq id }.singleOrNull()?.let { metadata ->
             val brukerId = metadata[MetadataTable.utfoertAvId]
             val bruker = hentBruker(brukerId)
+            val tidspunktFraKildeId = metadata[MetadataTable.tidspunktFraKildeId]
+            val tidspunktFraKilde = tidspunktFraKildeId?.let { hentTidspunktFraKilde(it) }
             Metadata(
                 metadata[MetadataTable.tidspunkt],
                 bruker,
                 metadata[MetadataTable.kilde],
-                metadata[MetadataTable.aarsak]
+                metadata[MetadataTable.aarsak],
+                tidspunktFraKilde
             )
         }
     }
@@ -75,6 +80,15 @@ class ArbeidssoekerperiodeRepository(private val database: Database) {
         transaction(database) {
             PeriodeTable.selectAll().where { PeriodeTable.avsluttetId eq null }.count()
         }
+
+    fun hentTidspunktFraKilde(tidspunktFraKildeId: Long): TidspunktFraKilde? {
+        return TidspunktFraKildeTable.selectAll().where { TidspunktFraKildeTable.id eq tidspunktFraKildeId }.singleOrNull()?.let {
+            TidspunktFraKilde(
+                it[TidspunktFraKildeTable.tidspunkt],
+                it[TidspunktFraKildeTable.avviksType]
+            )
+        }
+    }
 
     private fun hentBruker(brukerId: Long): Bruker? {
         return BrukerTable.selectAll().where { BrukerTable.id eq brukerId }.singleOrNull()?.let {
@@ -102,6 +116,14 @@ class ArbeidssoekerperiodeRepository(private val database: Database) {
             it[tidspunkt] = metadata.tidspunkt
             it[kilde] = metadata.kilde
             it[aarsak] = metadata.aarsak
+            it[tidspunktFraKildeId] = metadata.tidspunktFraKilde?.let { tidspunkt -> settInnTidspunktFraKilde(tidspunkt) }
+        }.value
+    }
+
+    private fun settInnTidspunktFraKilde(tidspunktFraKilde: TidspunktFraKilde): Long {
+        return TidspunktFraKildeTable.insertAndGetId {
+            it[tidspunkt] = tidspunktFraKilde.tidspunkt
+            it[avviksType] = tidspunktFraKilde.avviksType
         }.value
     }
 

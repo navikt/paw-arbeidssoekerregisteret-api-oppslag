@@ -96,7 +96,8 @@ fun lagTestProfilering(
         Instant.now(),
         Bruker(BrukerType.SLUTTBRUKER, "1"),
         "KILDE",
-        "AARSAK"
+        "AARSAK",
+        null
     ),
     ProfilertTil.UDEFINERT,
     true,

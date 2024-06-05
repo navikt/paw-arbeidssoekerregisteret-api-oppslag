@@ -5,6 +5,7 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.ApplicationConfig
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.serdes.OpplysningerOmArbeidssoekerSerializer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.serdes.PeriodeSerializer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.serdes.ProfileringSerializer
+import no.nav.paw.arbeidssokerregisteret.api.v1.AvviksType
 import no.nav.paw.arbeidssokerregisteret.api.v1.Beskrivelse
 import no.nav.paw.arbeidssokerregisteret.api.v1.BeskrivelseMedDetaljer
 import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
@@ -16,6 +17,7 @@ import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.api.v1.Profilering
 import no.nav.paw.arbeidssokerregisteret.api.v1.ProfilertTil
+import no.nav.paw.arbeidssokerregisteret.api.v1.TidspunktFraKilde
 import no.nav.paw.arbeidssokerregisteret.api.v2.Annet
 import no.nav.paw.arbeidssokerregisteret.api.v4.OpplysningerOmArbeidssoeker
 import no.nav.paw.arbeidssokerregisteret.api.v4.Utdanning
@@ -117,7 +119,11 @@ class TestMessages {
                         "12345678901"
                     ),
                     "test",
-                    "test"
+                    "test",
+                    TidspunktFraKilde(
+                        Instant.now(),
+                        AvviksType.UKJENT_VERDI
+                    )
                 ),
                 null
             ),
@@ -131,7 +137,11 @@ class TestMessages {
                         "12345678902"
                     ),
                     "test",
-                    "test"
+                    "test",
+                    TidspunktFraKilde(
+                        Instant.now(),
+                        AvviksType.UKJENT_VERDI
+                    )
                 ),
                 Metadata(
                     Instant.now().plusSeconds(100),
@@ -140,7 +150,11 @@ class TestMessages {
                         "12345678902"
                     ),
                     "test",
-                    "test"
+                    "test",
+                    TidspunktFraKilde(
+                        Instant.now(),
+                        AvviksType.UKJENT_VERDI
+                    )
                 )
             )
         )
@@ -157,7 +171,11 @@ class TestMessages {
                         "12345678901"
                     ),
                     "test",
-                    "test"
+                    "test",
+                    TidspunktFraKilde(
+                        Instant.now(),
+                        AvviksType.UKJENT_VERDI
+                    )
                 ),
                 Utdanning(
                     "NUS_KODE",
@@ -204,7 +222,11 @@ class TestMessages {
                         "12345678901"
                     ),
                     "test",
-                    "test"
+                    "test",
+                    TidspunktFraKilde(
+                        Instant.now(),
+                        AvviksType.UKJENT_VERDI
+                    )
                 ),
                 ProfilertTil.ANTATT_BEHOV_FOR_VEILEDNING,
                 true,

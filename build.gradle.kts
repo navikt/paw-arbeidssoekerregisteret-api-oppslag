@@ -10,7 +10,7 @@ plugins {
     application
 }
 
-val arbeidssoekerregisteretSchemaVersion = "1.8062260419.22-1"
+val arbeidssoekerregisteretSchemaVersion = "1.9348086045.48-1"
 val logbackVersion = "1.4.14"
 val logstashVersion = "7.4"
 val pawUtilsVersion = "24.01.11.9-1"

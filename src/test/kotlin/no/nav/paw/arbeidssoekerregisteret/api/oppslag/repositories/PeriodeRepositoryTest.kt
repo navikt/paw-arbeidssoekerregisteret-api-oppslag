@@ -61,7 +61,8 @@ class PeriodeRepositoryTest : StringSpec({
                 Instant.now(),
                 Bruker(BrukerType.SYSTEM, "2"),
                 "NY_KILDE",
-                "NY_AARSAK"
+                "NY_AARSAK",
+                null
             )
 
         val updatedPeriode = periode.copy(avsluttet = updatedMetadata)
@@ -85,7 +86,8 @@ class PeriodeRepositoryTest : StringSpec({
                 Instant.now(),
                 Bruker(BrukerType.SYSTEM, "2"),
                 "NY_KILDE",
-                "NY_AARSAK"
+                "NY_AARSAK",
+                null
             )
         val updatedPeriode = periode.copy(avsluttet = updatedMetadata)
 
@@ -123,14 +125,16 @@ fun hentTestPeriode(periodeId: UUID? = null): Periode {
             Instant.now(),
             Bruker(BrukerType.SLUTTBRUKER, "1"),
             "KILDE",
-            "AARSAK"
+            "AARSAK",
+            null
         )
     val avsluttetMetadata =
         Metadata(
             Instant.now().plusMillis(100),
             Bruker(BrukerType.SYSTEM, "2"),
             "KILDE AVSLUTTET",
-            "AARSAK AVSLUTTET"
+            "AARSAK AVSLUTTET",
+            null
         )
     return Periode(
         periodeId ?: UUID.randomUUID(),

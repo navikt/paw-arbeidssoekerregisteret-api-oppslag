@@ -220,6 +220,24 @@ components:
       required:
         - "type"
         - "id"
+    AvviksTypeResponse:
+      type: "string"
+      enum:
+        - "UKJENT_VERDI"
+        - "FORSINKELSE"
+        - "RETTING"
+    TidspunktFraKildeResponse:
+        type: "object"
+        properties:
+            tidspunkt:
+              type: "string"
+              format: "date-time"
+              example: "2021-09-29T11:20:33.444Z"
+            avviksType:
+              $ref: "#/components/schemas/AvviksTypeResponse"
+        required:
+            - "tidspunkt"
+            - "avviksType"
     MetadataResponse:
       type: "object"
       properties:
@@ -233,6 +251,8 @@ components:
           type: "string"
         aarsak:
           type: "string"
+        tidspunktFraKilde:
+          $ref: "#/components/schemas/TidspunktFraKildeResponse"
       required:
         - "tidspunkt"
         - "utfoertAv"

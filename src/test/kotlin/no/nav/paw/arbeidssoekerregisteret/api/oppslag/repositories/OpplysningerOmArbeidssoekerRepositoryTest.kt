@@ -6,6 +6,7 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.Arbeidssoeker
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.OpplysningerOmArbeidssoekerRepository
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.hentTestPeriode
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.initTestDatabase
+import no.nav.paw.arbeidssokerregisteret.api.v1.AvviksType
 import no.nav.paw.arbeidssokerregisteret.api.v1.Beskrivelse
 import no.nav.paw.arbeidssokerregisteret.api.v1.BeskrivelseMedDetaljer
 import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
@@ -14,6 +15,7 @@ import no.nav.paw.arbeidssokerregisteret.api.v1.Helse
 import no.nav.paw.arbeidssokerregisteret.api.v1.JaNeiVetIkke
 import no.nav.paw.arbeidssokerregisteret.api.v1.Jobbsituasjon
 import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata
+import no.nav.paw.arbeidssokerregisteret.api.v1.TidspunktFraKilde
 import no.nav.paw.arbeidssokerregisteret.api.v2.Annet
 import no.nav.paw.arbeidssokerregisteret.api.v4.OpplysningerOmArbeidssoeker
 import no.nav.paw.arbeidssokerregisteret.api.v4.Utdanning
@@ -153,7 +155,11 @@ fun hentTestOpplysningerOmArbeidssoeker(
             "12345678911"
         ),
         "test",
-        "test"
+        "test",
+        TidspunktFraKilde(
+            Instant.now(),
+            AvviksType.UKJENT_VERDI
+        )
     ),
     Utdanning(
         "NUS_KODE",
@@ -194,7 +200,11 @@ fun hentTestOpplysningerOmArbeidssoekerMedUtdanningHelseOgAnnetLikNull(
                 "12345678911"
             ),
             "test",
-            "test"
+            "test",
+            TidspunktFraKilde(
+                Instant.now(),
+                AvviksType.UKJENT_VERDI
+            )
         ),
         null,
         null,
@@ -234,7 +244,11 @@ fun hentTestOpplysningerOmArbeidssoekerMedUtdanningOgAnnetFelterLikNull(
                 "12345678911"
             ),
             "test",
-            "test"
+            "test",
+            TidspunktFraKilde(
+                Instant.now(),
+                AvviksType.UKJENT_VERDI
+            )
         ),
         Utdanning(
             "NUS_KODE",
