@@ -22,13 +22,13 @@ spec:
   kafka:
     pool: nav-prod
   replicas:
-    min: 6
-    max: 6
+    min: 20
+    max: 20
   resources:
     limits:
-      memory: 2048Mi
+      memory: 3048Mi
     requests:
-      cpu: 1000m
+      cpu: 2048m
       memory: 1024Mi
   liveness:
     path: /internal/isAlive
