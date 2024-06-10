@@ -62,7 +62,17 @@ fun main() {
     }
 
     val server =
-        embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = { module(dependencies, applicationConfig) })
+        embeddedServer(
+            factory = Netty,
+            configure = {
+                callGroupSize = 8
+                workerGroupSize = 8
+                connectionGroupSize = 8
+            },
+            port = 8080,
+            host = "0.0.0.0",
+            module = { module(dependencies, applicationConfig) }
+        )
             .start(wait = true)
 
     server.addShutdownHook {
