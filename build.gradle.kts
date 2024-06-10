@@ -32,6 +32,7 @@ dependencies {
 
     // OpenTelemetry
     implementation(pawObservability.bundles.ktorNettyOpentelemetryMicrometerPrometheus)
+    implementation("io.ktor:ktor-server-cio:$ktorVersion")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.1.0")
 
     // Token support

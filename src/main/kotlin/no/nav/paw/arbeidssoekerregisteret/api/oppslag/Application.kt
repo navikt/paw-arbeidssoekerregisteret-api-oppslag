@@ -1,8 +1,8 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag
 
 import io.ktor.server.application.*
+import io.ktor.server.cio.CIO
 import io.ktor.server.engine.*
-import io.ktor.server.netty.*
 import io.ktor.server.routing.*
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.annotations.WithSpan
@@ -63,7 +63,7 @@ fun main() {
 
     val server =
         embeddedServer(
-            factory = Netty,
+            factory = CIO,
             configure = {
                 callGroupSize = 8
                 workerGroupSize = 8
@@ -77,6 +77,9 @@ fun main() {
 
     server.addShutdownHook {
         server.stop(300, 300)
+        dependencies.profileringConsumer.stop()
+        dependencies.opplysningerOmArbeidssoekerConsumer.stop()
+        dependencies.arbeidssoekerperiodeConsumer.stop()
     }
 }
 
