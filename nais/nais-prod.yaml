@@ -22,8 +22,8 @@ spec:
   kafka:
     pool: nav-prod
   replicas:
-    min: 3
-    max: 3
+    min: 6
+    max: 6
   resources:
     limits:
       memory: 2048Mi
