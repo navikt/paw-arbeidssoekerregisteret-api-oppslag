@@ -18,6 +18,10 @@ import no.nav.paw.config.kafka.KAFKA_CONFIG_WITH_SCHEME_REG
 import no.nav.paw.config.kafka.KafkaConfig
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture.runAsync
+import java.util.concurrent.Executor
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
@@ -37,19 +41,20 @@ fun main() {
     migrateDatabase(dependencies.dataSource)
 
     // Konsumer periode meldinger fra Kafka
-    thread {
+    val threadPoolExecutor = ThreadPoolExecutor(4, 8, 1, TimeUnit.MINUTES, LinkedBlockingQueue())
+    runAsync({
         try {
             dependencies.arbeidssoekerperiodeConsumer.subscribe()
             dependencies.opplysningerOmArbeidssoekerConsumer.subscribe()
             dependencies.profileringConsumer.subscribe()
             while (true) {
-                consume(dependencies, applicationConfig)
+                consume(threadPoolExecutor, dependencies, applicationConfig)
             }
         } catch (e: Exception) {
             logger.error("Consumer error: ${e.message}", e)
             exitProcess(1)
         }
-    }
+    }, threadPoolExecutor)
 
     // Oppdaterer grafana gauge for antall aktive perioder
     thread {
@@ -99,18 +104,19 @@ fun Application.module(
     kind = SpanKind.INTERNAL
 )
 fun consume(
+    executor: Executor,
     dependencies: Dependencies,
     config: ApplicationConfig
 ) {
     listOf(
-        runAsync {
+        runAsync({
             dependencies.arbeidssoekerperiodeConsumer.getAndProcessBatch(config.periodeTopic)
-        },
-        runAsync {
+        }, executor),
+        runAsync({
             dependencies.opplysningerOmArbeidssoekerConsumer.getAndProcessBatch(config.opplysningerOmArbeidssoekerTopic)
-        },
-        runAsync {
+        }, executor),
+        runAsync({
             dependencies.profileringConsumer.getAndProcessBatch(config.profileringTopic)
-        }
+        }, executor)
     ).forEach { it.join() }
 }
