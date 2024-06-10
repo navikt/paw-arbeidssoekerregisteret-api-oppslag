@@ -22,14 +22,14 @@ spec:
   kafka:
     pool: nav-prod
   replicas:
-    min: 6
-    max: 6
+    min: 1
+    max: 1
   resources:
     limits:
-      memory: 6Gi
+      memory: 2Gi
     requests:
-      cpu: 2048m
-      memory: 6Gi
+      cpu: 250m
+      memory: 1Gi
   liveness:
     path: /internal/isAlive
     initialDelay: 10
@@ -83,6 +83,6 @@ spec:
   gcp:
     sqlInstances:
       - type: POSTGRES_14
-        tier: db-custom-4-6144
+        tier: db-custom-1-6144
         databases:
           - name: arbeidssoekerregisteretapioppslag
