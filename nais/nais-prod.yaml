@@ -51,6 +51,11 @@ spec:
           namespace: aura
         - application: azure-token-generator
           namespace: aura
+        - application: saas-proxy
+          namespace: teamcrm
+        - application: salesforce
+          namespace: teamcrm
+          cluster: prod-external
         - application: arena
           namespace: teamarenanais
           cluster: prod-fss
