@@ -75,6 +75,9 @@ spec:
         - application: veilarbperson
           namespace: pto
           cluster: dev-fss
+        - application: arbeidssokerregistrering
+          namespace: paw
+          cluster: dev-gcp
         
     outbound:
       rules:
