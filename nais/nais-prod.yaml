@@ -84,6 +84,9 @@ spec:
         - application: arbeidssokerregistrering
           namespace: paw
           cluster: prod-gcp
+        - application: veilarbdirigent
+          namespace: pto
+          cluster: prod-fss
     outbound:
       rules:
         - application: poao-tilgang
