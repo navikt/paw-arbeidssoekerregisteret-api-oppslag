@@ -37,6 +37,44 @@ flowchart RL;
     H-->E;
 ```
 
+## Autentisering
+
+Kall til API-et er autentisert med Bearer token fra TokenX eller Azure.
+Eksempel: `Authorization: Bearer <token>`
+
+### TOKENX
+For oppslag som gjøres av arbeidssoker selv:
+- `/arbeidssoekerperioder`
+- `/opplysninger-om-arbeidssoeker/{periodeId}`
+- `/profilering/{periodeId}`
+```json
+{ "acr": "Level4", "pid": "<fnr>" }
+```
+
+### AZURE:
+For oppslag som gjøres av veileder eller system:
+- `/veileder/arbeidssoekerperioder`
+- `/veileder/opplysninger-om-arbeidssoeker/{periodeId}`
+- `/veileder/profilering/{periodeId}`
+
+Token med veileder-ident:
+```json
+{
+  "oid": "989f736f-14db-45dc-b8d1-94d621dbf2bb",
+  "NAVident": "<veileder-ident>"
+}
+```
+- Verifiserer veileders leserettigheter med [POAO-tilgang](https://github.com/navikt/poao-tilgang).
+
+Machine-to-maching token:
+```json
+{
+  "oid": "989f736f-14db-45dc-b8d1-94d621dbf2bb",
+  "roles": ["access_as_application"]
+}
+```
+- Krever ikke `NAVident` i tokenet og brukes kun av systemer.
+
 ## Teknologier
 
 Øvrige teknologier, rammeverk og biblioteker som er blitt tatt i bruk:
