@@ -1,12 +1,10 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -15,13 +13,16 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Arbeidssoekerperiod
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.OpplysningerOmArbeidssoekerRequest
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ProfileringRequest
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.SamletInformasjonResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ArbeidssoekerperiodeService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.AutorisasjonService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.OpplysningerOmArbeidssoekerService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ProfileringService
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getNavAnsattFromToken
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getPidClaim
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.isPeriodeIdValid
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.verifyAccessFromToken
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.verifyPeriodeId
 import java.util.*
 
 fun Route.oppslagRoutes(
@@ -34,10 +35,7 @@ fun Route.oppslagRoutes(
         authenticate("tokenx") {
             route("/arbeidssoekerperioder") {
                 get {
-                    logger.info("Henter arbeidssøkerperioder for bruker")
-
                     val identitetsnummer = call.getPidClaim()
-
                     val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(identitetsnummer)
 
                     logger.info("Hentet arbeidssøkerperioder for bruker")
@@ -45,21 +43,38 @@ fun Route.oppslagRoutes(
                     call.respond(HttpStatusCode.OK, arbeidssoekerperioder)
                 }
             }
+            route("/opplysninger-om-arbeidssoeker") {
+                get {
+                    val identitetsnummer = call.getPidClaim()
+                    val opplysningerOmArbeidssoeker = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(identitetsnummer)
+
+                    logger.info("Hentet opplysninger for bruker")
+
+                    call.respond(HttpStatusCode.OK, opplysningerOmArbeidssoeker)
+                }
+            }
             route("/opplysninger-om-arbeidssoeker/{periodeId}") {
                 get {
                     val periodeId = UUID.fromString(call.parameters["periodeId"])
                     val identitetsnummer = call.getPidClaim()
 
-                    val periodeIdTilhoererIdentitetsnummer = call.verifyPeriodeId(periodeId, identitetsnummer, arbeidssoekerperiodeService)
-                    if (!periodeIdTilhoererIdentitetsnummer) return@get
-
-                    logger.info("Henter opplysninger-om-arbeidssøker for bruker med periodeId: $periodeId")
+                    if (!isPeriodeIdValid(periodeId, identitetsnummer, arbeidssoekerperiodeService)) return@get
 
                     val opplysningerOmArbeidssoeker = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(periodeId)
 
-                    logger.info("Hentet opplysninger-om-arbeidssøker for bruker med periodeId: $periodeId")
+                    logger.info("Hentet opplysninger for bruker")
 
                     call.respond(HttpStatusCode.OK, opplysningerOmArbeidssoeker)
+                }
+            }
+            route("/profilering") {
+                get {
+                    val identitetsnummer = call.getPidClaim()
+                    val profilering = profileringService.hentProfileringForArbeidssoekerMedIdentitetsnummer(identitetsnummer)
+
+                    logger.info("Hentet profilering for bruker")
+
+                    call.respond(HttpStatusCode.OK, profilering)
                 }
             }
             route("/profilering/{periodeId}") {
@@ -67,28 +82,62 @@ fun Route.oppslagRoutes(
                     val periodeId = UUID.fromString(call.parameters["periodeId"])
                     val identitetsnummer = call.getPidClaim()
 
-                    val periodeIdTilhoererIdentitetsnummer = call.verifyPeriodeId(periodeId, identitetsnummer, arbeidssoekerperiodeService)
-                    if (!periodeIdTilhoererIdentitetsnummer) return@get
-
-                    logger.info("Henter profilering for bruker med periodeId: $periodeId")
+                    if (!isPeriodeIdValid(periodeId, identitetsnummer, arbeidssoekerperiodeService)) return@get
 
                     val profilering = profileringService.hentProfileringForArbeidssoekerMedPeriodeId(periodeId)
 
-                    logger.info("Hentet profilering for bruker med periodeId: $periodeId")
+                    logger.info("Hentet profilering for bruker")
 
                     call.respond(HttpStatusCode.OK, profilering)
+                }
+            }
+            route("/samlet-informasjon") {
+                get {
+                    val identitetsnummer = call.getPidClaim()
+                    val siste = call.request.queryParameters["siste"]?.toBoolean() ?: false
+
+                    if (siste) {
+                        val sistePeriode = arbeidssoekerperiodeService.hentArbeidssoekerperioder(identitetsnummer).maxByOrNull { it.startet.tidspunkt }
+                        val sisteOpplysninger = sistePeriode?.let { opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(it.periodeId) }
+                        val sisteProfilering = sistePeriode?.let { profileringService.hentProfileringForArbeidssoekerMedPeriodeId(it.periodeId) }
+
+                        val response =
+                            SamletInformasjonResponse(
+                                arbeidssoekerperioder = listOfNotNull(sistePeriode),
+                                opplysningerOmArbeidssoeker = sisteOpplysninger ?: emptyList(),
+                                profilering = sisteProfilering ?: emptyList()
+                            )
+
+                        logger.info("Hentet siste samlet informasjon for bruker")
+
+                        call.respond(HttpStatusCode.OK, response)
+                    } else {
+                        val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(identitetsnummer)
+                        val opplysningerOmArbeidssoeker = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(identitetsnummer)
+                        val profilering = profileringService.hentProfileringForArbeidssoekerMedIdentitetsnummer(identitetsnummer)
+
+                        val response =
+                            SamletInformasjonResponse(
+                                arbeidssoekerperioder = arbeidssoekerperioder,
+                                opplysningerOmArbeidssoeker = opplysningerOmArbeidssoeker,
+                                profilering = profilering
+                            )
+
+                        logger.info("Hentet samlet informasjon for bruker")
+
+                        call.respond(HttpStatusCode.OK, response)
+                    }
                 }
             }
         }
         authenticate("azure") {
             route("/veileder/arbeidssoekerperioder") {
                 post {
-                    logger.info("Veileder henter arbeidssøkerperioder for bruker")
-
                     val (identitetsnummer) = call.receive<ArbeidssoekerperiodeRequest>()
 
-                    val harTilgang = call.verifyAccessFromToken(autorisasjonService, Identitetsnummer(identitetsnummer))
-                    if (!harTilgang) return@post
+                    if (!call.verifyAccessFromToken(autorisasjonService, Identitetsnummer(identitetsnummer))) {
+                        return@post
+                    }
 
                     val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(Identitetsnummer(identitetsnummer))
 
@@ -101,17 +150,17 @@ fun Route.oppslagRoutes(
                 post {
                     val (identitetsnummer, periodeId) = call.receive<OpplysningerOmArbeidssoekerRequest>()
 
-                    logger.info("Veileder henter opplysninger-om-arbeidssøker for bruker med periodeId: $periodeId")
+                    if (!call.verifyAccessFromToken(autorisasjonService, Identitetsnummer(identitetsnummer))) {
+                        return@post
+                    }
 
-                    val harTilgang = call.verifyAccessFromToken(autorisasjonService, Identitetsnummer(identitetsnummer))
-                    if (!harTilgang) return@post
-
-                    val periodeIdTilhoererIdentitetsnummer = call.verifyPeriodeId(periodeId, Identitetsnummer(identitetsnummer), arbeidssoekerperiodeService)
-                    if (!periodeIdTilhoererIdentitetsnummer) return@post
+                    if (!call.verifyPeriodeId(periodeId, Identitetsnummer(identitetsnummer), arbeidssoekerperiodeService)) {
+                        return@post
+                    }
 
                     val opplysningerOmArbeidssoeker = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(periodeId)
 
-                    logger.info("Veileder hentet opplysninger-om-arbeidssøker for bruker med periodeId: $periodeId")
+                    logger.info("Veileder hentet opplysninger-om-arbeidssøker for bruker")
 
                     call.respond(HttpStatusCode.OK, opplysningerOmArbeidssoeker)
                 }
@@ -120,51 +169,63 @@ fun Route.oppslagRoutes(
                 post {
                     val (identitetsnummer, periodeId) = call.receive<ProfileringRequest>()
 
-                    logger.info("Veileder henter profilering for bruker med periodeId: $periodeId")
+                    if (!call.verifyAccessFromToken(autorisasjonService, Identitetsnummer(identitetsnummer))) {
+                        return@post
+                    }
 
-                    val harTilgang = call.verifyAccessFromToken(autorisasjonService, Identitetsnummer(identitetsnummer))
-                    if (!harTilgang) return@post
-
-                    val periodeIdTilhoererIdentitetsnummer = call.verifyPeriodeId(periodeId, Identitetsnummer(identitetsnummer), arbeidssoekerperiodeService)
-                    if (!periodeIdTilhoererIdentitetsnummer) return@post
+                    if (!call.verifyPeriodeId(periodeId, Identitetsnummer(identitetsnummer), arbeidssoekerperiodeService)) {
+                        return@post
+                    }
 
                     val profilering = profileringService.hentProfileringForArbeidssoekerMedPeriodeId(periodeId)
 
-                    logger.info("Veileder hentet profilering for bruker med periodeId: $periodeId")
+                    logger.info("Veileder hentet profilering for bruker")
 
                     call.respond(HttpStatusCode.OK, profilering)
                 }
             }
+            route("/veileder/samlet-informasjon") {
+                post {
+                    val (identitetsnummer) = call.receive<ArbeidssoekerperiodeRequest>()
+                    val siste = call.request.queryParameters["siste"]?.toBoolean() ?: false
+
+                    if (!call.verifyAccessFromToken(autorisasjonService, Identitetsnummer(identitetsnummer))) {
+                        return@post
+                    }
+
+                    if (siste) {
+                        val sistePeriode = arbeidssoekerperiodeService.hentArbeidssoekerperioder(Identitetsnummer(identitetsnummer)).maxByOrNull { it.startet.tidspunkt }
+                        val sisteOpplysninger = sistePeriode?.let { opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(it.periodeId) }
+                        val sisteProfilering = sistePeriode?.let { profileringService.hentProfileringForArbeidssoekerMedPeriodeId(it.periodeId) }
+
+                        val response =
+                            SamletInformasjonResponse(
+                                arbeidssoekerperioder = listOfNotNull(sistePeriode),
+                                opplysningerOmArbeidssoeker = sisteOpplysninger ?: emptyList(),
+                                profilering = sisteProfilering ?: emptyList()
+                            )
+
+                        logger.info("Veileder hentet siste samlet informasjon for bruker")
+
+                        call.respond(HttpStatusCode.OK, response)
+                    } else {
+                        val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(Identitetsnummer(identitetsnummer))
+                        val opplysningerOmArbeidssoeker = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(Identitetsnummer(identitetsnummer))
+                        val profilering = profileringService.hentProfileringForArbeidssoekerMedIdentitetsnummer(Identitetsnummer(identitetsnummer))
+
+                        val response =
+                            SamletInformasjonResponse(
+                                arbeidssoekerperioder = arbeidssoekerperioder,
+                                opplysningerOmArbeidssoeker = opplysningerOmArbeidssoeker,
+                                profilering = profilering
+                            )
+
+                        logger.info("Veileder hentet samlet informasjon for bruker")
+
+                        call.respond(HttpStatusCode.OK, response)
+                    }
+                }
+            }
         }
     }
-}
-
-suspend fun ApplicationCall.verifyAccessFromToken(
-    autorisasjonService: AutorisasjonService,
-    identitetsnummer: Identitetsnummer
-): Boolean {
-    val navAnsatt =
-        getNavAnsattFromToken()
-            ?: return true
-
-    logger.info("Sjekker om NAV-ansatt har tilgang til bruker")
-    return autorisasjonService.verifiserTilgangTilBruker(navAnsatt, identitetsnummer).also { harTilgang ->
-        if (!harTilgang) {
-            logger.warn("NAV-ansatt har ikke tilgang til bruker")
-            respondText(status = HttpStatusCode.Forbidden, text = HttpStatusCode.Forbidden.description)
-        }
-    }
-}
-
-suspend fun ApplicationCall.verifyPeriodeId(
-    periodeId: UUID,
-    identitetsnummer: Identitetsnummer,
-    arbeidssoekerperiodeService: ArbeidssoekerperiodeService
-): Boolean {
-    val periodeIdTilhoererIdentitetsnummer = arbeidssoekerperiodeService.periodeIdTilhoererIdentitetsnummer(periodeId, identitetsnummer)
-    if (!periodeIdTilhoererIdentitetsnummer) {
-        respondText(status = HttpStatusCode.Forbidden, text = "PeriodeId tilhører ikke bruker: $periodeId")
-        return false
-    }
-    return true
 }

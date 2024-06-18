@@ -1,6 +1,7 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories
 
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.ProfileringTable
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ProfileringResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.toMetadataResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.toProfilertTilResponse
@@ -13,15 +14,25 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 class ProfileringRepository(private val database: Database) {
-    fun hentProfileringForArbeidssoekerMedPeriodeId(periodeId: UUID): List<ProfileringResponse> {
-        return transaction(database) {
+    fun hentProfileringForArbeidssoekerMedPeriodeId(periodeId: UUID): List<ProfileringResponse> =
+        transaction(database) {
             ProfileringTable.selectAll().where { ProfileringTable.periodeId eq periodeId }.map { resultRow ->
                 ProfileringConverter(this@ProfileringRepository).konverterTilProfileringResponse(resultRow)
             }
         }
-    }
 
-    fun storeBatch(batch: Sequence<Profilering>) {
+    fun hentProfileringForArbeidssoekerMedIdentitetsnummer(identitetsnummer: Identitetsnummer): List<ProfileringResponse> =
+        transaction(database) {
+            val periodeIder = ArbeidssoekerperiodeRepository(database).hentArbeidssoekerperioder(identitetsnummer).map { it.periodeId }
+
+            periodeIder.flatMap { periodeId ->
+                ProfileringTable.selectAll().where { ProfileringTable.periodeId eq periodeId }.map { resultRow ->
+                    ProfileringConverter(this@ProfileringRepository).konverterTilProfileringResponse(resultRow)
+                }
+            }
+        }
+
+    fun storeBatch(batch: Sequence<Profilering>) =
         transaction(database) {
             repetitionAttempts = 2
             minRepetitionDelay = 20
@@ -29,9 +40,8 @@ class ProfileringRepository(private val database: Database) {
                 opprettProfileringForArbeidssoeker(profilering)
             }
         }
-    }
 
-    fun opprettProfileringForArbeidssoeker(profilering: Profilering) {
+    fun opprettProfileringForArbeidssoeker(profilering: Profilering) =
         transaction(database) {
             repetitionAttempts = 2
             minRepetitionDelay = 20
@@ -46,7 +56,6 @@ class ProfileringRepository(private val database: Database) {
                 it[alder] = profilering.alder
             }
         }
-    }
 
     fun hentMetadata(metadataId: Long) = ArbeidssoekerperiodeRepository(database).hentMetadata(metadataId)
 }

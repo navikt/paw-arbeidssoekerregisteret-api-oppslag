@@ -31,6 +31,14 @@ class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
             }
         }
 
+    fun hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(identitetsnummer: Identitetsnummer): List<OpplysningerOmArbeidssoekerResponse> =
+        transaction(database) {
+            val periodeIder = ArbeidssoekerperiodeRepository(database).hentArbeidssoekerperioder(identitetsnummer).map { it.periodeId }
+            periodeIder.flatMap { periodeId ->
+                hentOpplysningerOmArbeidssoeker(periodeId)
+            }
+        }
+
     fun storeBatch(batch: Sequence<OpplysningerOmArbeidssoeker>) {
         transaction(database) {
             repetitionAttempts = 2
