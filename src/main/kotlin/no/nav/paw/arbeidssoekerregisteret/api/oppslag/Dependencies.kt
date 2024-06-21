@@ -16,6 +16,7 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.AutorisasjonServi
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.OpplysningerOmArbeidssoekerService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ProfileringService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.TokenService
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.RetryInterceptor
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.generateDatasource
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.api.v1.Profilering
@@ -24,8 +25,10 @@ import no.nav.paw.config.kafka.KafkaConfig
 import no.nav.paw.config.kafka.KafkaFactory
 import no.nav.poao_tilgang.client.PoaoTilgangCachedClient
 import no.nav.poao_tilgang.client.PoaoTilgangHttpClient
+import okhttp3.OkHttpClient
 import org.apache.kafka.common.serialization.LongDeserializer
 import org.jetbrains.exposed.sql.Database
+import java.time.Duration
 import javax.sql.DataSource
 
 fun createDependencies(
@@ -46,7 +49,8 @@ fun createDependencies(
         PoaoTilgangCachedClient(
             PoaoTilgangHttpClient(
                 config.poaoClientConfig.url,
-                { tokenService.createMachineToMachineToken(config.poaoClientConfig.scope) }
+                { tokenService.createMachineToMachineToken(config.poaoClientConfig.scope) },
+                OkHttpClient.Builder().callTimeout(Duration.ofSeconds(6)).addInterceptor(RetryInterceptor(maxRetries = 1)).build()
             )
         )
 
