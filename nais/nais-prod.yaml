@@ -62,6 +62,9 @@ spec:
         - application: aia-backend
           namespace: paw
           cluster: prod-gcp
+        - application: paw-brukerstotte
+          namespace: paw
+          cluster: prod-gcp
         - application: dp-oppslag-arbeidssoker
           namespace: teamdagpenger
         - application: dp-dagpenger
