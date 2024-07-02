@@ -84,6 +84,8 @@ spec:
         - application: veilarbdirigent
           namespace: pto
           cluster: dev-fss
+        - application: paw-brukerstotte
+          namespace: paw
         
     outbound:
       rules:
