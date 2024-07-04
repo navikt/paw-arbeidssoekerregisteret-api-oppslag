@@ -291,42 +291,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SamletInformasjonResponse"
-  /internal/isAlive:
-    get:
-      description: ""
-      responses:
-        "200":
-          description: "OK"
-          content:
-            text/plain:
-              schema:
-                type: "string"
-              examples:
-                Example#1:
-                  value: "ALIVE"
-  /internal/isReady:
-    get:
-      description: ""
-      responses:
-        "200":
-          description: "OK"
-          content:
-            text/plain:
-              schema:
-                type: "string"
-              examples:
-                Example#1:
-                  value: "READY"
-  /internal/metrics:
-    get:
-      description: ""
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                type: "string"
 components:
   securitySchemes:
     TokenXAuth:
