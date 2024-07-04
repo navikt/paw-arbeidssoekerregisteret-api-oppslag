@@ -32,6 +32,25 @@ class ProfileringRepository(private val database: Database) {
             }
         }
 
+    /*fun hentProfileringForArbeidssoekerMedIdentitetsnummer(
+        identitetsnummer: Identitetsnummer,
+        limit: Int? = null
+    ): List<ProfileringResponse> =
+        transaction(database) {
+            ProfileringTable
+                .innerJoin(MetadataTable, { sendtInnAvId }, { MetadataTable.id })
+                .innerJoin(PeriodeOpplysningerTable, { OpplysningerOmArbeidssoekerTable.id }, { opplysningerOmArbeidssoekerTableId })
+                .innerJoin(PeriodeTable, { PeriodeOpplysningerTable.periodeId }, { periodeId })
+                .selectAll().where { PeriodeTable.identitetsnummer eq identitetsnummer.verdi }
+                .orderBy(MetadataTable.tidspunkt, SortOrder.DESC)
+                .let { query ->
+                    if (limit != null) query.limit(limit) else query
+                }
+                .mapNotNull { resultRow ->
+                    ProfileringConverter(this@ProfileringRepository).konverterTilProfileringResponse(resultRow)
+                }
+        }*/
+
     fun storeBatch(batch: Sequence<Profilering>) =
         transaction(database) {
             repetitionAttempts = 2
@@ -62,6 +81,7 @@ class ProfileringRepository(private val database: Database) {
 
 class ProfileringConverter(private val profileringRepository: ProfileringRepository) {
     fun konverterTilProfileringResponse(resultRow: ResultRow): ProfileringResponse {
+        println("resultRow: $resultRow")
         val profileringId = resultRow[ProfileringTable.profileringId]
         val periodeId = resultRow[ProfileringTable.periodeId]
         val opplysningerOmArbeidssoekerId = resultRow[ProfileringTable.opplysningerOmArbeidssoekerId]

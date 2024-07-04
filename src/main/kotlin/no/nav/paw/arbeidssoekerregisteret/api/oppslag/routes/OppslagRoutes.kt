@@ -13,11 +13,12 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Arbeidssoekerperiod
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.OpplysningerOmArbeidssoekerRequest
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ProfileringRequest
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.SamletInformasjonResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ArbeidssoekerperiodeService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.AutorisasjonService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.OpplysningerOmArbeidssoekerService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ProfileringService
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.createSamletInformasjonResponse
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.createSisteSamletInformasjonResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getPidClaim
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.isPeriodeIdValid
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
@@ -55,15 +56,14 @@ fun Route.oppslagRoutes(
             route("/opplysninger-om-arbeidssoeker") {
                 get {
                     val identitetsnummer = call.getPidClaim()
-                    val siste = call.request.queryParameters["siste"]?.toBoolean() ?: false
+                    val siste = call.request.queryParameters["siste"]
 
-                    val opplysningerOmArbeidssoeker = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(identitetsnummer)
-
+                    val opplysninger = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(identitetsnummer)
                     val response =
-                        if (siste) {
-                            opplysningerOmArbeidssoeker.maxByOrNull { it.sendtInnAv.tidspunkt }?.let { listOf(it) } ?: emptyList()
+                        if (siste != null && siste.toBoolean()) {
+                            opplysninger.maxByOrNull { it.sendtInnAv.tidspunkt }?.let { listOf(it) } ?: emptyList()
                         } else {
-                            opplysningerOmArbeidssoeker
+                            opplysninger
                         }
 
                     logger.info("Hentet opplysninger for bruker")
@@ -125,25 +125,9 @@ fun Route.oppslagRoutes(
 
                     val response =
                         if (siste) {
-                            val sistePeriode = arbeidssoekerperiodeService.hentArbeidssoekerperioder(identitetsnummer).maxByOrNull { it.startet.tidspunkt }
-                            val sisteOpplysninger = sistePeriode?.let { opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(it.periodeId) }
-                            val sisteProfilering = sistePeriode?.let { profileringService.hentProfileringForArbeidssoekerMedPeriodeId(it.periodeId) }
-
-                            SamletInformasjonResponse(
-                                arbeidssoekerperioder = listOfNotNull(sistePeriode),
-                                opplysningerOmArbeidssoeker = sisteOpplysninger ?: emptyList(),
-                                profilering = sisteProfilering ?: emptyList()
-                            )
+                            createSisteSamletInformasjonResponse(arbeidssoekerperiodeService.hentArbeidssoekerperioder(identitetsnummer), opplysningerOmArbeidssoekerService, profileringService)
                         } else {
-                            val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(identitetsnummer)
-                            val opplysningerOmArbeidssoeker = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(identitetsnummer)
-                            val profilering = profileringService.hentProfileringForArbeidssoekerMedIdentitetsnummer(identitetsnummer)
-
-                            SamletInformasjonResponse(
-                                arbeidssoekerperioder = arbeidssoekerperioder,
-                                opplysningerOmArbeidssoeker = opplysningerOmArbeidssoeker,
-                                profilering = profilering
-                            )
+                            createSamletInformasjonResponse(arbeidssoekerperiodeService.hentArbeidssoekerperioder(identitetsnummer), identitetsnummer.verdi, opplysningerOmArbeidssoekerService, profileringService)
                         }
 
                     logger.info("Hentet siste samlet informasjon for bruker")
@@ -185,21 +169,24 @@ fun Route.oppslagRoutes(
                         return@post
                     }
 
+                    val opplysninger =
+                        when {
+                            periodeId != null -> {
+                                if (!call.verifyPeriodeId(periodeId, Identitetsnummer(identitetsnummer), arbeidssoekerperiodeService)) {
+                                    return@post
+                                }
+                                opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(periodeId)
+                            }
+                            else -> {
+                                opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(Identitetsnummer(identitetsnummer))
+                            }
+                        }
+
                     val response =
-                        if (periodeId != null) {
-                            val opplysninger = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(periodeId)
-                            if (siste) {
-                                opplysninger.maxByOrNull { it.sendtInnAv.tidspunkt }?.let { listOf(it) } ?: emptyList()
-                            } else {
-                                opplysninger
-                            }
+                        if (siste) {
+                            opplysninger.maxByOrNull { it.sendtInnAv.tidspunkt }?.let { listOf(it) } ?: emptyList()
                         } else {
-                            val opplysninger = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(Identitetsnummer(identitetsnummer))
-                            if (siste) {
-                                opplysninger.maxByOrNull { it.sendtInnAv.tidspunkt }?.let { listOf(it) } ?: emptyList()
-                            } else {
-                                opplysninger
-                            }
+                            opplysninger
                         }
 
                     logger.info("Veileder hentet opplysninger-om-arbeidssøker for bruker")
@@ -216,24 +203,24 @@ fun Route.oppslagRoutes(
                         return@post
                     }
 
+                    val profilering =
+                        when {
+                            periodeId != null -> {
+                                if (!call.verifyPeriodeId(periodeId, Identitetsnummer(identitetsnummer), arbeidssoekerperiodeService)) {
+                                    return@post
+                                }
+                                profileringService.hentProfileringForArbeidssoekerMedPeriodeId(periodeId)
+                            }
+                            else -> {
+                                profileringService.hentProfileringForArbeidssoekerMedIdentitetsnummer(Identitetsnummer(identitetsnummer))
+                            }
+                        }
+
                     val response =
-                        if (periodeId != null) {
-                            if (!call.verifyPeriodeId(periodeId, Identitetsnummer(identitetsnummer), arbeidssoekerperiodeService)) {
-                                return@post
-                            }
-                            val profilering = profileringService.hentProfileringForArbeidssoekerMedPeriodeId(periodeId)
-                            if (siste) {
-                                profilering.maxByOrNull { it.sendtInnAv.tidspunkt }?.let { listOf(it) } ?: emptyList()
-                            } else {
-                                profilering
-                            }
+                        if (siste) {
+                            profilering.maxByOrNull { it.sendtInnAv.tidspunkt }?.let { listOf(it) } ?: emptyList()
                         } else {
-                            val profilering = profileringService.hentProfileringForArbeidssoekerMedIdentitetsnummer(Identitetsnummer(identitetsnummer))
-                            if (siste) {
-                                profilering.maxByOrNull { it.sendtInnAv.tidspunkt }?.let { listOf(it) } ?: emptyList()
-                            } else {
-                                profilering
-                            }
+                            profilering
                         }
 
                     logger.info("Veileder hentet profilering for bruker")
@@ -254,24 +241,9 @@ fun Route.oppslagRoutes(
 
                     val response =
                         if (siste) {
-                            val sistePeriode = arbeidssoekerperioder.maxByOrNull { it.startet.tidspunkt }
-                            val sisteOpplysninger = sistePeriode?.let { periode -> opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(periode.periodeId).maxByOrNull { it.sendtInnAv.tidspunkt } }
-                            val sisteProfilering = sistePeriode?.let { periode -> profileringService.hentProfileringForArbeidssoekerMedPeriodeId(periode.periodeId).maxByOrNull { it.sendtInnAv.tidspunkt } }
-
-                            SamletInformasjonResponse(
-                                arbeidssoekerperioder = listOfNotNull(sistePeriode),
-                                opplysningerOmArbeidssoeker = listOfNotNull(sisteOpplysninger),
-                                profilering = listOfNotNull(sisteProfilering)
-                            )
+                            createSisteSamletInformasjonResponse(arbeidssoekerperioder, opplysningerOmArbeidssoekerService, profileringService)
                         } else {
-                            val opplysningerOmArbeidssoeker = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(Identitetsnummer(identitetsnummer))
-                            val profilering = profileringService.hentProfileringForArbeidssoekerMedIdentitetsnummer(Identitetsnummer(identitetsnummer))
-
-                            SamletInformasjonResponse(
-                                arbeidssoekerperioder = arbeidssoekerperioder,
-                                opplysningerOmArbeidssoeker = opplysningerOmArbeidssoeker,
-                                profilering = profilering
-                            )
+                            createSamletInformasjonResponse(arbeidssoekerperioder, identitetsnummer, opplysningerOmArbeidssoekerService, profileringService)
                         }
 
                     logger.info("Veileder hentet siste samlet informasjon for bruker")

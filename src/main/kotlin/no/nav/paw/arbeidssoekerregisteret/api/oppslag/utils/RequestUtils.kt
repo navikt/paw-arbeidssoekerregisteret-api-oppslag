@@ -5,12 +5,16 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.authentication
 import io.ktor.server.response.*
 import io.ktor.util.pipeline.*
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ArbeidssoekerperiodeResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.SamletInformasjonResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.toIdentitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.StatusException
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ArbeidssoekerperiodeService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.AutorisasjonService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.NavAnsatt
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.OpplysningerOmArbeidssoekerService
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ProfileringService
 import no.nav.security.token.support.v2.TokenValidationContextPrincipal
 import java.util.*
 
@@ -104,4 +108,42 @@ suspend fun PipelineContext<Unit, ApplicationCall>.isPeriodeIdValid(
         }
     }
     return true
+}
+
+fun createSisteSamletInformasjonResponse(
+    arbeidssoekerperioder: List<ArbeidssoekerperiodeResponse>,
+    opplysningerOmArbeidssoekerService: OpplysningerOmArbeidssoekerService,
+    profileringService: ProfileringService
+): SamletInformasjonResponse {
+    val sistePeriode = arbeidssoekerperioder.maxByOrNull { it.startet.tidspunkt }
+    val sisteOpplysninger =
+        sistePeriode?.let { periode ->
+            opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(periode.periodeId).maxByOrNull { it.sendtInnAv.tidspunkt }
+        }
+    val sisteProfilering =
+        sistePeriode?.let { periode ->
+            profileringService.hentProfileringForArbeidssoekerMedPeriodeId(periode.periodeId).maxByOrNull { it.sendtInnAv.tidspunkt }
+        }
+
+    return SamletInformasjonResponse(
+        arbeidssoekerperioder = listOfNotNull(sistePeriode),
+        opplysningerOmArbeidssoeker = listOfNotNull(sisteOpplysninger),
+        profilering = listOfNotNull(sisteProfilering)
+    )
+}
+
+fun createSamletInformasjonResponse(
+    arbeidssoekerperioder: List<ArbeidssoekerperiodeResponse>,
+    identitetsnummer: String,
+    opplysningerOmArbeidssoekerService: OpplysningerOmArbeidssoekerService,
+    profileringService: ProfileringService
+): SamletInformasjonResponse {
+    val opplysningerOmArbeidssoeker = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(Identitetsnummer(identitetsnummer))
+    val profilering = profileringService.hentProfileringForArbeidssoekerMedIdentitetsnummer(Identitetsnummer(identitetsnummer))
+
+    return SamletInformasjonResponse(
+        arbeidssoekerperioder = arbeidssoekerperioder,
+        opplysningerOmArbeidssoeker = opplysningerOmArbeidssoeker,
+        profilering = profilering
+    )
 }
