@@ -3,10 +3,12 @@ package no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.routing.*
@@ -24,11 +26,16 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.Arbeidssoekerperi
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.AutorisasjonService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.OpplysningerOmArbeidssoekerService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ProfileringService
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.Arbeidssoekerperioder
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.arbeidssoekerperioderObjectMapper
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getArbeidssoekerperiodeResponse
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getAzureM2MToken
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getTokenXToken
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import java.util.*
 
 class OppslagRoutesTest : FreeSpec({
-    val periodeId = UUID.randomUUID()
+    val testPeriodeId = UUID.randomUUID()
     val oauth = MockOAuth2Server()
 
     beforeSpec {
@@ -39,7 +46,7 @@ class OppslagRoutesTest : FreeSpec({
         oauth.shutdown()
     }
 
-    "/arbeidssoekerperiode should respond with 200 OK" {
+    "/arbeidssoekerperioder should respond with 200 OK" {
         val arbeidssoekerperiodeService = ArbeidssoekerperiodeService(mockk<ArbeidssoekerperiodeRepository>(relaxed = true))
 
         every {
@@ -56,23 +63,44 @@ class OppslagRoutesTest : FreeSpec({
                 }
             }
 
-            val tokenMap =
-                mapOf(
-                    "acr" to "idporten-loa-high",
-                    "pid" to "12345678901"
-                )
-
-            val token =
-                oauth.issueToken(
-                    claims = tokenMap
-                )
-
-            val response = client.get("api/v1/arbeidssoekerperioder") { bearerAuth(token.serialize()) }
+            val response = client.get("api/v1/arbeidssoekerperioder") { bearerAuth(getTokenXToken(oauth)) }
             response.status shouldBe HttpStatusCode.OK
         }
     }
 
-    "/arbeidssoekerperiode should respond with 401 Unauthorized without token" {
+    "/arbeidssoekerperioder?siste=true should respond with 200 OK and last arbeidssoekerperiode" {
+        val arbeidssoekerperiodeService = ArbeidssoekerperiodeService(mockk<ArbeidssoekerperiodeRepository>(relaxed = true))
+
+        every {
+            arbeidssoekerperiodeService.hentArbeidssoekerperioder(any())
+        } returns getArbeidssoekerperiodeResponse(testPeriodeId)
+
+        testApplication {
+            application {
+                configureAuthentication(oauth)
+                configureSerialization()
+                configureHTTP()
+                routing {
+                    oppslagRoutes(mockk(relaxed = true), arbeidssoekerperiodeService, mockk(relaxed = true), mockk(relaxed = true))
+                }
+            }
+
+            val response =
+                client.get("api/v1/arbeidssoekerperioder?siste=true") {
+                    bearerAuth(getTokenXToken(oauth))
+                }
+            response.status shouldBe HttpStatusCode.OK
+
+            val responseBody = response.bodyAsText()
+            val objectMapper = arbeidssoekerperioderObjectMapper()
+            val responseList = objectMapper.readValue<Arbeidssoekerperioder>(responseBody)
+
+            responseList.size shouldBe 1
+            responseList[0].periodeId shouldBe testPeriodeId
+        }
+    }
+
+    "/arbeidssoekerperioder should respond with 401 Unauthorized without token" {
         testApplication {
             application {
                 configureAuthentication(oauth)
@@ -112,18 +140,7 @@ class OppslagRoutesTest : FreeSpec({
                 }
             }
 
-            val tokenMap =
-                mapOf(
-                    "acr" to "idporten-loa-high",
-                    "pid" to "12345678901"
-                )
-
-            val token =
-                oauth.issueToken(
-                    claims = tokenMap
-                )
-
-            val response = client.get("api/v1/opplysninger-om-arbeidssoeker/$periodeId") { bearerAuth(token.serialize()) }
+            val response = client.get("api/v1/opplysninger-om-arbeidssoeker/$testPeriodeId") { bearerAuth(getTokenXToken(oauth)) }
             response.status shouldBe HttpStatusCode.OK
         }
     }
@@ -140,7 +157,7 @@ class OppslagRoutesTest : FreeSpec({
             }
 
             val noTokenResponse =
-                client.get("api/v1/opplysninger-om-arbeidssoeker/$periodeId")
+                client.get("api/v1/opplysninger-om-arbeidssoeker/$testPeriodeId")
 
             noTokenResponse.status shouldBe HttpStatusCode.Unauthorized
         }
@@ -168,18 +185,7 @@ class OppslagRoutesTest : FreeSpec({
                 }
             }
 
-            val tokenMap =
-                mapOf(
-                    "acr" to "idporten-loa-high",
-                    "pid" to "12345678901"
-                )
-
-            val token =
-                oauth.issueToken(
-                    claims = tokenMap
-                )
-
-            val response = client.get("api/v1/profilering/$periodeId") { bearerAuth(token.serialize()) }
+            val response = client.get("api/v1/profilering/$testPeriodeId") { bearerAuth(getTokenXToken(oauth)) }
             response.status shouldBe HttpStatusCode.OK
         }
     }
@@ -196,7 +202,7 @@ class OppslagRoutesTest : FreeSpec({
             }
 
             val noTokenResponse =
-                client.get("api/v1/profilering/$periodeId")
+                client.get("api/v1/profilering/$testPeriodeId")
 
             noTokenResponse.status shouldBe HttpStatusCode.Unauthorized
         }
@@ -222,16 +228,6 @@ class OppslagRoutesTest : FreeSpec({
                 }
             }
 
-            val tokenMap =
-                mapOf(
-                    "oid" to "989f736f-14db-45dc-b8d1-94d621dbf2bb",
-                    "roles" to listOf("access_as_application")
-                )
-            val token =
-                oauth.issueToken(
-                    claims = tokenMap
-                )
-
             val client =
                 createClient {
                     install(ContentNegotiation) {
@@ -247,7 +243,7 @@ class OppslagRoutesTest : FreeSpec({
 
             val response =
                 client.post("api/v1/veileder/arbeidssoekerperioder") {
-                    bearerAuth(token.serialize())
+                    bearerAuth(getAzureM2MToken(oauth))
                     header("Nav-Ident", "test")
                     contentType(ContentType.Application.Json)
                     setBody(
@@ -276,16 +272,6 @@ class OppslagRoutesTest : FreeSpec({
                 }
             }
 
-            val tokenMap =
-                mapOf(
-                    "oid" to "989f736f-14db-45dc-b8d1-94d621dbf2bb",
-                    "roles" to listOf("access_as_application")
-                )
-            val token =
-                oauth.issueToken(
-                    claims = tokenMap
-                )
-
             val client =
                 createClient {
                     install(ContentNegotiation) {
@@ -301,7 +287,7 @@ class OppslagRoutesTest : FreeSpec({
 
             val response =
                 client.post("api/v1/veileder/arbeidssoekerperioder") {
-                    bearerAuth(token.serialize())
+                    bearerAuth(getAzureM2MToken(oauth))
                     contentType(ContentType.Application.Json)
                     header("Nav-Ident", "test")
                     setBody(
@@ -334,16 +320,6 @@ class OppslagRoutesTest : FreeSpec({
                 }
             }
 
-            val tokenMap =
-                mapOf(
-                    "oid" to "989f736f-14db-45dc-b8d1-94d621dbf2bb",
-                    "roles" to listOf("access_as_application")
-                )
-            val token =
-                oauth.issueToken(
-                    claims = tokenMap
-                )
-
             val client =
                 createClient {
                     install(ContentNegotiation) {
@@ -359,7 +335,7 @@ class OppslagRoutesTest : FreeSpec({
 
             val response =
                 client.post("api/v1/veileder/arbeidssoekerperioder") {
-                    bearerAuth(token.serialize())
+                    bearerAuth(getAzureM2MToken(oauth))
                     contentType(ContentType.Application.Json)
                     setBody(
                         ArbeidssoekerperiodeRequest(
@@ -422,7 +398,7 @@ class OppslagRoutesTest : FreeSpec({
                     setBody(
                         OpplysningerOmArbeidssoekerRequest(
                             identitetsnummer = "12345678901",
-                            periodeId = periodeId
+                            periodeId = testPeriodeId
                         )
                     )
                 }
@@ -483,7 +459,7 @@ class OppslagRoutesTest : FreeSpec({
                     setBody(
                         OpplysningerOmArbeidssoekerRequest(
                             identitetsnummer = "12345678901",
-                            periodeId = periodeId
+                            periodeId = testPeriodeId
                         )
                     )
                 }
@@ -542,7 +518,7 @@ class OppslagRoutesTest : FreeSpec({
                     setBody(
                         ProfileringRequest(
                             identitetsnummer = "12345678901",
-                            periodeId = periodeId
+                            periodeId = testPeriodeId
                         )
                     )
                 }
@@ -601,7 +577,7 @@ class OppslagRoutesTest : FreeSpec({
                     setBody(
                         ProfileringRequest(
                             identitetsnummer = "12345678901",
-                            periodeId = periodeId
+                            periodeId = testPeriodeId
                         )
                     )
                 }

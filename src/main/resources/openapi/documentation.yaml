@@ -14,6 +14,13 @@ paths:
       description: ""
       security:
         - TokenXAuth: []
+      parameters:
+        - name: "siste"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+          description: "Hvis true hentes bare den siste perioden."
       responses:
         "403":
           description: "Forbidden"
@@ -40,6 +47,13 @@ paths:
       description: ""
       security:
         - TokenXAuth: []
+      parameters:
+        - name: "siste"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+          description: "Hvis true hentes bare den siste opplysninger."
       responses:
         "500":
           description: "Internal Server Error"
@@ -86,6 +100,13 @@ paths:
       description: ""
       security:
         - TokenXAuth: []
+      parameters:
+        - name: "siste"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+          description: "Hvis true hentes bare den siste profileringen."
       responses:
         "500":
           description: "Internal Server Error"
@@ -138,7 +159,7 @@ paths:
           required: false
           schema:
             type: "boolean"
-          description: "Hvis true, henter bare den siste periode, opplysninger og profilering."
+          description: "Hvis true hentes siste periode, opplysninger og profilering."
       responses:
         "403":
           description: "Forbidden"
@@ -163,6 +184,13 @@ paths:
       description: ""
       security:
         - AzureAuth: []
+      parameters:
+        - name: "siste"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+          description: "Hvis true hentes bare den siste perioden."
       requestBody:
         content:
           application/json:
@@ -195,6 +223,13 @@ paths:
       description: ""
       security:
         - AzureAuth: []
+      parameters:
+        - name: "siste"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+          description: "Hvis true hentes bare den siste opplysningen."
       requestBody:
         content:
           application/json:
@@ -227,6 +262,13 @@ paths:
       description: ""
       security:
         - AzureAuth: []
+      parameters:
+        - name: "siste"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+          description: "Hvis true hentes bare den siste profileringen."
       requestBody:
         content:
           application/json:
@@ -265,7 +307,7 @@ paths:
           required: false
           schema:
             type: "boolean"
-          description: "Hvis true, henter bare den siste periode, opplysninger og profilering."
+          description: "Hvis true hentes bare siste periode, opplysninger og profilering."
       requestBody:
         content:
           application/json:
