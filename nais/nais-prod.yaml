@@ -90,6 +90,8 @@ spec:
         - application: veilarbdirigent
           namespace: pto
           cluster: prod-fss
+        - application: paw-arbeidssoekerregisteret-hendelselogg-backup
+          namespace: paw
     outbound:
       rules:
         - application: poao-tilgang

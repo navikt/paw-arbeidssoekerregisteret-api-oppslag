@@ -86,6 +86,8 @@ spec:
           cluster: dev-fss
         - application: paw-brukerstotte
           namespace: paw
+        - application: paw-arbeidssoekerregisteret-hendelselogg-backup
+          namespace: paw
         
     outbound:
       rules:
