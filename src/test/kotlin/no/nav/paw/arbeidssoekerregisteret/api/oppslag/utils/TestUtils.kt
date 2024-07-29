@@ -6,7 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.security.mock.oauth2.MockOAuth2Server
 
-fun arbeidssoekerperioderObjectMapper() =
+fun arbeidssoekerregisterObjectMapper() =
     jacksonObjectMapper().apply {
         registerModule(JavaTimeModule())
         disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
