@@ -2,7 +2,7 @@ openapi: "3.0.3"
 info:
   title: "paw_arbeidssoekerregisteret_api_oppslag API"
   description: "API for synkront oppslag mot arbeidssøkerregisteret."
-  version: "1.0.0"
+  version: "1.1.0"
 servers:
   - url: "https://oppslag-arbeidssoekerregisteret.intern.nav.no"
     description: "Production"
@@ -20,7 +20,7 @@ paths:
           required: false
           schema:
             type: "boolean"
-          description: "Hvis true hentes bare den siste perioden."
+          description: "siste=true returnerer siste periode."
       responses:
         "403":
           description: "Forbidden"
@@ -53,7 +53,7 @@ paths:
           required: false
           schema:
             type: "boolean"
-          description: "Hvis true hentes bare den siste opplysninger."
+          description: "siste=true returnerer siste opplysninger."
       responses:
         "500":
           description: "Internal Server Error"
@@ -106,7 +106,7 @@ paths:
           required: false
           schema:
             type: "boolean"
-          description: "Hvis true hentes bare den siste profileringen."
+          description: "siste=true returnerer siste profilering."
       responses:
         "500":
           description: "Internal Server Error"
@@ -159,7 +159,7 @@ paths:
           required: false
           schema:
             type: "boolean"
-          description: "Hvis true hentes siste periode, opplysninger og profilering."
+          description: "siste=true returnerer siste periode, opplysninger og profilering."
       responses:
         "403":
           description: "Forbidden"
@@ -190,7 +190,7 @@ paths:
           required: false
           schema:
             type: "boolean"
-          description: "Hvis true hentes bare den siste perioden."
+          description: "siste=true returnerer siste periode."
       requestBody:
         content:
           application/json:
@@ -229,7 +229,7 @@ paths:
           required: false
           schema:
             type: "boolean"
-          description: "Hvis true hentes bare den siste opplysningen."
+          description: "siste=true returnerer siste opplysninger."
       requestBody:
         content:
           application/json:
@@ -268,7 +268,7 @@ paths:
           required: false
           schema:
             type: "boolean"
-          description: "Hvis true hentes bare den siste profileringen."
+          description: "siste=true returnerer siste profilering."
       requestBody:
         content:
           application/json:
@@ -307,7 +307,7 @@ paths:
           required: false
           schema:
             type: "boolean"
-          description: "Hvis true hentes bare siste periode, opplysninger og profilering."
+          description: "siste=true returnerer siste periode, opplysninger og profilering."
       requestBody:
         content:
           application/json:

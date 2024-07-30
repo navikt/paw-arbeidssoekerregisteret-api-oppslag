@@ -68,17 +68,15 @@ class OppslagRoutesTest : FreeSpec({
                 }
             }
 
-            val objectMapper = arbeidssoekerregisterObjectMapper()
-
             client.get("api/v1/arbeidssoekerperioder") { bearerAuth(getTokenXToken(oauth)) }.let {
                 it.status shouldBe HttpStatusCode.OK
-                val responseList = objectMapper.readValue<List<ArbeidssoekerperiodeResponse>>(it.bodyAsText())
+                val responseList = arbeidssoekerregisterObjectMapper().readValue<List<ArbeidssoekerperiodeResponse>>(it.bodyAsText())
                 responseList.size shouldBe 3
             }
 
             client.get("api/v1/arbeidssoekerperioder?siste=true") { bearerAuth(getTokenXToken(oauth)) }.let {
                 it.status shouldBe HttpStatusCode.OK
-                val responseList = objectMapper.readValue<List<ArbeidssoekerperiodeResponse>>(it.bodyAsText())
+                val responseList = arbeidssoekerregisterObjectMapper().readValue<List<ArbeidssoekerperiodeResponse>>(it.bodyAsText())
                 responseList.size shouldBe 1
                 responseList[0].periodeId shouldBe testPeriodeId
             }
@@ -125,17 +123,15 @@ class OppslagRoutesTest : FreeSpec({
                 }
             }
 
-            val objectMapper = arbeidssoekerregisterObjectMapper()
-
             client.get("api/v1/opplysninger-om-arbeidssoeker") { bearerAuth(getTokenXToken(oauth)) }.let {
                 it.status shouldBe HttpStatusCode.OK
-                val responseList = objectMapper.readValue<List<OpplysningerOmArbeidssoekerResponse>>(it.bodyAsText())
+                val responseList = arbeidssoekerregisterObjectMapper().readValue<List<OpplysningerOmArbeidssoekerResponse>>(it.bodyAsText())
                 responseList.size shouldBe 3
             }
 
             client.get("api/v1/opplysninger-om-arbeidssoeker?siste=true") { bearerAuth(getTokenXToken(oauth)) }.let {
                 it.status shouldBe HttpStatusCode.OK
-                val responseList = objectMapper.readValue<List<OpplysningerOmArbeidssoekerResponse>>(it.bodyAsText())
+                val responseList = arbeidssoekerregisterObjectMapper().readValue<List<OpplysningerOmArbeidssoekerResponse>>(it.bodyAsText())
                 responseList.size shouldBe 1
                 responseList[0].periodeId shouldBe testPeriodeId
             }
@@ -209,17 +205,15 @@ class OppslagRoutesTest : FreeSpec({
                 }
             }
 
-            val objectMapper = arbeidssoekerregisterObjectMapper()
-
             client.get("api/v1/profilering") { bearerAuth(getTokenXToken(oauth)) }.let {
                 it.status shouldBe HttpStatusCode.OK
-                val responseList = objectMapper.readValue<List<ProfileringResponse>>(it.bodyAsText())
+                val responseList = arbeidssoekerregisterObjectMapper().readValue<List<ProfileringResponse>>(it.bodyAsText())
                 responseList.size shouldBe 3
             }
 
             client.get("api/v1/profilering?siste=true") { bearerAuth(getTokenXToken(oauth)) }.let {
                 it.status shouldBe HttpStatusCode.OK
-                val responseList = objectMapper.readValue<List<ProfileringResponse>>(it.bodyAsText())
+                val responseList = arbeidssoekerregisterObjectMapper().readValue<List<ProfileringResponse>>(it.bodyAsText())
                 responseList.size shouldBe 1
                 responseList[0].periodeId shouldBe testPeriodeId
             }
@@ -306,11 +300,10 @@ class OppslagRoutesTest : FreeSpec({
                 }
             }
 
-            val objectMapper = arbeidssoekerregisterObjectMapper()
 
             client.get("api/v1/samlet-informasjon") { bearerAuth(getTokenXToken(oauth)) }.let {
                 it.status shouldBe HttpStatusCode.OK
-                val response = objectMapper.readValue<SamletInformasjonResponse>(it.bodyAsText())
+                val response = arbeidssoekerregisterObjectMapper().readValue<SamletInformasjonResponse>(it.bodyAsText())
                 response.arbeidssoekerperioder?.size shouldBe 3
                 response.opplysningerOmArbeidssoeker?.size shouldBe 3
                 response.profilering?.size shouldBe 3
@@ -318,7 +311,7 @@ class OppslagRoutesTest : FreeSpec({
 
             client.get("api/v1/samlet-informasjon?siste=true") { bearerAuth(getTokenXToken(oauth)) }.let {
                 it.status shouldBe HttpStatusCode.OK
-                val response = objectMapper.readValue<SamletInformasjonResponse>(it.bodyAsText())
+                val response = arbeidssoekerregisterObjectMapper().readValue<SamletInformasjonResponse>(it.bodyAsText())
                 response.arbeidssoekerperioder?.size shouldBe 1
                 response.opplysningerOmArbeidssoeker?.size shouldBe 1
                 response.profilering?.size shouldBe 1
@@ -331,7 +324,7 @@ class OppslagRoutesTest : FreeSpec({
         val autorisasjonService = mockk<AutorisasjonService>(relaxed = true)
         every {
             arbeidssoekerperiodeService.hentArbeidssoekerperioder(any())
-        } returns emptyList()
+        } returns getArbeidssoekerperiodeResponse(testPeriodeId)
         every {
             autorisasjonService.verifiserTilgangTilBruker(any(), any())
         } returns true
@@ -359,7 +352,6 @@ class OppslagRoutesTest : FreeSpec({
                     }
                 }
 
-            val response =
                 client.post("api/v1/veileder/arbeidssoekerperioder") {
                     bearerAuth(getAzureM2MToken(oauth))
                     header("Nav-Ident", "test")
@@ -369,8 +361,26 @@ class OppslagRoutesTest : FreeSpec({
                             identitetsnummer = "12345678911"
                         )
                     )
+                }.let {
+                    it.status shouldBe HttpStatusCode.OK
+                    val responseList = arbeidssoekerregisterObjectMapper().readValue<List<ArbeidssoekerperiodeResponse>>(it.bodyAsText())
+                    responseList.size shouldBe 3
                 }
-            response.status shouldBe HttpStatusCode.OK
+
+                client.post("api/v1/veileder/arbeidssoekerperioder?siste=true") {
+                    bearerAuth(getAzureM2MToken(oauth))
+                    header("Nav-Ident", "test")
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        ArbeidssoekerperiodeRequest(
+                            identitetsnummer = "12345678911"
+                        )
+                    )
+                }.let {
+                    it.status shouldBe HttpStatusCode.OK
+                    val responseList = arbeidssoekerregisterObjectMapper().readValue<List<ArbeidssoekerperiodeResponse>>(it.bodyAsText())
+                    responseList.size shouldBe 1
+                }
         }
     }
 
@@ -521,7 +531,7 @@ class OppslagRoutesTest : FreeSpec({
 
         every {
             opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(any())
-        } returns emptyList()
+        } returns getOpplysningerOmArbeidssoekerResponse(testPeriodeId)
 
         every {
             arbeidssoekerperiodeService.periodeIdTilhoererIdentitetsnummer(any(), any())
@@ -550,18 +560,36 @@ class OppslagRoutesTest : FreeSpec({
                     }
                 }
 
-            val response =
-                client.post("api/v1/veileder/opplysninger-om-arbeidssoeker") {
-                    bearerAuth(getAzureM2MToken(oauth))
-                    contentType(ContentType.Application.Json)
-                    setBody(
-                        OpplysningerOmArbeidssoekerRequest(
-                            identitetsnummer = "12345678901",
-                            periodeId = testPeriodeId
-                        )
+            client.post("api/v1/veileder/opplysninger-om-arbeidssoeker") {
+                bearerAuth(getAzureM2MToken(oauth))
+                contentType(ContentType.Application.Json)
+                setBody(
+                    OpplysningerOmArbeidssoekerRequest(
+                        identitetsnummer = "12345678901",
+                        periodeId = testPeriodeId
                     )
-                }
-            response.status shouldBe HttpStatusCode.OK
+                )
+            }.let {
+                it.status shouldBe HttpStatusCode.OK
+                val responseList = arbeidssoekerregisterObjectMapper().readValue<List<OpplysningerOmArbeidssoekerResponse>>(it.bodyAsText())
+                responseList.size shouldBe 3
+            }
+
+            client.post("api/v1/veileder/opplysninger-om-arbeidssoeker?siste=true") {
+                bearerAuth(getAzureM2MToken(oauth))
+                contentType(ContentType.Application.Json)
+                setBody(
+                    OpplysningerOmArbeidssoekerRequest(
+                        identitetsnummer = "12345678901",
+                        periodeId = testPeriodeId
+                    )
+                )
+            }.let {
+                it.status shouldBe HttpStatusCode.OK
+                val responseList = arbeidssoekerregisterObjectMapper().readValue<List<OpplysningerOmArbeidssoekerResponse>>(it.bodyAsText())
+                responseList.size shouldBe 1
+                responseList[0].periodeId shouldBe testPeriodeId
+            }
         }
     }
     "/veileder/profilering should return 403 Forbidden if periodeId does not exist for user" {
@@ -619,7 +647,7 @@ class OppslagRoutesTest : FreeSpec({
 
         every {
             profileringService.hentProfileringForArbeidssoekerMedPeriodeId(any())
-        } returns emptyList()
+        } returns getProfileringResponse(testPeriodeId)
 
         every {
             arbeidssoekerperiodeService.periodeIdTilhoererIdentitetsnummer(any(), any())
@@ -648,18 +676,36 @@ class OppslagRoutesTest : FreeSpec({
                     }
                 }
 
-            val response =
-                client.post("api/v1/veileder/profilering") {
-                    bearerAuth(getAzureM2MToken(oauth))
-                    contentType(ContentType.Application.Json)
-                    setBody(
-                        ProfileringRequest(
-                            identitetsnummer = "12345678901",
-                            periodeId = testPeriodeId
-                        )
+            client.post("api/v1/veileder/profilering") {
+                bearerAuth(getAzureM2MToken(oauth))
+                contentType(ContentType.Application.Json)
+                setBody(
+                    ProfileringRequest(
+                        identitetsnummer = "12345678901",
+                        periodeId = testPeriodeId
                     )
-                }
-            response.status shouldBe HttpStatusCode.OK
+                )
+            }.let {
+                it.status shouldBe HttpStatusCode.OK
+                val responseList = arbeidssoekerregisterObjectMapper().readValue<List<ProfileringResponse>>(it.bodyAsText())
+                responseList.size shouldBe 3
+            }
+
+            client.post("api/v1/veileder/profilering?siste=true") {
+                bearerAuth(getAzureM2MToken(oauth))
+                contentType(ContentType.Application.Json)
+                setBody(
+                    ProfileringRequest(
+                        identitetsnummer = "12345678901",
+                        periodeId = testPeriodeId
+                    )
+                )
+            }.let {
+                it.status shouldBe HttpStatusCode.OK
+                val responseList = arbeidssoekerregisterObjectMapper().readValue<List<ProfileringResponse>>(it.bodyAsText())
+                responseList.size shouldBe 1
+                responseList[0].periodeId shouldBe testPeriodeId
+            }
         }
     }
 })
