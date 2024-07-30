@@ -300,7 +300,6 @@ class OppslagRoutesTest : FreeSpec({
                 }
             }
 
-
             client.get("api/v1/samlet-informasjon") { bearerAuth(getTokenXToken(oauth)) }.let {
                 it.status shouldBe HttpStatusCode.OK
                 val response = arbeidssoekerregisterObjectMapper().readValue<SamletInformasjonResponse>(it.bodyAsText())
@@ -352,35 +351,35 @@ class OppslagRoutesTest : FreeSpec({
                     }
                 }
 
-                client.post("api/v1/veileder/arbeidssoekerperioder") {
-                    bearerAuth(getAzureM2MToken(oauth))
-                    header("Nav-Ident", "test")
-                    contentType(ContentType.Application.Json)
-                    setBody(
-                        ArbeidssoekerperiodeRequest(
-                            identitetsnummer = "12345678911"
-                        )
+            client.post("api/v1/veileder/arbeidssoekerperioder") {
+                bearerAuth(getAzureM2MToken(oauth))
+                header("Nav-Ident", "test")
+                contentType(ContentType.Application.Json)
+                setBody(
+                    ArbeidssoekerperiodeRequest(
+                        identitetsnummer = "12345678911"
                     )
-                }.let {
-                    it.status shouldBe HttpStatusCode.OK
-                    val responseList = arbeidssoekerregisterObjectMapper().readValue<List<ArbeidssoekerperiodeResponse>>(it.bodyAsText())
-                    responseList.size shouldBe 3
-                }
+                )
+            }.let {
+                it.status shouldBe HttpStatusCode.OK
+                val responseList = arbeidssoekerregisterObjectMapper().readValue<List<ArbeidssoekerperiodeResponse>>(it.bodyAsText())
+                responseList.size shouldBe 3
+            }
 
-                client.post("api/v1/veileder/arbeidssoekerperioder?siste=true") {
-                    bearerAuth(getAzureM2MToken(oauth))
-                    header("Nav-Ident", "test")
-                    contentType(ContentType.Application.Json)
-                    setBody(
-                        ArbeidssoekerperiodeRequest(
-                            identitetsnummer = "12345678911"
-                        )
+            client.post("api/v1/veileder/arbeidssoekerperioder?siste=true") {
+                bearerAuth(getAzureM2MToken(oauth))
+                header("Nav-Ident", "test")
+                contentType(ContentType.Application.Json)
+                setBody(
+                    ArbeidssoekerperiodeRequest(
+                        identitetsnummer = "12345678911"
                     )
-                }.let {
-                    it.status shouldBe HttpStatusCode.OK
-                    val responseList = arbeidssoekerregisterObjectMapper().readValue<List<ArbeidssoekerperiodeResponse>>(it.bodyAsText())
-                    responseList.size shouldBe 1
-                }
+                )
+            }.let {
+                it.status shouldBe HttpStatusCode.OK
+                val responseList = arbeidssoekerregisterObjectMapper().readValue<List<ArbeidssoekerperiodeResponse>>(it.bodyAsText())
+                responseList.size shouldBe 1
+            }
         }
     }
 
