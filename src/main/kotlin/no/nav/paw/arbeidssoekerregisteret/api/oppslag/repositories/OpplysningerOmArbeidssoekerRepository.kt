@@ -31,6 +31,33 @@ class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
             }
         }
 
+    fun hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(identitetsnummer: Identitetsnummer): List<OpplysningerOmArbeidssoekerResponse> =
+        transaction(database) {
+            val periodeIder = ArbeidssoekerperiodeRepository(database).hentArbeidssoekerperioder(identitetsnummer).map { it.periodeId }
+            periodeIder.flatMap { periodeId ->
+                hentOpplysningerOmArbeidssoeker(periodeId)
+            }
+        }
+
+    /*fun hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(
+        identitetsnummer: Identitetsnummer,
+        limit: Int? = null
+    ): List<OpplysningerOmArbeidssoekerResponse> =
+        transaction(database) {
+            OpplysningerOmArbeidssoekerTable
+                .innerJoin(MetadataTable, { sendtInnAvId }, { MetadataTable.id })
+                .innerJoin(PeriodeOpplysningerTable, { OpplysningerOmArbeidssoekerTable.id }, { opplysningerOmArbeidssoekerTableId })
+                .innerJoin(PeriodeTable, { PeriodeOpplysningerTable.periodeId }, { periodeId })
+                .selectAll().where { PeriodeTable.identitetsnummer eq identitetsnummer.verdi }
+                .orderBy(MetadataTable.tidspunkt, SortOrder.DESC)
+                .let { query ->
+                    if (limit != null) query.limit(limit) else query
+                }
+                .mapNotNull { resultRow ->
+                    OpplysningerOmArbeidssoekerConverter().konverterTilOpplysningerOmArbeidssoekerResponse(resultRow, resultRow[PeriodeTable.periodeId])
+                }
+        }*/
+
     fun storeBatch(batch: Sequence<OpplysningerOmArbeidssoeker>) {
         transaction(database) {
             repetitionAttempts = 2
@@ -183,6 +210,7 @@ class OpplysningerOmArbeidssoekerConverter {
         resultRow: ResultRow,
         periodeId: UUID
     ): OpplysningerOmArbeidssoekerResponse {
+        println("resultRow: $resultRow")
         val situasjonIdPK = resultRow[OpplysningerOmArbeidssoekerTable.id]
         val opplysningerOmArbeidssoekerId = resultRow[OpplysningerOmArbeidssoekerTable.opplysningerOmArbeidssoekerId]
         val sendtInnAvId = resultRow[OpplysningerOmArbeidssoekerTable.sendtInnAvId]

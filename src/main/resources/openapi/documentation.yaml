@@ -2,7 +2,7 @@ openapi: "3.0.3"
 info:
   title: "paw_arbeidssoekerregisteret_api_oppslag API"
   description: "API for synkront oppslag mot arbeidssøkerregisteret."
-  version: "1.0.0"
+  version: "1.1.0"
 servers:
   - url: "https://oppslag-arbeidssoekerregisteret.intern.nav.no"
     description: "Production"
@@ -14,6 +14,13 @@ paths:
       description: ""
       security:
         - TokenXAuth: []
+      parameters:
+        - name: "siste"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+          description: "siste=true returnerer siste periode."
       responses:
         "403":
           description: "Forbidden"
@@ -35,6 +42,33 @@ paths:
                 type: "array"
                 items:
                   $ref: "#/components/schemas/ArbeidssoekerperiodeResponse"
+  /api/v1/opplysninger-om-arbeidssoeker:
+    get:
+      description: ""
+      security:
+        - TokenXAuth: []
+      parameters:
+        - name: "siste"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+          description: "siste=true returnerer siste opplysninger."
+      responses:
+        "500":
+          description: "Internal Server Error"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/OpplysningerOmArbeidssoekerResponse"
   /api/v1/opplysninger-om-arbeidssoeker/{periodeId}:
     get:
       description: ""
@@ -61,6 +95,33 @@ paths:
                 type: "array"
                 items:
                   $ref: "#/components/schemas/OpplysningerOmArbeidssoekerResponse"
+  /api/v1/profilering:
+    get:
+      description: ""
+      security:
+        - TokenXAuth: []
+      parameters:
+        - name: "siste"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+          description: "siste=true returnerer siste profilering."
+      responses:
+        "500":
+          description: "Internal Server Error"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/ProfileringResponse"
   /api/v1/profilering/{periodeId}:
     get:
       description: ""
@@ -87,11 +148,49 @@ paths:
                 type: "array"
                 items:
                   $ref: "#/components/schemas/ProfileringResponse"
+  /api/v1/samlet-informasjon:
+    get:
+      description: "Henter samlet informasjon om arbeidssøkerperioder, opplysninger og profilering."
+      security:
+        - TokenXAuth: []
+      parameters:
+        - name: "siste"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+          description: "siste=true returnerer siste periode, opplysninger og profilering."
+      responses:
+        "403":
+          description: "Forbidden"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+        "500":
+          description: "Internal Server Error"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SamletInformasjonResponse"
   /api/v1/veileder/arbeidssoekerperioder:
     post:
       description: ""
       security:
-        - AzureAuth: [ ]
+        - AzureAuth: []
+      parameters:
+        - name: "siste"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+          description: "siste=true returnerer siste periode."
       requestBody:
         content:
           application/json:
@@ -124,6 +223,13 @@ paths:
       description: ""
       security:
         - AzureAuth: []
+      parameters:
+        - name: "siste"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+          description: "siste=true returnerer siste opplysninger."
       requestBody:
         content:
           application/json:
@@ -156,6 +262,13 @@ paths:
       description: ""
       security:
         - AzureAuth: []
+      parameters:
+        - name: "siste"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+          description: "siste=true returnerer siste profilering."
       requestBody:
         content:
           application/json:
@@ -183,42 +296,43 @@ paths:
                 type: "array"
                 items:
                   $ref: "#/components/schemas/ProfileringResponse"
-  /internal/isAlive:
-    get:
-      description: ""
+  /api/v1/veileder/samlet-informasjon:
+    post:
+      description: "Veileder henter samlet informasjon om arbeidssøkerperioder, opplysninger og profilering."
+      security:
+        - AzureAuth: []
+      parameters:
+        - name: "siste"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+          description: "siste=true returnerer siste periode, opplysninger og profilering."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SamletInformasjonRequest"
+        required: true
       responses:
-        "200":
-          description: "OK"
+        "403":
+          description: "Forbidden"
           content:
             text/plain:
               schema:
                 type: "string"
-              examples:
-                Example#1:
-                  value: "ALIVE"
-  /internal/isReady:
-    get:
-      description: ""
-      responses:
-        "200":
-          description: "OK"
+        "500":
+          description: "Internal Server Error"
           content:
             text/plain:
               schema:
                 type: "string"
-              examples:
-                Example#1:
-                  value: "READY"
-  /internal/metrics:
-    get:
-      description: ""
-      responses:
         "200":
           description: "OK"
           content:
             application/json:
               schema:
-                type: "string"
+                $ref: "#/components/schemas/SamletInformasjonResponse"
 components:
   securitySchemes:
     TokenXAuth:
@@ -278,17 +392,17 @@ components:
         - "FORSINKELSE"
         - "RETTING"
     TidspunktFraKildeResponse:
-        type: "object"
-        properties:
-            tidspunkt:
-              type: "string"
-              format: "date-time"
-              example: "2021-09-29T11:20:33.444Z"
-            avviksType:
-              $ref: "#/components/schemas/AvviksTypeResponse"
-        required:
-            - "tidspunkt"
-            - "avviksType"
+      type: "object"
+      properties:
+        tidspunkt:
+          type: "string"
+          format: "date-time"
+          example: "2021-09-29T11:20:33.444Z"
+        avviksType:
+          $ref: "#/components/schemas/AvviksTypeResponse"
+      required:
+        - "tidspunkt"
+        - "avviksType"
     MetadataResponse:
       type: "object"
       properties:
@@ -412,6 +526,21 @@ components:
         - "opplysningerOmArbeidssoekerId"
         - "sendtInnAv"
         - "profilertTil"
+    SamletInformasjonResponse:
+      type: "object"
+      properties:
+        arbeidssoekerperioder:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/ArbeidssoekerperiodeResponse"
+        opplysningerOmArbeidssoeker:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/OpplysningerOmArbeidssoekerResponse"
+        profilering:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/ProfileringResponse"
     ArbeidssoekerperiodeRequest:
       type: "object"
       properties:
@@ -429,7 +558,6 @@ components:
           format: "uuid"
       required:
         - "identitetsnummer"
-        - "periodeId"
     ProfileringRequest:
       type: "object"
       properties:
@@ -440,7 +568,13 @@ components:
           format: "uuid"
       required:
         - "identitetsnummer"
-        - "periodeId"
+    SamletInformasjonRequest:
+      type: "object"
+      properties:
+        identitetsnummer:
+          type: "string"
+      required:
+        - "identitetsnummer"
     JaNeiVetIkke:
       type: "string"
       enum:

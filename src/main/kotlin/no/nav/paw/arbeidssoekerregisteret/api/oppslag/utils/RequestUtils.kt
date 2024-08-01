@@ -1,13 +1,22 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.*
 import io.ktor.server.auth.authentication
+import io.ktor.server.response.*
+import io.ktor.util.pipeline.*
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ArbeidssoekerperiodeResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.SamletInformasjonResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.toIdentitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.StatusException
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ArbeidssoekerperiodeService
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.AutorisasjonService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.NavAnsatt
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.OpplysningerOmArbeidssoekerService
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ProfileringService
 import no.nav.security.token.support.v2.TokenValidationContextPrincipal
+import java.util.*
 
 fun ApplicationCall.getClaim(
     issuer: String,
@@ -53,3 +62,88 @@ fun ApplicationCall.getNavAnsattFromToken(): NavAnsatt? =
     } else {
         this.getNavAnsatt()
     }
+
+suspend fun ApplicationCall.verifyAccessFromToken(
+    autorisasjonService: AutorisasjonService,
+    identitetsnummer: Identitetsnummer
+): Boolean {
+    val navAnsatt =
+        getNavAnsattFromToken()
+            ?: return true
+
+    logger.info("Sjekker om NAV-ansatt har tilgang til bruker")
+    return autorisasjonService.verifiserTilgangTilBruker(navAnsatt, identitetsnummer).also { harTilgang ->
+        if (!harTilgang) {
+            logger.warn("NAV-ansatt har ikke tilgang til bruker")
+            respondText(status = HttpStatusCode.Forbidden, text = HttpStatusCode.Forbidden.description)
+        }
+    }
+}
+
+suspend fun ApplicationCall.verifyPeriodeId(
+    periodeId: UUID,
+    identitetsnummer: Identitetsnummer,
+    arbeidssoekerperiodeService: ArbeidssoekerperiodeService
+): Boolean {
+    val periodeIdTilhoererIdentitetsnummer = arbeidssoekerperiodeService.periodeIdTilhoererIdentitetsnummer(periodeId, identitetsnummer)
+    if (!periodeIdTilhoererIdentitetsnummer) {
+        logger.warn("PeriodeId tilhører ikke bruker: $periodeId")
+        respondText(status = HttpStatusCode.Forbidden, text = "PeriodeId tilhører ikke bruker: $periodeId")
+        return false
+    }
+    return true
+}
+
+suspend fun PipelineContext<Unit, ApplicationCall>.isPeriodeIdValid(
+    periodeId: UUID?,
+    identitetsnummer: Identitetsnummer,
+    arbeidssoekerperiodeService: ArbeidssoekerperiodeService
+): Boolean {
+    if (periodeId != null) {
+        val periodeIdTilhoererIdentitetsnummer = call.verifyPeriodeId(periodeId, identitetsnummer, arbeidssoekerperiodeService)
+        if (!periodeIdTilhoererIdentitetsnummer) {
+            logger.warn("PeriodeId tilhører ikke bruker: $periodeId")
+            call.respond(HttpStatusCode.Forbidden, "PeriodeId tilhører ikke bruker: $periodeId")
+            return false
+        }
+    }
+    return true
+}
+
+fun createSisteSamletInformasjonResponse(
+    arbeidssoekerperioder: List<ArbeidssoekerperiodeResponse>,
+    opplysningerOmArbeidssoekerService: OpplysningerOmArbeidssoekerService,
+    profileringService: ProfileringService
+): SamletInformasjonResponse {
+    val sistePeriode = arbeidssoekerperioder.maxByOrNull { it.startet.tidspunkt }
+    val sisteOpplysninger =
+        sistePeriode?.let { periode ->
+            opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(periode.periodeId).maxByOrNull { it.sendtInnAv.tidspunkt }
+        }
+    val sisteProfilering =
+        sistePeriode?.let { periode ->
+            profileringService.hentProfileringForArbeidssoekerMedPeriodeId(periode.periodeId).maxByOrNull { it.sendtInnAv.tidspunkt }
+        }
+
+    return SamletInformasjonResponse(
+        arbeidssoekerperioder = listOfNotNull(sistePeriode),
+        opplysningerOmArbeidssoeker = listOfNotNull(sisteOpplysninger),
+        profilering = listOfNotNull(sisteProfilering)
+    )
+}
+
+fun createSamletInformasjonResponse(
+    arbeidssoekerperioder: List<ArbeidssoekerperiodeResponse>,
+    identitetsnummer: String,
+    opplysningerOmArbeidssoekerService: OpplysningerOmArbeidssoekerService,
+    profileringService: ProfileringService
+): SamletInformasjonResponse {
+    val opplysningerOmArbeidssoeker = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(Identitetsnummer(identitetsnummer))
+    val profilering = profileringService.hentProfileringForArbeidssoekerMedIdentitetsnummer(Identitetsnummer(identitetsnummer))
+
+    return SamletInformasjonResponse(
+        arbeidssoekerperioder = arbeidssoekerperioder,
+        opplysningerOmArbeidssoeker = opplysningerOmArbeidssoeker,
+        profilering = profilering
+    )
+}

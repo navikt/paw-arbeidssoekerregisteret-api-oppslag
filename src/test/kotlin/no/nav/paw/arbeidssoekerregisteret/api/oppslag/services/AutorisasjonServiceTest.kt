@@ -4,7 +4,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.TestData
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.TestData
 import no.nav.poao_tilgang.client.Decision
 import no.nav.poao_tilgang.client.PoaoTilgangCachedClient
 import no.nav.poao_tilgang.client.api.ApiResult
