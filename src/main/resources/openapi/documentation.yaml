@@ -541,6 +541,10 @@ components:
           type: "array"
           items:
             $ref: "#/components/schemas/ProfileringResponse"
+      required:
+        - "arbeidssoekerperioder"
+        - "opplysningerOmArbeidssoeker"
+        - "profilering"
     ArbeidssoekerperiodeRequest:
       type: "object"
       properties:

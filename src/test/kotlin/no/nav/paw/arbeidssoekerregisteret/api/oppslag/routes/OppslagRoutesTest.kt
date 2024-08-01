@@ -304,17 +304,17 @@ class OppslagRoutesTest : FreeSpec({
             client.get("api/v1/samlet-informasjon") { bearerAuth(getTokenXToken(oauth)) }.let {
                 it.status shouldBe HttpStatusCode.OK
                 val response = arbeidssoekerregisterObjectMapper().readValue<SamletInformasjonResponse>(it.bodyAsText())
-                response.arbeidssoekerperioder?.size shouldBe 3
-                response.opplysningerOmArbeidssoeker?.size shouldBe 3
-                response.profilering?.size shouldBe 3
+                response.arbeidssoekerperioder.size shouldBe 3
+                response.opplysningerOmArbeidssoeker.size shouldBe 3
+                response.profilering.size shouldBe 3
             }
 
             client.get("api/v1/samlet-informasjon?siste=true") { bearerAuth(getTokenXToken(oauth)) }.let {
                 it.status shouldBe HttpStatusCode.OK
                 val response = arbeidssoekerregisterObjectMapper().readValue<SamletInformasjonResponse>(it.bodyAsText())
-                response.arbeidssoekerperioder?.size shouldBe 1
-                response.opplysningerOmArbeidssoeker?.size shouldBe 1
-                response.profilering?.size shouldBe 1
+                response.arbeidssoekerperioder.size shouldBe 1
+                response.opplysningerOmArbeidssoeker.size shouldBe 1
+                response.profilering.size shouldBe 1
             }
         }
     }
@@ -767,9 +767,9 @@ class OppslagRoutesTest : FreeSpec({
             }.let {
                 it.status shouldBe HttpStatusCode.OK
                 val response = arbeidssoekerregisterObjectMapper().readValue<SamletInformasjonResponse>(it.bodyAsText())
-                response.arbeidssoekerperioder?.size shouldBe 3
-                response.opplysningerOmArbeidssoeker?.size shouldBe 3
-                response.profilering?.size shouldBe 3
+                response.arbeidssoekerperioder.size shouldBe 3
+                response.opplysningerOmArbeidssoeker.size shouldBe 3
+                response.profilering.size shouldBe 3
             }
 
             client.post("api/v1/veileder/samlet-informasjon?siste=true") {
@@ -783,9 +783,9 @@ class OppslagRoutesTest : FreeSpec({
             }.let {
                 it.status shouldBe HttpStatusCode.OK
                 val response = arbeidssoekerregisterObjectMapper().readValue<SamletInformasjonResponse>(it.bodyAsText())
-                response.arbeidssoekerperioder?.size shouldBe 1
-                response.opplysningerOmArbeidssoeker?.size shouldBe 1
-                response.profilering?.size shouldBe 1
+                response.arbeidssoekerperioder.size shouldBe 1
+                response.opplysningerOmArbeidssoeker.size shouldBe 1
+                response.profilering.size shouldBe 1
             }
         }
     }
