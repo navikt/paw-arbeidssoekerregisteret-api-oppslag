@@ -22,6 +22,7 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.OpplysningerOmArbei
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.OpplysningerOmArbeidssoekerResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ProfileringRequest
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ProfileringResponse
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.SamletInformasjonRequest
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.SamletInformasjonResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.configureHTTP
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.configureSerialization
@@ -704,6 +705,87 @@ class OppslagRoutesTest : FreeSpec({
                 val responseList = arbeidssoekerregisterObjectMapper().readValue<List<ProfileringResponse>>(it.bodyAsText())
                 responseList.size shouldBe 1
                 responseList[0].periodeId shouldBe testPeriodeId
+            }
+        }
+    }
+    "/veileder/samlet-informasjon should return OK" {
+        val arbeidssoekerperiodeService = mockk<ArbeidssoekerperiodeService>(relaxed = true)
+        val opplysningerOmArbeidssoekerService = mockk<OpplysningerOmArbeidssoekerService>(relaxed = true)
+        val profileringService = mockk<ProfileringService>(relaxed = true)
+
+        every {
+            arbeidssoekerperiodeService.hentArbeidssoekerperioder(any())
+        } returns getArbeidssoekerperiodeResponse(testPeriodeId)
+
+        every {
+            opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(any())
+        } returns getOpplysningerOmArbeidssoekerResponse(testPeriodeId)
+
+        every {
+            opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(any())
+        } returns getOpplysningerOmArbeidssoekerResponse(testPeriodeId)
+
+        every {
+            profileringService.hentProfileringForArbeidssoekerMedPeriodeId(any())
+        } returns getProfileringResponse(testPeriodeId)
+
+        every {
+            profileringService.hentProfileringForArbeidssoekerMedIdentitetsnummer(any())
+        } returns getProfileringResponse(testPeriodeId)
+
+        testApplication {
+            application {
+                configureAuthentication(oauth)
+                configureSerialization()
+                configureHTTP()
+                routing {
+                    oppslagRoutes(mockk(relaxed = true), arbeidssoekerperiodeService, opplysningerOmArbeidssoekerService, profileringService)
+                }
+            }
+
+            val client =
+                createClient {
+                    install(ContentNegotiation) {
+                        jackson {
+                            jackson {
+                                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                                registerModule(JavaTimeModule())
+                            }
+                        }
+                    }
+                }
+
+            client.post("api/v1/veileder/samlet-informasjon") {
+                bearerAuth(getAzureM2MToken(oauth))
+                contentType(ContentType.Application.Json)
+                setBody(
+                    SamletInformasjonRequest(
+                        identitetsnummer = "12345678901"
+                    )
+                )
+            }.let {
+                it.status shouldBe HttpStatusCode.OK
+                val response = arbeidssoekerregisterObjectMapper().readValue<SamletInformasjonResponse>(it.bodyAsText())
+                response.arbeidssoekerperioder?.size shouldBe 3
+                response.opplysningerOmArbeidssoeker?.size shouldBe 3
+                response.profilering?.size shouldBe 3
+            }
+
+            client.post("api/v1/veileder/samlet-informasjon?siste=true") {
+                bearerAuth(getAzureM2MToken(oauth))
+                contentType(ContentType.Application.Json)
+                setBody(
+                    SamletInformasjonRequest(
+                        identitetsnummer = "12345678901"
+                    )
+                )
+            }.let {
+                it.status shouldBe HttpStatusCode.OK
+                val response = arbeidssoekerregisterObjectMapper().readValue<SamletInformasjonResponse>(it.bodyAsText())
+                response.arbeidssoekerperioder?.size shouldBe 1
+                response.opplysningerOmArbeidssoeker?.size shouldBe 1
+                response.profilering?.size shouldBe 1
             }
         }
     }
