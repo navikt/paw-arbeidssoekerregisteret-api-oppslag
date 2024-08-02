@@ -3,6 +3,7 @@ package no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.auth.authentication
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.util.pipeline.*
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ArbeidssoekerperiodeResponse
@@ -17,6 +18,13 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.OpplysningerOmArb
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ProfileringService
 import no.nav.security.token.support.v2.TokenValidationContextPrincipal
 import java.util.*
+
+suspend inline fun <reified T : Any> ApplicationCall.getRequestBody(): T =
+    try {
+        receive<T>()
+    } catch (e: Exception) {
+        throw StatusException(HttpStatusCode.BadRequest, "Kunne ikke deserialisere request-body")
+    }
 
 fun ApplicationCall.getClaim(
     issuer: String,

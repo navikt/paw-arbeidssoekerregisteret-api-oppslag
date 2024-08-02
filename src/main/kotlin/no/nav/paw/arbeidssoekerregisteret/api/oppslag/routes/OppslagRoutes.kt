@@ -3,7 +3,6 @@ package no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
-import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -20,6 +19,7 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ProfileringServic
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.createSamletInformasjonResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.createSisteSamletInformasjonResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getPidClaim
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getRequestBody
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.isPeriodeIdValid
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.verifyAccessFromToken
@@ -139,7 +139,7 @@ fun Route.oppslagRoutes(
         authenticate("azure") {
             route("/veileder/arbeidssoekerperioder") {
                 post {
-                    val (identitetsnummer) = call.receive<ArbeidssoekerperiodeRequest>()
+                    val (identitetsnummer) = call.getRequestBody<ArbeidssoekerperiodeRequest>()
                     val siste = call.request.queryParameters["siste"]?.toBoolean() ?: false
 
                     if (!call.verifyAccessFromToken(autorisasjonService, Identitetsnummer(identitetsnummer))) {
@@ -162,7 +162,7 @@ fun Route.oppslagRoutes(
             }
             route("/veileder/opplysninger-om-arbeidssoeker") {
                 post {
-                    val (identitetsnummer, periodeId) = call.receive<OpplysningerOmArbeidssoekerRequest>()
+                    val (identitetsnummer, periodeId) = call.getRequestBody<OpplysningerOmArbeidssoekerRequest>()
                     val siste = call.request.queryParameters["siste"]?.toBoolean() ?: false
 
                     if (!call.verifyAccessFromToken(autorisasjonService, Identitetsnummer(identitetsnummer))) {
@@ -196,7 +196,7 @@ fun Route.oppslagRoutes(
             }
             route("/veileder/profilering") {
                 post {
-                    val (identitetsnummer, periodeId) = call.receive<ProfileringRequest>()
+                    val (identitetsnummer, periodeId) = call.getRequestBody<ProfileringRequest>()
                     val siste = call.request.queryParameters["siste"]?.toBoolean() ?: false
 
                     if (!call.verifyAccessFromToken(autorisasjonService, Identitetsnummer(identitetsnummer))) {
@@ -230,7 +230,7 @@ fun Route.oppslagRoutes(
             }
             route("/veileder/samlet-informasjon") {
                 post {
-                    val (identitetsnummer) = call.receive<ArbeidssoekerperiodeRequest>()
+                    val (identitetsnummer) = call.getRequestBody<ArbeidssoekerperiodeRequest>()
                     val siste = call.request.queryParameters["siste"]?.toBoolean() ?: false
 
                     if (!call.verifyAccessFromToken(autorisasjonService, Identitetsnummer(identitetsnummer))) {
