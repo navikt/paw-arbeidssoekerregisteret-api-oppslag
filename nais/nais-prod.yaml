@@ -92,6 +92,9 @@ spec:
           cluster: prod-fss
         - application: paw-arbeidssoekerregisteret-hendelselogg-backup
           namespace: paw
+        - application: veilarbportefolje
+          namespace: obo
+          cluster: prod-gcp
     outbound:
       rules:
         - application: poao-tilgang
