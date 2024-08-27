@@ -1,11 +1,9 @@
 import com.github.davidmc24.gradle.plugin.avro.GenerateAvroProtocolTask
-import org.jmailen.gradle.kotlinter.tasks.LintTask
 
 plugins {
     kotlin("jvm") version "1.9.20"
     id("io.ktor.plugin") version "2.3.9"
     id("com.github.davidmc24.gradle.plugin.avro") version "1.9.1"
-    id("org.jmailen.kotlinter") version "4.0.0"
     id("org.openapi.generator") version "7.4.0"
     application
 }
@@ -18,7 +16,7 @@ val navCommonModulesVersion = "2.2023.01.02_13.51-1c6adeb1653b"
 val tokenSupportVersion = "4.1.0"
 val koTestVersion = "5.8.0"
 val hopliteVersion = "2.7.5"
-val exposedVersion = "0.46.0"
+val exposedVersion = "0.53.0"
 val poaoVersion = "2024.01.05_08.39-83879ad64bab"
 val ktorVersion = pawObservability.versions.ktor
 
@@ -98,15 +96,9 @@ sourceSets {
     }
 }
 
-
 val opneApiDocFile = "${layout.projectDirectory}/src/main/resources/openapi/documentation.yaml"
 val generatedCodePackageName = "no.nav.paw.arbeidssoekerregisteret.api.oppslag"
 val generatedCodeOutputDir = "${layout.buildDirectory.get()}/generated/"
-
-tasks.withType<LintTask>() {
-    dependsOn("openApiGenerate")
-    source = (source - fileTree("build")).asFileTree
-}
 
 openApiValidate {
     inputSpec = opneApiDocFile
@@ -136,8 +128,6 @@ openApiGenerate {
     )
 }
 
-
-
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
@@ -162,7 +152,7 @@ tasks.named("compileKotlin") {
 
 task<JavaExec>("produceLocalMessagesForTopics") {
     mainClass.set("no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.producers.LocalProducerKt")
-    classpath = sourceSets["main"].runtimeClasspath
+    classpath = sourceSets["test"].runtimeClasspath
 }
 
 task<JavaExec>("cleanDatabase") {

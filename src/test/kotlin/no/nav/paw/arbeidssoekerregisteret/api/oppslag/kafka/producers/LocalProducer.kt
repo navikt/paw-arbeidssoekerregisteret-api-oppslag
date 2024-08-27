@@ -118,8 +118,8 @@ class TestMessages {
                         BrukerType.UKJENT_VERDI,
                         "12345678901"
                     ),
-                    "test",
-                    "test",
+                    "kilde1a",
+                    "aarsak1a",
                     TidspunktFraKilde(
                         Instant.now(),
                         AvviksType.UKJENT_VERDI
@@ -136,8 +136,8 @@ class TestMessages {
                         BrukerType.UKJENT_VERDI,
                         "12345678902"
                     ),
-                    "test",
-                    "test",
+                    "kilde2a",
+                    "aarsak2a",
                     TidspunktFraKilde(
                         Instant.now(),
                         AvviksType.UKJENT_VERDI
@@ -149,8 +149,8 @@ class TestMessages {
                         BrukerType.UKJENT_VERDI,
                         "12345678902"
                     ),
-                    "test",
-                    "test",
+                    "kilde2b",
+                    "aarsak2b",
                     TidspunktFraKilde(
                         Instant.now(),
                         AvviksType.UKJENT_VERDI
@@ -170,8 +170,8 @@ class TestMessages {
                         BrukerType.UKJENT_VERDI,
                         "12345678901"
                     ),
-                    "test",
-                    "test",
+                    "kilde3a",
+                    "aarsak3a",
                     TidspunktFraKilde(
                         Instant.now(),
                         AvviksType.UKJENT_VERDI
@@ -182,30 +182,26 @@ class TestMessages {
                     JaNeiVetIkke.JA,
                     JaNeiVetIkke.JA
                 ),
-                Helse(
-                    JaNeiVetIkke.JA
-                ),
+                Helse(JaNeiVetIkke.JA),
                 Jobbsituasjon(
                     listOf(
                         BeskrivelseMedDetaljer(
                             Beskrivelse.AKKURAT_FULLFORT_UTDANNING,
                             mapOf(
-                                Pair("test", "test"),
-                                Pair("test2", "test2")
+                                Pair("noekkel1a", "verdi1a"),
+                                Pair("noekkel1b", "verdi1b")
                             )
                         ),
                         BeskrivelseMedDetaljer(
                             Beskrivelse.DELTIDSJOBB_VIL_MER,
                             mapOf(
-                                Pair("test3", "test3"),
-                                Pair("test4", "test4")
+                                Pair("noekkel2a", "verdi2a"),
+                                Pair("noekkel2b", "verdi2b")
                             )
                         )
                     )
                 ),
-                Annet(
-                    JaNeiVetIkke.JA
-                )
+                Annet(JaNeiVetIkke.JA)
             )
         )
 
@@ -221,8 +217,8 @@ class TestMessages {
                         BrukerType.UKJENT_VERDI,
                         "12345678901"
                     ),
-                    "test",
-                    "test",
+                    "kilde4a",
+                    "aarsak4a",
                     TidspunktFraKilde(
                         Instant.now(),
                         AvviksType.UKJENT_VERDI

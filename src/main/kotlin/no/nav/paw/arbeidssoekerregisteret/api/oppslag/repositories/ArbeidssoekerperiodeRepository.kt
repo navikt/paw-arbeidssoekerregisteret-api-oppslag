@@ -1,202 +1,79 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories
 
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.BrukerTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.MetadataTable
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.PeriodeTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.TidspunktFraKildeTable
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ArbeidssoekerperiodeResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.toMetadataResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
-import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
-import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.endrePeriode
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.finnPeriode
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.finnPerioder
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.lagrePeriode
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
-import no.nav.paw.arbeidssokerregisteret.api.v1.TidspunktFraKilde
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.sql.SQLException
 import java.util.*
-import kotlin.sequences.Sequence
-import kotlin.sequences.forEach
 
 class ArbeidssoekerperiodeRepository(private val database: Database) {
-    fun storeBatch(arbeidssoekerperioder: Sequence<Periode>) {
-        transaction(database) {
-            repetitionAttempts = 2
-            minRepetitionDelay = 20
-            arbeidssoekerperioder.forEach { periode ->
-                if (finnesArbeidssoekerperiode(periode.id)) {
-                    oppdaterArbeidssoekerperiode(periode)
-                } else {
-                    opprettArbeidssoekerperiode(periode)
-                }
-            }
-        }
-    }
-
-    fun finnesArbeidssoekerperiode(periodeId: UUID): Boolean =
-        transaction(database) {
-            PeriodeTable.selectAll().where { PeriodeTable.periodeId eq periodeId }.singleOrNull() != null
-        }
-
     fun hentArbeidssoekerperiode(periodeId: UUID): Periode? =
         transaction(database) {
-            PeriodeTable.selectAll().where { PeriodeTable.periodeId eq periodeId }.singleOrNull()?.let { resultRow ->
-                PeriodeConverter(this@ArbeidssoekerperiodeRepository).konverterResultRowToPeriode(resultRow)
-            }
+            finnPeriode(periodeId)
         }
 
     fun hentArbeidssoekerperioder(identitetsnummer: Identitetsnummer): List<ArbeidssoekerperiodeResponse> =
         transaction(database) {
-            PeriodeTable.selectAll().where { PeriodeTable.identitetsnummer eq identitetsnummer.verdi }.map { resultRow ->
-                val periodeId = resultRow[PeriodeTable.periodeId]
-                val startetId = resultRow[PeriodeTable.startetId]
-                val avsluttetId = resultRow[PeriodeTable.avsluttetId]
-
-                val startetMetadata = hentMetadata(startetId) ?: throw Error("Fant ikke startet metadata")
-                val avsluttetMetadata = avsluttetId?.let { hentMetadata(it) }
-
-                ArbeidssoekerperiodeResponse(periodeId, startetMetadata.toMetadataResponse(), avsluttetMetadata?.toMetadataResponse())
-            }
+            finnPerioder(identitetsnummer)
+                .map { ArbeidssoekerperiodeResponse(it.id, it.startet.toMetadataResponse(), it.avsluttet?.toMetadataResponse()) }
         }
-
-    fun hentMetadata(id: Long): Metadata? {
-        return MetadataTable.selectAll().where { MetadataTable.id eq id }.singleOrNull()?.let { metadata ->
-            val brukerId = metadata[MetadataTable.utfoertAvId]
-            val bruker = hentBruker(brukerId)
-            val tidspunktFraKildeId = metadata[MetadataTable.tidspunktFraKildeId]
-            val tidspunktFraKilde = tidspunktFraKildeId?.let { hentTidspunktFraKilde(it) }
-            Metadata(
-                metadata[MetadataTable.tidspunkt],
-                bruker,
-                metadata[MetadataTable.kilde],
-                metadata[MetadataTable.aarsak],
-                tidspunktFraKilde
-            )
-        }
-    }
 
     fun hentAntallAktivePerioder(): Long =
         transaction(database) {
             PeriodeTable.selectAll().where { PeriodeTable.avsluttetId eq null }.count()
         }
 
-    fun hentTidspunktFraKilde(tidspunktFraKildeId: Long): TidspunktFraKilde? {
-        return TidspunktFraKildeTable.selectAll().where { TidspunktFraKildeTable.id eq tidspunktFraKildeId }.singleOrNull()?.let {
-            TidspunktFraKilde(
-                it[TidspunktFraKildeTable.tidspunkt],
-                it[TidspunktFraKildeTable.avviksType]
-            )
-        }
-    }
-
-    private fun hentBruker(brukerId: Long): Bruker? {
-        return BrukerTable.selectAll().where { BrukerTable.id eq brukerId }.singleOrNull()?.let {
-            Bruker(
-                it[BrukerTable.type],
-                it[BrukerTable.brukerId]
-            )
-        }
-    }
-
-    fun opprettArbeidssoekerperiode(arbeidssoekerperiode: Periode) {
+    fun opprettArbeidssoekerperiode(periode: Periode) {
         transaction(database) {
-            repetitionAttempts = 2
-            minRepetitionDelay = 20
-            val startetId = settInnMetadata(arbeidssoekerperiode.startet)
-            val avsluttetId = arbeidssoekerperiode.avsluttet?.let { settInnMetadata(it) }
-
-            settInnArbeidssoekerperiode(arbeidssoekerperiode.id, arbeidssoekerperiode.identitetsnummer, startetId, avsluttetId)
+            lagrePeriode(periode)
         }
     }
 
-    fun settInnMetadata(metadata: Metadata): Long {
-        return MetadataTable.insertAndGetId {
-            it[utfoertAvId] = settInnBruker(metadata.utfoertAv)
-            it[tidspunkt] = metadata.tidspunkt
-            it[kilde] = metadata.kilde
-            it[aarsak] = metadata.aarsak
-            it[tidspunktFraKildeId] = metadata.tidspunktFraKilde?.let { tidspunkt -> settInnTidspunktFraKilde(tidspunkt) }
-        }.value
-    }
-
-    private fun settInnTidspunktFraKilde(tidspunktFraKilde: TidspunktFraKilde): Long {
-        return TidspunktFraKildeTable.insertAndGetId {
-            it[tidspunkt] = tidspunktFraKilde.tidspunkt
-            it[avviksType] = tidspunktFraKilde.avviksType
-        }.value
-    }
-
-    private fun settInnBruker(bruker: Bruker): Long {
-        val eksisterendeBruker =
-            BrukerTable.selectAll().where {
-                (BrukerTable.brukerId eq bruker.id) and (BrukerTable.type eq bruker.type)
-            }.singleOrNull()
-        return if (eksisterendeBruker != null) {
-            eksisterendeBruker[BrukerTable.id].value
-        } else {
-            BrukerTable.insertAndGetId {
-                it[brukerId] = bruker.id
-                it[type] = bruker.type
-            }.value
-        }
-    }
-
-    private fun settInnArbeidssoekerperiode(
-        periodeId: UUID,
-        identitetsnummer: String,
-        startetId: Long,
-        avsluttetId: Long?
-    ) {
-        PeriodeTable.insert {
-            it[PeriodeTable.periodeId] = periodeId
-            it[PeriodeTable.identitetsnummer] = identitetsnummer
-            it[PeriodeTable.startetId] = startetId
-            it[PeriodeTable.avsluttetId] = avsluttetId
-        }
-    }
-
-    fun oppdaterArbeidssoekerperiode(arbeidssoekerperiode: Periode) {
+    fun oppdaterArbeidssoekerperiode(periode: Periode) {
         transaction(database) {
-            try {
-                // TODO: håndtere oppdatering av periode. Periode skal kunne oppdateres selv om avsluttet er null, men ikke fra avsluttet til null
-                if (arbeidssoekerperiode.avsluttet != null) {
-                    oppdaterAvsluttetMetadata(arbeidssoekerperiode.id, arbeidssoekerperiode.avsluttet)
+            endrePeriode(periode)
+        }
+    }
+
+    fun storeBatch(perioder: Sequence<Periode>) {
+        transaction(database) {
+            maxAttempts = 2
+            minRetryDelay = 20
+
+            val periodeIdList = perioder.map { it.id }.toList()
+            val eksisterendePerioder = finnPeriodeRows(periodeIdList)
+            val eksisterendePeriodeIdList = eksisterendePerioder.map { it.periodeId }.toHashSet()
+
+            perioder.forEach { periode ->
+                if (eksisterendePeriodeIdList.contains(periode.id)) {
+                    endrePeriode(periode)
                 } else {
-                    logger.warn("Avsluttet er null ved oppdatering av periode")
+                    lagrePeriode(periode)
                 }
-            } catch (e: SQLException) {
-                logger.error("Feil ved oppdatering av periode", e)
             }
-        }
-    }
-
-    private fun oppdaterAvsluttetMetadata(
-        periodeId: UUID,
-        avsluttetMetadata: Metadata
-    ) {
-        val avsluttetMetadataId = settInnMetadata(avsluttetMetadata)
-        PeriodeTable.update({ PeriodeTable.periodeId eq periodeId }) {
-            it[avsluttetId] = avsluttetMetadataId
         }
     }
 }
 
-class PeriodeConverter(private val repository: ArbeidssoekerperiodeRepository) {
-    fun konverterResultRowToPeriode(resultRow: ResultRow): Periode {
-        val periodeId = resultRow[PeriodeTable.periodeId]
-        val identitetsnummer = resultRow[PeriodeTable.identitetsnummer]
-        val startetId = resultRow[PeriodeTable.startetId]
-        val avsluttetId = resultRow[PeriodeTable.avsluttetId]
+private data class PeriodeRow(
+    val periodeId: UUID,
+)
 
-        val startetMetadata = repository.hentMetadata(startetId) ?: throw Error("Fant ikke startet metadata")
-        val avsluttetMetadata = avsluttetId?.let { repository.hentMetadata(it) }
+private fun Transaction.finnPeriodeRows(periodeIdList: List<UUID>): List<PeriodeRow> {
+    return PeriodeTable.selectAll().where { PeriodeTable.periodeId inList periodeIdList }.map { it.toPeriodeRow() }
+}
 
-        return Periode(
-            periodeId,
-            identitetsnummer,
-            startetMetadata,
-            avsluttetMetadata
-        )
-    }
+private fun ResultRow.toPeriodeRow(): PeriodeRow {
+    val periodeId = get(PeriodeTable.periodeId)
+    return PeriodeRow(periodeId)
 }

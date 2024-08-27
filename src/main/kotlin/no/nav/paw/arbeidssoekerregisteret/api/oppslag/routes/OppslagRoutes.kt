@@ -39,10 +39,9 @@ fun Route.oppslagRoutes(
                     val identitetsnummer = call.getPidClaim()
                     val siste = call.request.queryParameters["siste"]?.toBoolean() ?: false
 
-                    val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(identitetsnummer)
-
                     val response =
                         if (siste) {
+                            val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(identitetsnummer)
                             arbeidssoekerperioder.maxByOrNull { it.startet.tidspunkt }?.let { listOf(it) } ?: emptyList()
                         } else {
                             arbeidssoekerperiodeService.hentArbeidssoekerperioder(identitetsnummer)
@@ -146,10 +145,9 @@ fun Route.oppslagRoutes(
                         return@post
                     }
 
-                    val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(Identitetsnummer(identitetsnummer))
-
                     val response =
                         if (siste) {
+                            val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(Identitetsnummer(identitetsnummer))
                             arbeidssoekerperioder.maxByOrNull { it.startet.tidspunkt }?.let { listOf(it) } ?: emptyList()
                         } else {
                             arbeidssoekerperiodeService.hentArbeidssoekerperioder(Identitetsnummer(identitetsnummer))
@@ -177,6 +175,7 @@ fun Route.oppslagRoutes(
                                 }
                                 opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(periodeId)
                             }
+
                             else -> {
                                 opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(Identitetsnummer(identitetsnummer))
                             }
@@ -211,6 +210,7 @@ fun Route.oppslagRoutes(
                                 }
                                 profileringService.hentProfileringForArbeidssoekerMedPeriodeId(periodeId)
                             }
+
                             else -> {
                                 profileringService.hentProfileringForArbeidssoekerMedIdentitetsnummer(Identitetsnummer(identitetsnummer))
                             }

@@ -1,14 +1,19 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag
 
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
+import io.ktor.server.application.Application
+import io.ktor.server.engine.addShutdownHook
+import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.ktor.server.routing.*
+import io.ktor.server.routing.routing
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.APPLICATION_CONFIG_FILE
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.config.ApplicationConfig
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.*
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.configureAuthentication
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.configureHTTP
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.configureLogging
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.configureMetrics
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.configureSerialization
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.healthRoutes
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.oppslagRoutes
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.routes.swaggerRoutes
@@ -18,7 +23,6 @@ import no.nav.paw.config.kafka.KAFKA_CONFIG_WITH_SCHEME_REG
 import no.nav.paw.config.kafka.KafkaConfig
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture.runAsync
-import java.util.concurrent.Executor
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -48,7 +52,7 @@ fun main() {
             dependencies.opplysningerOmArbeidssoekerConsumer.subscribe()
             dependencies.profileringConsumer.subscribe()
             while (true) {
-                consume(threadPoolExecutor, dependencies, applicationConfig)
+                consume(dependencies, applicationConfig)
             }
         } catch (e: Exception) {
             logger.error("Consumer error: ${e.message}", e)
@@ -117,19 +121,10 @@ fun Application.module(
     kind = SpanKind.INTERNAL
 )
 fun consume(
-    executor: Executor,
     dependencies: Dependencies,
     config: ApplicationConfig
 ) {
-    listOf(
-        runAsync({
-            dependencies.arbeidssoekerperiodeConsumer.getAndProcessBatch(config.periodeTopic)
-        }, executor),
-        runAsync({
-            dependencies.opplysningerOmArbeidssoekerConsumer.getAndProcessBatch(config.opplysningerOmArbeidssoekerTopic)
-        }, executor),
-        runAsync({
-            dependencies.profileringConsumer.getAndProcessBatch(config.profileringTopic)
-        }, executor)
-    ).forEach { it.join() }
+    dependencies.arbeidssoekerperiodeConsumer.getAndProcessBatch(config.periodeTopic)
+    dependencies.opplysningerOmArbeidssoekerConsumer.getAndProcessBatch(config.opplysningerOmArbeidssoekerTopic)
+    dependencies.profileringConsumer.getAndProcessBatch(config.profileringTopic)
 }
