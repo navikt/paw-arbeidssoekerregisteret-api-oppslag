@@ -30,23 +30,26 @@ class BatchConsumer<K, V>(
     fun getAndProcessBatch(
         @SpanAttribute("topics") topic: String = this.topic
     ) {
-        consumer
-            .poll(pollingInterval)
-            .asSequence()
-            .onEach {
-                logger.trace(
-                    "Mottok melding fra {} med offset {} partition {}",
-                    it.topic(),
-                    it.offset(),
-                    it.partition()
+        val records = consumer.poll(pollingInterval)
+        if (records.isEmpty) {
+            logger.trace("Mottok ingen meldinger i intervall")
+        } else {
+            records.asSequence()
+                .onEach {
+                    logger.trace(
+                        "Mottok melding fra {} med offset {} partition {}",
+                        it.topic(),
+                        it.offset(),
+                        it.partition()
+                    )
+                }.map { it.value() }
+                .runCatching(receiver)
+                .mapCatching { commitSync() }
+                .fold(
+                    onSuccess = { logger.debug("Batch behandlet og commitet") },
+                    onFailure = { error -> throw Exception("Feil ved konsumering av melding fra $topic", error) }
                 )
-            }.map { it.value() }
-            .runCatching(receiver)
-            .mapCatching { commitSync() }
-            .fold(
-                onSuccess = { logger.debug("Batch behandlet og commitet") },
-                onFailure = { error -> throw Exception("Feil ved konsumering av melding fra $topic", error) }
-            )
+        }
     }
 
     @WithSpan(

@@ -45,20 +45,22 @@ class ArbeidssoekerperiodeRepository(private val database: Database) {
         }
     }
 
-    fun storeBatch(perioder: Sequence<Periode>) {
-        transaction(database) {
-            maxAttempts = 2
-            minRetryDelay = 20
+    fun storeBatch(batch: Sequence<Periode>) {
+        if (batch.iterator().hasNext()) {
+            transaction(database) {
+                maxAttempts = 2
+                minRetryDelay = 20
 
-            val periodeIdList = perioder.map { it.id }.toList()
-            val eksisterendePerioder = finnPeriodeRows(periodeIdList)
-            val eksisterendePeriodeIdList = eksisterendePerioder.map { it.periodeId }.toHashSet()
+                val periodeIdList = batch.map { it.id }.toList()
+                val eksisterendePerioder = finnPeriodeRows(periodeIdList)
+                val eksisterendePeriodeIdList = eksisterendePerioder.map { it.periodeId }.toHashSet()
 
-            perioder.forEach { periode ->
-                if (eksisterendePeriodeIdList.contains(periode.id)) {
-                    endrePeriode(periode)
-                } else {
-                    lagrePeriode(periode)
+                batch.forEach { periode ->
+                    if (eksisterendePeriodeIdList.contains(periode.id)) {
+                        endrePeriode(periode)
+                    } else {
+                        lagrePeriode(periode)
+                    }
                 }
             }
         }

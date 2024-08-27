@@ -27,12 +27,15 @@ class ProfileringRepository(private val database: Database) {
         }
     }
 
-    fun storeBatch(profileringer: Sequence<Profilering>) =
-        transaction(database) {
-            maxAttempts = 2
-            minRetryDelay = 20
-            profileringer.forEach { profilering ->
-                lagreProfilering(profilering)
+    fun storeBatch(batch: Sequence<Profilering>) {
+        if (batch.iterator().hasNext()) {
+            transaction(database) {
+                maxAttempts = 2
+                minRetryDelay = 20
+                batch.forEach { profilering ->
+                    lagreProfilering(profilering)
+                }
             }
         }
+    }
 }

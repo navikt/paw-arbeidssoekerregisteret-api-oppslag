@@ -48,11 +48,13 @@ class OpplysningerOmArbeidssoekerRepository(private val database: Database) {
     }
 
     fun storeBatch(batch: Sequence<OpplysningerOmArbeidssoeker>) {
-        transaction(database) {
-            maxAttempts = 2
-            minRetryDelay = 20
-            batch.forEach { opplysninger ->
-                lagreOpplysningerOmArbeidssoeker(opplysninger)
+        if (batch.iterator().hasNext()) {
+            transaction(database) {
+                maxAttempts = 2
+                minRetryDelay = 20
+                batch.forEach { opplysninger ->
+                    lagreOpplysningerOmArbeidssoeker(opplysninger)
+                }
             }
         }
     }
