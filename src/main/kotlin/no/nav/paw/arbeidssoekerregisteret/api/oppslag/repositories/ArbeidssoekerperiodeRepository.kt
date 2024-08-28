@@ -159,6 +159,7 @@ class ArbeidssoekerperiodeRepository(private val database: Database) {
     fun oppdaterArbeidssoekerperiode(arbeidssoekerperiode: Periode) {
         transaction(database) {
             try {
+                // TODO: håndtere oppdatering av periode. Periode skal kunne oppdateres selv om avsluttet er null, men ikke fra avsluttet til null
                 if (arbeidssoekerperiode.avsluttet != null) {
                     oppdaterAvsluttetMetadata(arbeidssoekerperiode.id, arbeidssoekerperiode.avsluttet)
                 } else {
