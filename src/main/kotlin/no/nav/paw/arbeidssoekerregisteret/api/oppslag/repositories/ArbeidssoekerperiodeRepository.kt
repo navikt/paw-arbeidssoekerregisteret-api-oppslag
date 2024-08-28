@@ -162,7 +162,7 @@ class ArbeidssoekerperiodeRepository(private val database: Database) {
                 if (arbeidssoekerperiode.avsluttet != null) {
                     oppdaterAvsluttetMetadata(arbeidssoekerperiode.id, arbeidssoekerperiode.avsluttet)
                 } else {
-                    throw IllegalArgumentException("Avsluttet kan ikke være null ved oppdatering av periode")
+                    logger.warn("Avsluttet er null ved oppdatering av periode")
                 }
             } catch (e: SQLException) {
                 logger.error("Feil ved oppdatering av periode", e)
