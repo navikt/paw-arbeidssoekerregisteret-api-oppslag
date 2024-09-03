@@ -2,32 +2,15 @@ package no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.OpplysningerOmArbeidssoekerTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.PeriodeOpplysningerTable
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.AnnetResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.BrukerResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.HelseResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.MetadataResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.OpplysningerOmArbeidssoekerResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.TidspunktFraKildeResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.UtdanningResponse
-import no.nav.paw.arbeidssokerregisteret.api.v1.AvviksType
-import no.nav.paw.arbeidssokerregisteret.api.v1.Beskrivelse
-import no.nav.paw.arbeidssokerregisteret.api.v1.BeskrivelseMedDetaljer
-import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
-import no.nav.paw.arbeidssokerregisteret.api.v1.BrukerType
-import no.nav.paw.arbeidssokerregisteret.api.v1.Helse
-import no.nav.paw.arbeidssokerregisteret.api.v1.JaNeiVetIkke
-import no.nav.paw.arbeidssokerregisteret.api.v1.Jobbsituasjon
-import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata
-import no.nav.paw.arbeidssokerregisteret.api.v1.TidspunktFraKilde
-import no.nav.paw.arbeidssokerregisteret.api.v2.Annet
-import no.nav.paw.arbeidssokerregisteret.api.v4.OpplysningerOmArbeidssoeker
-import no.nav.paw.arbeidssokerregisteret.api.v4.Utdanning
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.test.nyAnnet
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.test.nyAvsluttetPeriode
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.test.nyOpplysningerOmArbeidssoeker
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.test.nyUtdanning
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.test.shouldBeEqualTo
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.finnOpplysningerRows
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.finnPeriodeOpplysningerRows
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.time.Instant
 import java.util.*
 import javax.sql.DataSource
 
@@ -38,15 +21,18 @@ class OpplysningerOmArbeidssoekerRepositoryTest : StringSpec({
     lateinit var repository: OpplysningerOmArbeidssoekerRepository
     val periodeId1: UUID = UUID.fromString("84201f96-363b-4aab-a589-89fa4b9b1feb")
     val periodeId2: UUID = UUID.fromString("84201f96-363b-4aab-a589-89fa4b9b1fec")
-    val opplysningerOmArbeidssoekerId1: UUID = UUID.fromString("84201f96-363b-4aab-a589-89fa4b9b1fed")
-    val opplysningerOmArbeidssoekerId2: UUID = UUID.fromString("84201f96-363b-4aab-a589-89fa4b9b1fee")
+    val opplysningerId1: UUID = UUID.fromString("84201f96-363b-4aab-a589-89fa4b9b1fed")
+    val opplysningerId2: UUID = UUID.fromString("84201f96-363b-4aab-a589-89fa4b9b1fee")
 
     beforeEach {
         dataSource = initTestDatabase()
         database = Database.connect(dataSource)
         repository = OpplysningerOmArbeidssoekerRepository(database)
-        settInnTestPeriode(database, periodeId1)
-        settInnTestPeriode(database, periodeId2)
+        val arbeidssoekerperiodeRepository = ArbeidssoekerperiodeRepository(database)
+        val periode1 = nyAvsluttetPeriode(periodeId = periodeId1)
+        val periode2 = nyAvsluttetPeriode(periodeId = periodeId2)
+        arbeidssoekerperiodeRepository.lagreArbeidssoekerperiode(periode1)
+        arbeidssoekerperiodeRepository.lagreArbeidssoekerperiode(periode2)
     }
 
     afterEach {
@@ -54,58 +40,69 @@ class OpplysningerOmArbeidssoekerRepositoryTest : StringSpec({
     }
 
     "Opprett og hent ut opplysninger om arbeidssøker" {
-        val opplysninger = lagTestOpplysningerOmArbeidssoeker(periodeId1, opplysningerOmArbeidssoekerId1)
+        val opplysninger = nyOpplysningerOmArbeidssoeker(periodeId = periodeId1, opplysningerId = opplysningerId1)
         repository.lagreOpplysningerOmArbeidssoeker(opplysninger)
 
         val retrievedOpplysninger = repository.hentOpplysningerOmArbeidssoeker(opplysninger.periodeId)
-        val retrievedPeriodeOpplysninger = hentPeriodeOpplysninger(database, periodeId1)
+        val retrievedPeriodeOpplysninger = finnPeriodeOpplysninger(database, periodeId1)
 
         retrievedOpplysninger.size shouldBe 1
         val retrievedOpplysninger1 = retrievedOpplysninger[0]
         retrievedOpplysninger1 shouldBeEqualTo opplysninger
         retrievedPeriodeOpplysninger.size shouldBe 1
         val retrievedPeriodeOpplysninger1 = retrievedPeriodeOpplysninger[0]
-        retrievedPeriodeOpplysninger1[PeriodeOpplysningerTable.periodeId] shouldBe retrievedOpplysninger1.periodeId
+        retrievedPeriodeOpplysninger1.periodeId shouldBe retrievedOpplysninger1.periodeId
     }
 
     "Opprett og hent ut opplysninger om arbeidssøker med utdanning, helse og annet lik null" {
-        val opplysninger = lagTestOpplysningerOmArbeidssoekerMedUtdanningHelseOgAnnetLikNull(periodeId1, opplysningerOmArbeidssoekerId1)
+        val opplysninger = nyOpplysningerOmArbeidssoeker(
+            periodeId = periodeId1,
+            opplysningerId = opplysningerId1,
+            utdanning = null,
+            helse = null,
+            annet = null
+        )
         repository.lagreOpplysningerOmArbeidssoeker(opplysninger)
 
         val retrievedOpplysninger = repository.hentOpplysningerOmArbeidssoeker(opplysninger.periodeId)
-        val retrievedPeriodeOpplysninger = hentPeriodeOpplysninger(database, periodeId1)
+        val retrievedPeriodeOpplysninger = finnPeriodeOpplysninger(database, periodeId1)
 
         retrievedOpplysninger.size shouldBe 1
         val retrievedOpplysninger1 = retrievedOpplysninger[0]
         retrievedOpplysninger1 shouldBeEqualTo opplysninger
         retrievedPeriodeOpplysninger.size shouldBe 1
         val retrievedPeriodeOpplysninger1 = retrievedPeriodeOpplysninger[0]
-        retrievedPeriodeOpplysninger1[PeriodeOpplysningerTable.periodeId] shouldBe retrievedOpplysninger1.periodeId
+        retrievedPeriodeOpplysninger1.periodeId shouldBe retrievedOpplysninger1.periodeId
     }
 
     "Opprett og hent ut opplysninger om arbeidssøker med utdanning og annet felter lik null" {
-        val opplysninger = lagTestOpplysningerOmArbeidssoekerMedUtdanningOgAnnetFelterLikNull(periodeId1, opplysningerOmArbeidssoekerId1)
+        val opplysninger = nyOpplysningerOmArbeidssoeker(
+            periodeId = periodeId1,
+            opplysningerId = opplysningerId1,
+            utdanning = nyUtdanning(bestaat = null, godkjent = null),
+            annet = nyAnnet(null)
+        )
         repository.lagreOpplysningerOmArbeidssoeker(opplysninger)
 
         val retrievedOpplysninger = repository.hentOpplysningerOmArbeidssoeker(opplysninger.periodeId)
-        val retrievedPeriodeOpplysninger = hentPeriodeOpplysninger(database, periodeId1)
+        val retrievedPeriodeOpplysninger = finnPeriodeOpplysninger(database, periodeId1)
 
         retrievedOpplysninger.size shouldBe 1
         val retrievedOpplysninger1 = retrievedOpplysninger[0]
         retrievedOpplysninger1 shouldBeEqualTo opplysninger
         retrievedPeriodeOpplysninger.size shouldBe 1
         val retrievedPeriodeOpplysninger1 = retrievedPeriodeOpplysninger[0]
-        retrievedPeriodeOpplysninger1[PeriodeOpplysningerTable.periodeId] shouldBe retrievedOpplysninger1.periodeId
+        retrievedPeriodeOpplysninger1.periodeId shouldBe retrievedOpplysninger1.periodeId
     }
 
     "Opprett og hent ut flere opplysninger om arbeidssøker med samme periodeId" {
-        val opplysninger1 = lagTestOpplysningerOmArbeidssoeker(periodeId2, opplysningerOmArbeidssoekerId1)
-        val opplysninger2 = lagTestOpplysningerOmArbeidssoeker(periodeId2, opplysningerOmArbeidssoekerId2)
+        val opplysninger1 = nyOpplysningerOmArbeidssoeker(periodeId = periodeId2, opplysningerId = opplysningerId1)
+        val opplysninger2 = nyOpplysningerOmArbeidssoeker(periodeId = periodeId2, opplysningerId = opplysningerId2)
         repository.lagreOpplysningerOmArbeidssoeker(opplysninger1)
         repository.lagreOpplysningerOmArbeidssoeker(opplysninger2)
 
         val retrievedOpplysninger = repository.hentOpplysningerOmArbeidssoeker(periodeId2)
-        val retrievedPeriodeOpplysninger = hentPeriodeOpplysninger(database, periodeId2)
+        val retrievedPeriodeOpplysninger = finnPeriodeOpplysninger(database, periodeId2)
 
         retrievedOpplysninger.size shouldBe 2
         val retrievedOpplysninger1 = retrievedOpplysninger[0]
@@ -115,40 +112,46 @@ class OpplysningerOmArbeidssoekerRepositoryTest : StringSpec({
         retrievedPeriodeOpplysninger.size shouldBe 2
         val retrievedPeriodeOpplysninger1 = retrievedPeriodeOpplysninger[0]
         val retrievedPeriodeOpplysninger2 = retrievedPeriodeOpplysninger[1]
-        retrievedPeriodeOpplysninger1[PeriodeOpplysningerTable.periodeId] shouldBe retrievedOpplysninger1.periodeId
-        retrievedPeriodeOpplysninger2[PeriodeOpplysningerTable.periodeId] shouldBe retrievedOpplysninger2.periodeId
+        retrievedPeriodeOpplysninger1.periodeId shouldBe retrievedOpplysninger1.periodeId
+        retrievedPeriodeOpplysninger2.periodeId shouldBe retrievedOpplysninger2.periodeId
     }
 
     "Opprett og hent ut opplysninger om arbeidssøker med forskjellig periodeId" {
-        val opplysninger1 = lagTestOpplysningerOmArbeidssoeker(periodeId1, opplysningerOmArbeidssoekerId1)
-        val opplysninger2 = lagTestOpplysningerOmArbeidssoeker(periodeId2, opplysningerOmArbeidssoekerId1)
+        val opplysninger1 = nyOpplysningerOmArbeidssoeker(periodeId = periodeId1, opplysningerId = opplysningerId1)
+        val opplysninger2 = nyOpplysningerOmArbeidssoeker(periodeId = periodeId2, opplysningerId = opplysningerId1)
 
         repository.lagreOpplysningerOmArbeidssoeker(opplysninger1)
         repository.lagreOpplysningerOmArbeidssoeker(opplysninger2)
 
-        val allePeriodeOpplysnigner = hentAllePeriodeOpplysninger(database)
-        val alleOpplysningerOm = hentAlleOpplysningerOmArbeidssoeker(database)
+        val retrievedOpplysninger = finnOpplysninger(database)
+        val retrievedPeriodeOpplysninger = finnPeriodeOpplysninger(database)
 
-        alleOpplysningerOm.size shouldBe 1
-        allePeriodeOpplysnigner.size shouldBe 2
+        retrievedOpplysninger.size shouldBe 1
+        val retrievedOpplysninger1 = retrievedOpplysninger[0]
+        retrievedOpplysninger1.opplysningerId shouldBe opplysninger1.id
+        retrievedOpplysninger1.periodeId shouldBe opplysninger1.periodeId
+        retrievedPeriodeOpplysninger.size shouldBe 1
+        val retrievedPeriodeOpplysninger1 = retrievedPeriodeOpplysninger[0]
+        retrievedPeriodeOpplysninger1.periodeId shouldBe opplysninger1.periodeId
+        retrievedPeriodeOpplysninger1.opplysningerOmArbeidssoekerTableId shouldBe retrievedOpplysninger1.id
     }
 
     "Like opplysninger med samme periodeId skal ikke lagres på nytt" {
-        val opplysninger1 = lagTestOpplysningerOmArbeidssoeker(periodeId1, opplysningerOmArbeidssoekerId1)
-        val opplysninger2 = lagTestOpplysningerOmArbeidssoeker(periodeId1, opplysningerOmArbeidssoekerId1)
+        val opplysninger1 = nyOpplysningerOmArbeidssoeker(periodeId = periodeId1, opplysningerId = opplysningerId1)
+        val opplysninger2 = nyOpplysningerOmArbeidssoeker(periodeId = periodeId1, opplysningerId = opplysningerId1)
 
         repository.lagreOpplysningerOmArbeidssoeker(opplysninger1)
         repository.lagreOpplysningerOmArbeidssoeker(opplysninger2)
 
         val retrievedOpplysninger = repository.hentOpplysningerOmArbeidssoeker(opplysninger1.periodeId)
-        val retrievedPeriodeOpplysninger = hentPeriodeOpplysninger(database, periodeId1)
+        val retrievedPeriodeOpplysninger = finnPeriodeOpplysninger(database, periodeId1)
 
         retrievedOpplysninger.size shouldBe 1
         val retrievedOpplysninger1 = retrievedOpplysninger[0]
         retrievedOpplysninger1 shouldBeEqualTo opplysninger1
         retrievedPeriodeOpplysninger.size shouldBe 1
         val retrievedPeriodeOpplysninger1 = retrievedPeriodeOpplysninger[0]
-        retrievedPeriodeOpplysninger1[PeriodeOpplysningerTable.periodeId] shouldBe retrievedOpplysninger1.periodeId
+        retrievedPeriodeOpplysninger1.periodeId shouldBe retrievedOpplysninger1.periodeId
     }
 
     "Hent ut ikke-eksisterende opplysninger om arbeidssøker" {
@@ -159,11 +162,11 @@ class OpplysningerOmArbeidssoekerRepositoryTest : StringSpec({
 
     "Lagre opplysninger med samme periodeId i batch" {
         val periodeId = UUID.randomUUID()
-        val opplysninger1 = lagTestOpplysningerOmArbeidssoeker(periodeId, UUID.randomUUID())
-        val opplysninger2 = lagTestOpplysningerOmArbeidssoeker(periodeId, UUID.randomUUID())
-        val opplysninger3 = lagTestOpplysningerOmArbeidssoeker(periodeId, UUID.randomUUID())
+        val opplysninger1 = nyOpplysningerOmArbeidssoeker(periodeId = periodeId)
+        val opplysninger2 = nyOpplysningerOmArbeidssoeker(periodeId = periodeId)
+        val opplysninger3 = nyOpplysningerOmArbeidssoeker(periodeId = periodeId)
         val opplysninger = sequenceOf(opplysninger1, opplysninger2, opplysninger3)
-        repository.storeBatch(opplysninger)
+        repository.lagreOpplysningerOmArbeidssoeker(opplysninger)
 
         val retrievedOpplysninger = repository.hentOpplysningerOmArbeidssoeker(periodeId)
 
@@ -177,226 +180,18 @@ class OpplysningerOmArbeidssoekerRepositoryTest : StringSpec({
     }
 })
 
-fun hentPeriodeOpplysninger(
-    database: Database,
-    periodeId: UUID
-) = transaction(database) {
-    PeriodeOpplysningerTable.selectAll()
-        .where { PeriodeOpplysningerTable.periodeId eq periodeId }
-        .toList()
-}
-
-fun hentAllePeriodeOpplysninger(database: Database) =
+private fun finnOpplysninger(database: Database) =
     transaction(database) {
-        PeriodeOpplysningerTable.selectAll()
-            .toList()
+        finnOpplysningerRows()
     }
 
-fun hentAlleOpplysningerOmArbeidssoeker(database: Database) =
+
+private fun finnPeriodeOpplysninger(database: Database, periodeId: UUID) =
     transaction(database) {
-        OpplysningerOmArbeidssoekerTable.selectAll()
-            .toList()
+        finnPeriodeOpplysningerRows(periodeId)
     }
 
-fun settInnTestPeriode(
-    database: Database,
-    periodeId: UUID
-) {
-    val arbeidssoekerperiodeRepository = ArbeidssoekerperiodeRepository(database)
-    val periode = nyAvsluttetPeriode(periodeId = periodeId)
-    arbeidssoekerperiodeRepository.opprettArbeidssoekerperiode(periode)
-}
-
-fun lagTestOpplysningerOmArbeidssoeker(
-    periodeId: UUID,
-    opplysningerOmArbeidssoekerId: UUID
-) = OpplysningerOmArbeidssoeker(
-    opplysningerOmArbeidssoekerId,
-    periodeId,
-    Metadata(
-        Instant.now(),
-        Bruker(
-            BrukerType.SYSTEM,
-            "12345678911"
-        ),
-        "kilde",
-        "aarsak",
-        TidspunktFraKilde(
-            Instant.now(),
-            AvviksType.UKJENT_VERDI
-        )
-    ),
-    Utdanning(
-        "NUS_KODE",
-        JaNeiVetIkke.VET_IKKE,
-        JaNeiVetIkke.VET_IKKE
-    ),
-    Helse(
-        JaNeiVetIkke.VET_IKKE
-    ),
-    Jobbsituasjon(
-        listOf(
-            BeskrivelseMedDetaljer(
-                Beskrivelse.AKKURAT_FULLFORT_UTDANNING,
-                mapOf(
-                    Pair("noekkel1", "verdi1"),
-                    Pair("noekkel2", "verdi2")
-                )
-            ),
-            BeskrivelseMedDetaljer(
-                Beskrivelse.IKKE_VAERT_I_JOBB_SISTE_2_AAR,
-                mapOf(
-                    Pair("noekkel3", "verdi3"),
-                    Pair("noekkel4", "verdi4")
-                )
-            )
-        )
-    ),
-    Annet(
-        JaNeiVetIkke.VET_IKKE
-    )
-)
-
-fun lagTestOpplysningerOmArbeidssoekerMedUtdanningHelseOgAnnetLikNull(
-    periodeId: UUID,
-    opplysningerOmArbeidssoekerId: UUID
-): OpplysningerOmArbeidssoeker {
-    return OpplysningerOmArbeidssoeker(
-        opplysningerOmArbeidssoekerId,
-        periodeId,
-        Metadata(
-            Instant.now(),
-            Bruker(
-                BrukerType.UKJENT_VERDI,
-                "12345678911"
-            ),
-            "kilde",
-            "aarsak",
-            TidspunktFraKilde(
-                Instant.now(),
-                AvviksType.UKJENT_VERDI
-            )
-        ),
-        null,
-        null,
-        Jobbsituasjon(
-            listOf(
-                BeskrivelseMedDetaljer(
-                    Beskrivelse.AKKURAT_FULLFORT_UTDANNING,
-                    mapOf(
-                        Pair("noekkel1", "verdi1"),
-                        Pair("noekkel2", "verdi2")
-                    )
-                ),
-                BeskrivelseMedDetaljer(
-                    Beskrivelse.DELTIDSJOBB_VIL_MER,
-                    mapOf(
-                        Pair("noekkel3", "verdi3"),
-                        Pair("noekkel4", "verdi4")
-                    )
-                )
-            )
-        ),
-        null
-    )
-}
-
-fun lagTestOpplysningerOmArbeidssoekerMedUtdanningOgAnnetFelterLikNull(
-    periodeId: UUID,
-    opplysningerOmArbeidssoekerId: UUID
-): OpplysningerOmArbeidssoeker {
-    return OpplysningerOmArbeidssoeker(
-        opplysningerOmArbeidssoekerId,
-        periodeId,
-        Metadata(
-            Instant.now(),
-            Bruker(
-                BrukerType.UKJENT_VERDI,
-                "12345678911"
-            ),
-            "kilde",
-            "aarsak",
-            TidspunktFraKilde(
-                Instant.now(),
-                AvviksType.UKJENT_VERDI
-            )
-        ),
-        Utdanning(
-            "NUS_KODE",
-            null,
-            null
-        ),
-        Helse(
-            JaNeiVetIkke.JA
-        ),
-        Jobbsituasjon(
-            listOf(
-                BeskrivelseMedDetaljer(
-                    Beskrivelse.AKKURAT_FULLFORT_UTDANNING,
-                    mapOf(
-                        Pair("noekkel1", "verdi1"),
-                        Pair("noekkel2", "verdi2")
-                    )
-                ),
-                BeskrivelseMedDetaljer(
-                    Beskrivelse.DELTIDSJOBB_VIL_MER,
-                    mapOf(
-                        Pair("noekkel3", "verdi3"),
-                        Pair("noekkel4", "verdi4")
-                    )
-                )
-            )
-        ),
-        Annet(
-            null
-        )
-    )
-}
-
-private infix fun TidspunktFraKildeResponse.shouldBeEqualTo(tidspunktFraKilde: TidspunktFraKilde): TidspunktFraKildeResponse {
-    tidspunkt shouldBe tidspunktFraKilde.tidspunkt
-    avviksType.name shouldBe tidspunktFraKilde.avviksType.name
-    return this
-}
-
-private infix fun BrukerResponse.shouldBeEqualTo(bruker: Bruker): BrukerResponse {
-    id shouldBe bruker.id
-    type.name shouldBe bruker.type.name
-    return this
-}
-
-private infix fun MetadataResponse.shouldBeEqualTo(metadata: Metadata): MetadataResponse {
-    tidspunkt shouldBe metadata.tidspunkt
-    utfoertAv shouldBeEqualTo metadata.utfoertAv
-    kilde shouldBe metadata.kilde
-    aarsak shouldBe metadata.aarsak
-    tidspunktFraKilde?.shouldBeEqualTo(metadata.tidspunktFraKilde)
-    return this
-}
-
-private infix fun UtdanningResponse.shouldBeEqualTo(utdanning: Utdanning): UtdanningResponse {
-    nus shouldBe utdanning.nus
-    bestaatt?.name shouldBe utdanning.bestaatt?.name
-    godkjent?.name shouldBe utdanning.godkjent?.name
-    return this
-}
-
-private infix fun HelseResponse.shouldBeEqualTo(helse: Helse): HelseResponse {
-    helsetilstandHindrerArbeid.name shouldBe helse.helsetilstandHindrerArbeid.name
-    return this
-}
-
-private infix fun AnnetResponse.shouldBeEqualTo(annet: Annet): AnnetResponse {
-    andreForholdHindrerArbeid?.name shouldBe annet.andreForholdHindrerArbeid?.name
-    return this
-}
-
-private infix fun OpplysningerOmArbeidssoekerResponse.shouldBeEqualTo(opplysninger: OpplysningerOmArbeidssoeker): OpplysningerOmArbeidssoekerResponse {
-    opplysningerOmArbeidssoekerId shouldBe opplysninger.id
-    periodeId shouldBe opplysninger.periodeId
-    sendtInnAv shouldBeEqualTo opplysninger.sendtInnAv
-    utdanning?.shouldBeEqualTo(opplysninger.utdanning)
-    helse?.shouldBeEqualTo(opplysninger.helse)
-    annet?.shouldBeEqualTo(opplysninger.annet)
-    return this
-}
+private fun finnPeriodeOpplysninger(database: Database) =
+    transaction(database) {
+        finnPeriodeOpplysningerRows()
+    }

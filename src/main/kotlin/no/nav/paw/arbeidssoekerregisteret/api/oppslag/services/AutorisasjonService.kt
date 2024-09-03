@@ -1,9 +1,10 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.services
 
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.auditLogMelding
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.auditLogger
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.NavAnsatt
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.audit
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.buildAuditLogger
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.buildLogger
 import no.nav.poao_tilgang.client.NavAnsattNavIdentLesetilgangTilEksternBrukerPolicyInput
 import no.nav.poao_tilgang.client.PoaoTilgangCachedClient
 
@@ -20,12 +21,10 @@ class AutorisasjonService(
             ).getOrThrow().isPermit
 
         if (!harNavAnsattTilgang) {
-            logger.info("NAV-ansatt har ikke tilgang til bruker")
+            buildLogger.info("NAV-ansatt har ikke tilgang til bruker")
         } else {
-            auditLogger.info(auditLogMelding(identitetsnummer, navAnsatt, "NAV ansatt har hentet informasjon om bruker"))
+            buildAuditLogger.audit(identitetsnummer, navAnsatt, "NAV ansatt har hentet informasjon om bruker")
         }
         return harNavAnsattTilgang
     }
 }
-
-data class NavAnsatt(val azureId: String, val navIdent: String)

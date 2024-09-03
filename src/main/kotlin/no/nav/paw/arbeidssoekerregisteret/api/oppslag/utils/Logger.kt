@@ -4,19 +4,20 @@ import no.nav.common.audit_log.cef.CefMessage
 import no.nav.common.audit_log.cef.CefMessageEvent
 import no.nav.common.audit_log.cef.CefMessageSeverity
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.NavAnsatt
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.NavAnsatt
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-inline val <reified T : Any> T.logger get() = LoggerFactory.getLogger(T::class.java.name)
+inline val <reified T : Any> T.buildLogger get(): Logger = LoggerFactory.getLogger(T::class.java.name)
 
-inline val auditLogger get() = LoggerFactory.getLogger("AuditLogger")
+inline val buildAuditLogger get(): Logger = LoggerFactory.getLogger("AuditLogger")
 
-fun auditLogMelding(
+fun Logger.audit(
     identitetsnummer: Identitetsnummer,
     navAnsatt: NavAnsatt,
     melding: String
-): String =
-    CefMessage.builder()
+) {
+    val message = CefMessage.builder()
         .applicationName("paw-arbeidssoekerregisteret-api-oppslag")
         .event(CefMessageEvent.ACCESS)
         .name("Sporingslogg")
@@ -27,3 +28,6 @@ fun auditLogMelding(
         .extension("msg", melding)
         .build()
         .toString()
+
+    this.info(message)
+}

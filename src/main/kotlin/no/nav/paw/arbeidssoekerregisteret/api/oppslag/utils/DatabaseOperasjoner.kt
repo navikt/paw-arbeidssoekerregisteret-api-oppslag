@@ -15,8 +15,12 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.TidspunktFraKilde
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.database.UtdanningTable
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.BeskrivelseMedDetaljerResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.MetadataRow
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.OpplysningerOmArbeidssoekerResponse
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.OpplysningerRow
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.PeriodeRow
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ProfileringResponse
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.TidspunktFraKildeRow
 import no.nav.paw.arbeidssokerregisteret.api.v1.Beskrivelse
 import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
 import no.nav.paw.arbeidssokerregisteret.api.v1.Helse
@@ -46,35 +50,7 @@ val AvsluttetBrukerAlias = BrukerTable.alias("avsluttet_bruker")
 val StartetTidspunktAlias = TidspunktFraKildeTable.alias("startet_tidspunkt")
 val AvsluttetTidspunktAlias = TidspunktFraKildeTable.alias("avsluttet_tidspunkt")
 
-fun Transaction.lagreMetadata(metadata: Metadata): Long {
-    return MetadataTable.insertAndGetId {
-        it[utfoertAvId] = lagreBruker(metadata.utfoertAv)
-        it[tidspunkt] = metadata.tidspunkt
-        it[kilde] = metadata.kilde
-        it[aarsak] = metadata.aarsak
-        it[tidspunktFraKildeId] = metadata.tidspunktFraKilde?.let { tidspunkt -> lagreTidspunktFraKilde(tidspunkt) }
-    }.value
-}
-
-private fun Transaction.lagreBruker(bruker: Bruker): Long {
-    val result =
-        BrukerTable.upsert(
-            BrukerTable.type,
-            BrukerTable.brukerId,
-            where = { (BrukerTable.type eq bruker.type) and (BrukerTable.brukerId eq bruker.id) }
-        ) {
-            it[type] = bruker.type
-            it[brukerId] = bruker.id
-        }.resultedValues?.singleOrNull() ?: throw IllegalStateException("Upsert-operasjon returnerte ingen resultat")
-    return result[BrukerTable.id].value
-}
-
-private fun Transaction.lagreTidspunktFraKilde(tidspunktFraKilde: TidspunktFraKilde): Long {
-    return TidspunktFraKildeTable.insertAndGetId {
-        it[tidspunkt] = tidspunktFraKilde.tidspunkt
-        it[avviksType] = tidspunktFraKilde.avviksType
-    }.value
-}
+// ### OPPLYSNINGER ###
 
 fun Transaction.finnOpplysninger(periodeId: UUID): List<OpplysningerOmArbeidssoekerResponse> {
     return OpplysningerOmArbeidssoekerTable
@@ -132,49 +108,49 @@ private fun Transaction.hentDetaljer(beskrivelseId: Long): Map<String, String> {
         }
 }
 
-fun Transaction.lagreOpplysninger(opplysninger: OpplysningerOmArbeidssoeker): Long {
+fun Transaction.opprettOpplysninger(opplysninger: OpplysningerOmArbeidssoeker): Long {
     val id =
         OpplysningerOmArbeidssoekerTable.insertAndGetId {
             it[opplysningerOmArbeidssoekerId] = opplysninger.id
-            it[sendtInnAvId] = lagreMetadata(opplysninger.sendtInnAv)
-            it[utdanningId] = opplysninger.utdanning?.let { data -> lagreUtdanning(data) }
-            it[helseId] = opplysninger.helse?.let { data -> lagreHelse(data) }
-            it[annetId] = opplysninger.annet?.let { data -> lagreAnnet(data) }
+            it[sendtInnAvId] = opprettMetadata(opplysninger.sendtInnAv)
+            it[utdanningId] = opplysninger.utdanning?.let { data -> opprettUtdanning(data) }
+            it[helseId] = opplysninger.helse?.let { data -> opprettHelse(data) }
+            it[annetId] = opplysninger.annet?.let { data -> opprettAnnet(data) }
         }.value
     opplysninger.jobbsituasjon.beskrivelser.forEach { beskrivelseMedDetaljer ->
-        val beskrivelseMedDetaljerId = lagreBeskrivelseMedDetaljer(id)
-        val beskrivelserId = lagreBeskrivelse(beskrivelseMedDetaljer.beskrivelse, beskrivelseMedDetaljerId)
+        val beskrivelseMedDetaljerId = opprettBeskrivelseMedDetaljer(id)
+        val beskrivelserId = opprettBeskrivelse(beskrivelseMedDetaljer.beskrivelse, beskrivelseMedDetaljerId)
         beskrivelseMedDetaljer.detaljer.forEach { detalj ->
-            lagreDetaljer(beskrivelserId, detalj)
+            opprettDetaljer(beskrivelserId, detalj)
         }
     }
-    lagrePeriodeOpplysninger(id, opplysninger.periodeId)
+    opprettPeriodeOpplysninger(id, opplysninger.periodeId)
     return id
 }
 
-private fun Transaction.lagreUtdanning(utdanning: Utdanning): Long =
+private fun Transaction.opprettUtdanning(utdanning: Utdanning): Long =
     UtdanningTable.insertAndGetId {
         it[nus] = utdanning.nus
         it[bestaatt] = utdanning.bestaatt?.let { bestaatt -> JaNeiVetIkke.valueOf(bestaatt.name) }
         it[godkjent] = utdanning.godkjent?.let { godkjent -> JaNeiVetIkke.valueOf(godkjent.name) }
     }.value
 
-private fun Transaction.lagreHelse(helse: Helse): Long =
+private fun Transaction.opprettHelse(helse: Helse): Long =
     HelseTable.insertAndGetId {
         it[helsetilstandHindrerArbeid] = JaNeiVetIkke.valueOf(helse.helsetilstandHindrerArbeid.name)
     }.value
 
-private fun Transaction.lagreAnnet(annet: Annet): Long =
+private fun Transaction.opprettAnnet(annet: Annet): Long =
     AnnetTable.insertAndGetId {
         it[andreForholdHindrerArbeid] = annet.andreForholdHindrerArbeid?.let { data -> JaNeiVetIkke.valueOf(data.name) }
     }.value
 
-private fun Transaction.lagreBeskrivelseMedDetaljer(opplysningerOmArbeidssoekerId: Long): Long =
+private fun Transaction.opprettBeskrivelseMedDetaljer(opplysningerOmArbeidssoekerId: Long): Long =
     BeskrivelseMedDetaljerTable.insertAndGetId {
         it[BeskrivelseMedDetaljerTable.opplysningerOmArbeidssoekerId] = opplysningerOmArbeidssoekerId
     }.value
 
-private fun Transaction.lagreBeskrivelse(
+private fun Transaction.opprettBeskrivelse(
     beskrivelse: Beskrivelse,
     beskrivelseMedDetaljerId: Long
 ): Long =
@@ -183,7 +159,7 @@ private fun Transaction.lagreBeskrivelse(
         it[BeskrivelseTable.beskrivelseMedDetaljerId] = beskrivelseMedDetaljerId
     }.value
 
-private fun Transaction.lagreDetaljer(
+private fun Transaction.opprettDetaljer(
     beskrivelseId: Long,
     detaljer: Map.Entry<String, String>
 ) {
@@ -194,7 +170,7 @@ private fun Transaction.lagreDetaljer(
     }
 }
 
-fun Transaction.lagrePeriodeOpplysninger(
+fun Transaction.opprettPeriodeOpplysninger(
     opplysningerOmArbeidssoekerId: Long,
     periodeId: UUID
 ) {
@@ -204,8 +180,31 @@ fun Transaction.lagrePeriodeOpplysninger(
     }
 }
 
+fun Transaction.finnOpplysningerRow(opplysningerId: UUID): OpplysningerRow? {
+    return OpplysningerOmArbeidssoekerTable
+        .join(PeriodeOpplysningerTable, JoinType.LEFT, OpplysningerOmArbeidssoekerTable.id, PeriodeOpplysningerTable.opplysningerOmArbeidssoekerTableId)
+        .selectAll()
+        .where { OpplysningerOmArbeidssoekerTable.opplysningerOmArbeidssoekerId eq opplysningerId }
+        .singleOrNull()?.toOpplysningerRow()
+}
+
+fun Transaction.finnOpplysningerRows(opplysningerIdList: List<UUID>): List<OpplysningerRow> {
+    return OpplysningerOmArbeidssoekerTable
+        .join(PeriodeOpplysningerTable, JoinType.LEFT, OpplysningerOmArbeidssoekerTable.id, PeriodeOpplysningerTable.opplysningerOmArbeidssoekerTableId)
+        .selectAll()
+        .where { OpplysningerOmArbeidssoekerTable.opplysningerOmArbeidssoekerId inList opplysningerIdList }
+        .map { it.toOpplysningerRow() }
+}
+
+fun Transaction.finnOpplysningerRows() =
+    OpplysningerOmArbeidssoekerTable
+        .join(PeriodeOpplysningerTable, JoinType.LEFT, OpplysningerOmArbeidssoekerTable.id, PeriodeOpplysningerTable.opplysningerOmArbeidssoekerTableId)
+        .selectAll()
+        .map { it.toOpplysningerRow() }
+
 // ### PERIODE ###
-fun Transaction.finnPeriode(periodeId: UUID): Periode? {
+
+fun Transaction.finnPeriode(periodeId: UUID): PeriodeRow? {
     return PeriodeTable
         .join(StartetMetadataAlias, JoinType.LEFT, PeriodeTable.startetId, StartetMetadataAlias[MetadataTable.id])
         .join(AvsluttetMetadataAlias, JoinType.LEFT, PeriodeTable.avsluttetId, AvsluttetMetadataAlias[MetadataTable.id])
@@ -214,10 +213,10 @@ fun Transaction.finnPeriode(periodeId: UUID): Periode? {
         .join(StartetTidspunktAlias, JoinType.LEFT, StartetMetadataAlias[MetadataTable.tidspunktFraKildeId], StartetTidspunktAlias[TidspunktFraKildeTable.id])
         .join(AvsluttetTidspunktAlias, JoinType.LEFT, AvsluttetMetadataAlias[MetadataTable.tidspunktFraKildeId], AvsluttetTidspunktAlias[TidspunktFraKildeTable.id])
         .selectAll()
-        .where { PeriodeTable.periodeId eq periodeId }.singleOrNull()?.toPeriode()
+        .where { PeriodeTable.periodeId eq periodeId }.singleOrNull()?.toPeriodeRow()
 }
 
-fun Transaction.finnPerioder(identitetsnummer: Identitetsnummer): List<Periode> {
+fun Transaction.finnPerioder(identitetsnummer: Identitetsnummer): List<PeriodeRow> {
     return PeriodeTable
         .join(StartetMetadataAlias, JoinType.LEFT, PeriodeTable.startetId, StartetMetadataAlias[MetadataTable.id])
         .join(AvsluttetMetadataAlias, JoinType.LEFT, PeriodeTable.avsluttetId, AvsluttetMetadataAlias[MetadataTable.id])
@@ -227,28 +226,63 @@ fun Transaction.finnPerioder(identitetsnummer: Identitetsnummer): List<Periode> 
         .join(AvsluttetTidspunktAlias, JoinType.LEFT, AvsluttetMetadataAlias[MetadataTable.tidspunktFraKildeId], AvsluttetTidspunktAlias[TidspunktFraKildeTable.id])
         .selectAll()
         .where { PeriodeTable.identitetsnummer eq identitetsnummer.verdi }
-        .map { it.toPeriode() }
+        .map { it.toPeriodeRow() }
 }
 
-fun Transaction.lagrePeriode(periode: Periode) {
+fun Transaction.finnPerioder(periodeIdList: List<UUID>): List<PeriodeRow> {
+    return PeriodeTable
+        .join(StartetMetadataAlias, JoinType.LEFT, PeriodeTable.startetId, StartetMetadataAlias[MetadataTable.id])
+        .join(AvsluttetMetadataAlias, JoinType.LEFT, PeriodeTable.avsluttetId, AvsluttetMetadataAlias[MetadataTable.id])
+        .join(StartetBrukerAlias, JoinType.LEFT, StartetMetadataAlias[MetadataTable.utfoertAvId], StartetBrukerAlias[BrukerTable.id])
+        .join(AvsluttetBrukerAlias, JoinType.LEFT, AvsluttetMetadataAlias[MetadataTable.utfoertAvId], AvsluttetBrukerAlias[BrukerTable.id])
+        .join(StartetTidspunktAlias, JoinType.LEFT, StartetMetadataAlias[MetadataTable.tidspunktFraKildeId], StartetTidspunktAlias[TidspunktFraKildeTable.id])
+        .join(AvsluttetTidspunktAlias, JoinType.LEFT, AvsluttetMetadataAlias[MetadataTable.tidspunktFraKildeId], AvsluttetTidspunktAlias[TidspunktFraKildeTable.id])
+        .selectAll()
+        .where { PeriodeTable.periodeId inList periodeIdList }
+        .map { it.toPeriodeRow() }
+}
+
+fun Transaction.opprettPeriode(periode: Periode) {
     PeriodeTable.insert {
         it[periodeId] = periode.id
         it[identitetsnummer] = periode.identitetsnummer
-        it[startetId] = lagreMetadata(periode.startet)
-        it[avsluttetId] = periode.avsluttet?.let { metadata -> lagreMetadata(metadata) }
+        it[startetId] = opprettMetadata(periode.startet)
+        it[avsluttetId] = periode.avsluttet?.let { metadata -> opprettMetadata(metadata) }
     }
 }
 
-fun Transaction.endrePeriode(periode: Periode) {
-    val avsluttetMetadata = requireNotNull(periode.avsluttet) { "Avsluttet kan ikke være null ved oppdatering av periode" }
+fun Transaction.oppdaterPeriode(periode: Periode, eksisterendePeriode: PeriodeRow) {
+    oppdaterMetadata(periode.startet, eksisterendePeriode.startet)
 
-    PeriodeTable.update({ PeriodeTable.periodeId eq periode.id }) {
-        it[avsluttetId] = lagreMetadata(avsluttetMetadata)
+    if (eksisterendePeriode.avsluttet != null) {
+        if (periode.avsluttet == null) {
+            PeriodeTable.update(where = { PeriodeTable.id eq eksisterendePeriode.id }) {
+                it[avsluttetId] = null // Sletter referanse til avsluttet-metadata. Det vil føre til
+            }
+        } else {
+            oppdaterMetadata(periode.avsluttet, eksisterendePeriode.avsluttet)
+        }
+    } else {
+        if (periode.avsluttet != null) {
+            PeriodeTable.update(where = { PeriodeTable.id eq eksisterendePeriode.id }) {
+                it[avsluttetId] = opprettMetadata(periode.avsluttet)
+            }
+        }
     }
 }
+
+fun Transaction.finnPeriodeOpplysningerRows(periodeId: UUID) =
+    PeriodeOpplysningerTable.selectAll()
+        .where { PeriodeOpplysningerTable.periodeId eq periodeId }
+        .map { it.toPeriodeOpplysningerRow() }
+
+fun Transaction.finnPeriodeOpplysningerRows() =
+    PeriodeOpplysningerTable.selectAll()
+        .map { it.toPeriodeOpplysningerRow() }
 
 // ### PROFILERING ###
-fun Transaction.finnProfileringerForPeriodeId(periodeId: UUID): List<ProfileringResponse> {
+
+fun Transaction.finnProfileringer(periodeId: UUID): List<ProfileringResponse> {
     return ProfileringTable
         .join(MetadataTable, JoinType.LEFT, ProfileringTable.sendtInnAvId, MetadataTable.id)
         .join(BrukerTable, JoinType.LEFT, MetadataTable.utfoertAvId, BrukerTable.id)
@@ -256,7 +290,7 @@ fun Transaction.finnProfileringerForPeriodeId(periodeId: UUID): List<Profilering
         .selectAll().where { ProfileringTable.periodeId eq periodeId }.map { it.toProfileringResponse() }
 }
 
-fun Transaction.finnProfileringerForIdentitetsnummer(identitetsnummer: Identitetsnummer): List<ProfileringResponse> {
+fun Transaction.finnProfileringer(identitetsnummer: Identitetsnummer): List<ProfileringResponse> {
     return ProfileringTable
         .join(MetadataTable, JoinType.LEFT, ProfileringTable.sendtInnAvId, MetadataTable.id)
         .join(BrukerTable, JoinType.LEFT, MetadataTable.utfoertAvId, BrukerTable.id)
@@ -265,14 +299,81 @@ fun Transaction.finnProfileringerForIdentitetsnummer(identitetsnummer: Identitet
         .selectAll().where { PeriodeTable.identitetsnummer eq identitetsnummer.verdi }.map { it.toProfileringResponse() }
 }
 
-fun Transaction.lagreProfilering(profilering: Profilering) {
+fun Transaction.opprettProfilering(profilering: Profilering) {
     ProfileringTable.insert {
         it[profileringId] = profilering.id
         it[periodeId] = profilering.periodeId
         it[opplysningerOmArbeidssoekerId] = profilering.opplysningerOmArbeidssokerId
-        it[sendtInnAvId] = lagreMetadata(profilering.sendtInnAv)
+        it[sendtInnAvId] = opprettMetadata(profilering.sendtInnAv)
         it[profilertTil] = profilering.profilertTil
         it[jobbetSammenhengendeSeksAvTolvSisteManeder] = profilering.jobbetSammenhengendeSeksAvTolvSisteMnd
         it[alder] = profilering.alder
     }
+}
+
+// ### FELLES ###
+
+private fun Transaction.opprettMetadata(metadata: Metadata): Long {
+    return MetadataTable.insertAndGetId {
+        it[utfoertAvId] = opprettEllerOppdaterBruker(metadata.utfoertAv)
+        it[tidspunkt] = metadata.tidspunkt
+        it[kilde] = metadata.kilde
+        it[aarsak] = metadata.aarsak
+        it[tidspunktFraKildeId] = metadata.tidspunktFraKilde?.let { tidspunkt -> opprettTidspunktFraKilde(tidspunkt) }
+    }.value
+}
+
+private fun Transaction.oppdaterMetadata(metadata: Metadata, eksisterendeMetadata: MetadataRow) {
+    MetadataTable.update(where = { MetadataTable.id eq eksisterendeMetadata.id }) {
+        it[utfoertAvId] = opprettEllerOppdaterBruker(metadata.utfoertAv)
+        it[tidspunkt] = metadata.tidspunkt
+        it[kilde] = metadata.kilde
+        it[aarsak] = metadata.aarsak
+        it[tidspunktFraKildeId] = opprettEllerOppdatereTidspunktFraKilde(metadata.tidspunktFraKilde, eksisterendeMetadata.tidspunktFraKilde)
+    }
+}
+
+private fun Transaction.opprettEllerOppdaterBruker(bruker: Bruker): Long {
+    val result = BrukerTable.upsert(
+        BrukerTable.type,
+        BrukerTable.brukerId,
+        where = { (BrukerTable.type eq bruker.type) and (BrukerTable.brukerId eq bruker.id) }
+    ) {
+        it[type] = bruker.type
+        it[brukerId] = bruker.id
+    }.resultedValues?.singleOrNull() ?: throw IllegalStateException("Upsert-operasjon returnerte ingen resultat")
+    return result[BrukerTable.id].value
+}
+
+private fun Transaction.opprettEllerOppdatereTidspunktFraKilde(
+    tidspunktFraKilde: TidspunktFraKilde?,
+    eksisterendeTidspunktFraKilde: TidspunktFraKildeRow?
+): Long? {
+    return if (tidspunktFraKilde == null) {
+        null
+    } else {
+        if (eksisterendeTidspunktFraKilde == null) {
+            opprettTidspunktFraKilde(tidspunktFraKilde)
+        } else {
+            oppdatereTidspunktFraKilde(tidspunktFraKilde, eksisterendeTidspunktFraKilde)
+        }
+    }
+}
+
+private fun Transaction.opprettTidspunktFraKilde(tidspunktFraKilde: TidspunktFraKilde): Long {
+    return TidspunktFraKildeTable.insertAndGetId {
+        it[tidspunkt] = tidspunktFraKilde.tidspunkt
+        it[avviksType] = tidspunktFraKilde.avviksType
+    }.value
+}
+
+private fun Transaction.oppdatereTidspunktFraKilde(
+    tidspunktFraKilde: TidspunktFraKilde,
+    eksisterendeTidspunktFraKilde: TidspunktFraKildeRow
+): Long {
+    TidspunktFraKildeTable.update(where = { TidspunktFraKildeTable.id eq eksisterendeTidspunktFraKilde.id }) {
+        it[tidspunkt] = tidspunktFraKilde.tidspunkt
+        it[avviksType] = tidspunktFraKilde.avviksType
+    }
+    return eksisterendeTidspunktFraKilde.id
 }

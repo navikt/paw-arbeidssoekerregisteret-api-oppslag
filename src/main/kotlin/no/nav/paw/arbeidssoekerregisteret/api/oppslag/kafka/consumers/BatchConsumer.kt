@@ -3,7 +3,7 @@ package no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.consumers
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.buildLogger
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import java.time.Duration
 
@@ -32,11 +32,11 @@ class BatchConsumer<K, V>(
     ) {
         val records = consumer.poll(pollingInterval)
         if (records.isEmpty) {
-            logger.trace("Mottok ingen meldinger i intervall")
+            buildLogger.trace("Mottok ingen meldinger i intervall")
         } else {
             records.asSequence()
                 .onEach {
-                    logger.trace(
+                    buildLogger.trace(
                         "Mottok melding fra {} med offset {} partition {}",
                         it.topic(),
                         it.offset(),
@@ -46,7 +46,7 @@ class BatchConsumer<K, V>(
                 .runCatching(receiver)
                 .mapCatching { commitSync() }
                 .fold(
-                    onSuccess = { logger.debug("Batch behandlet og commitet") },
+                    onSuccess = { buildLogger.debug("Batch behandlet og commitet") },
                     onFailure = { error -> throw Exception("Feil ved konsumering av melding fra $topic", error) }
                 )
         }

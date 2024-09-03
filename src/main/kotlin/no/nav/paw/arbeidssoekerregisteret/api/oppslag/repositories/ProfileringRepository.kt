@@ -2,38 +2,38 @@ package no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories
 
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ProfileringResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.finnProfileringerForIdentitetsnummer
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.finnProfileringerForPeriodeId
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.lagreProfilering
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.finnProfileringer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.opprettProfilering
 import no.nav.paw.arbeidssokerregisteret.api.v1.Profilering
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 class ProfileringRepository(private val database: Database) {
-    fun hentProfileringForArbeidssoekerMedPeriodeId(periodeId: UUID): List<ProfileringResponse> =
+
+    fun hentProfilering(periodeId: UUID): List<ProfileringResponse> =
         transaction(database) {
-            finnProfileringerForPeriodeId(periodeId)
+            finnProfileringer(periodeId)
         }
 
-    fun hentProfileringForArbeidssoekerMedIdentitetsnummer(identitetsnummer: Identitetsnummer): List<ProfileringResponse> =
+    fun hentProfilering(identitetsnummer: Identitetsnummer): List<ProfileringResponse> =
         transaction(database) {
-            finnProfileringerForIdentitetsnummer(identitetsnummer)
+            finnProfileringer(identitetsnummer)
         }
 
-    fun opprettProfileringForArbeidssoeker(profilering: Profilering) {
+    fun lagreProfilering(profilering: Profilering) {
         transaction(database) {
-            lagreProfilering(profilering)
+            opprettProfilering(profilering)
         }
     }
 
-    fun storeBatch(batch: Sequence<Profilering>) {
-        if (batch.iterator().hasNext()) {
+    fun lagreProfileringer(profileringer: Sequence<Profilering>) {
+        if (profileringer.iterator().hasNext()) {
             transaction(database) {
                 maxAttempts = 2
                 minRetryDelay = 20
-                batch.forEach { profilering ->
-                    lagreProfilering(profilering)
+                profileringer.forEach { profilering ->
+                    opprettProfilering(profilering)
                 }
             }
         }

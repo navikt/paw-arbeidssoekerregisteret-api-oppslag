@@ -1,34 +1,32 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ArbeidssoekerperiodeResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.BrukerResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.MetadataResponse
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.TidspunktFraKildeResponse
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.test.copy
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.test.nyAvsluttetPeriode
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.test.nyBruker
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.test.nyMetadata
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.test.nyStartetPeriode
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.test.nyTidspunktFraKilde
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.test.shouldBeEqualTo
 import no.nav.paw.arbeidssokerregisteret.api.v1.AvviksType
-import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
 import no.nav.paw.arbeidssokerregisteret.api.v1.BrukerType
-import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata
-import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
-import no.nav.paw.arbeidssokerregisteret.api.v1.TidspunktFraKilde
 import org.jetbrains.exposed.sql.Database
 import java.time.Duration
 import java.time.Instant
-import java.util.*
 import javax.sql.DataSource
 
 class ArbeidssoekerperiodeRepositoryTest : StringSpec({
     lateinit var dataSource: DataSource
+    lateinit var database: Database
     lateinit var repository: ArbeidssoekerperiodeRepository
 
     beforeSpec {
         dataSource = initTestDatabase()
-        val database = Database.connect(dataSource)
+        database = Database.connect(dataSource)
         repository = ArbeidssoekerperiodeRepository(database)
     }
 
@@ -38,7 +36,7 @@ class ArbeidssoekerperiodeRepositoryTest : StringSpec({
 
     "Opprett og hent en periode" {
         val periode = nyStartetPeriode()
-        repository.opprettArbeidssoekerperiode(periode)
+        repository.lagreArbeidssoekerperiode(periode)
 
         val retrievedPeriode = repository.hentArbeidssoekerperiode(periode.id)
 
@@ -46,38 +44,36 @@ class ArbeidssoekerperiodeRepositoryTest : StringSpec({
         retrievedPeriode!! shouldBe periode
     }
 
-    "Hent en periode for et gitt identitetsnummer" {
-        val periode = nyStartetPeriode(identitetsnummer = "31017098765")
-        repository.opprettArbeidssoekerperiode(periode)
-        val retrievedPerioder = repository.hentArbeidssoekerperioder(Identitetsnummer(periode.identitetsnummer))
+    "Hent en perioder for et gitt identitetsnummer" {
+        val identitetsnummer = "31017098765"
+        val periode1 = nyStartetPeriode(identitetsnummer = identitetsnummer)
+        val periode2 = nyStartetPeriode(identitetsnummer = identitetsnummer)
+        val periode3 = nyStartetPeriode(identitetsnummer = identitetsnummer)
+        repository.lagreArbeidssoekerperiode(periode1)
+        repository.lagreArbeidssoekerperiode(periode2)
+        repository.lagreArbeidssoekerperiode(periode3)
+        val retrievedPerioder = repository.hentArbeidssoekerperioder(Identitetsnummer(identitetsnummer))
 
-        retrievedPerioder.size shouldBeExactly 1
-        val retrievedPeriode = retrievedPerioder.first()
-        retrievedPeriode shouldBeEqualTo periode
+        retrievedPerioder.size shouldBeExactly 3
+        val retrievedPerioderMap = retrievedPerioder.associateBy { it.periodeId }
+        val retrievedPeriode1 = retrievedPerioderMap[periode1.id]
+        val retrievedPeriode2 = retrievedPerioderMap[periode2.id]
+        val retrievedPeriode3 = retrievedPerioderMap[periode3.id]
+        retrievedPeriode1 shouldNotBe null
+        retrievedPeriode2 shouldNotBe null
+        retrievedPeriode3 shouldNotBe null
+        retrievedPeriode1!! shouldBeEqualTo periode1
+        retrievedPeriode2!! shouldBeEqualTo periode2
+        retrievedPeriode3!! shouldBeEqualTo periode3
     }
 
-    "Oppdater periode med avsluttet metadata" {
-        val periode =
-            nyAvsluttetPeriode(
-                avsluttetMetadata =
-                nyMetadata(
-                    ident = "ARENA",
-                    brukerType = BrukerType.SYSTEM,
-                    tidspunkt = Instant.now()
-                )
-            )
-        repository.opprettArbeidssoekerperiode(periode)
-        val updatedPeriode =
-            periode.copy(
-                avsluttetMetadata =
-                nyMetadata(
-                    ident = "ARENA",
-                    brukerType = BrukerType.SYSTEM,
-                    tidspunkt = Instant.now()
-                )
-            )
-
-        repository.oppdaterArbeidssoekerperiode(updatedPeriode)
+    "Oppdater åpen periode med avsluttet metadata" {
+        val periode = nyStartetPeriode()
+        repository.lagreArbeidssoekerperiode(periode)
+        val updatedPeriode = periode.copy(
+            avsluttet = nyMetadata()
+        )
+        repository.lagreArbeidssoekerperiode(updatedPeriode)
 
         val retrievedPeriode = repository.hentArbeidssoekerperiode(periode.id)
 
@@ -85,19 +81,25 @@ class ArbeidssoekerperiodeRepositoryTest : StringSpec({
         retrievedPeriode!! shouldBe updatedPeriode
     }
 
-    "Oppdater periode uten avsluttet metadata" {
-        val periode = nyStartetPeriode()
-        repository.opprettArbeidssoekerperiode(periode)
-        val updatedPeriode =
-            periode.copy(
-                avsluttetMetadata =
-                nyMetadata(
-                    ident = "ARENA",
-                    brukerType = BrukerType.SYSTEM,
-                    tidspunkt = Instant.now()
+    "Oppdater avsluttet periode med ny startet og avsluttet metadata" {
+        val periode = nyAvsluttetPeriode()
+        repository.lagreArbeidssoekerperiode(periode)
+        val updatedPeriode = periode.copy(
+            startet = nyMetadata(
+                tidspunkt = Instant.now(),
+                bruker = nyBruker(id = "02027612345"),
+                kilde = "NY_KILDE",
+                aarsak = "NY_AARSAK",
+                tidspunktFraKilde = nyTidspunktFraKilde(
+                    tidspunkt = Instant.now(),
+                    avviksType = AvviksType.RETTING
                 )
+            ),
+            avsluttet = nyMetadata(
+                bruker = nyBruker(type = BrukerType.SYSTEM, id = "ARENA")
             )
-        repository.oppdaterArbeidssoekerperiode(updatedPeriode)
+        )
+        repository.lagreArbeidssoekerperiode(updatedPeriode)
 
         val retrievedPeriode = repository.hentArbeidssoekerperiode(periode.id)
 
@@ -105,89 +107,91 @@ class ArbeidssoekerperiodeRepositoryTest : StringSpec({
         retrievedPeriode shouldBe updatedPeriode
     }
 
-    "Oppdatere periode med avsluttet lik null skal ikke være mulig" {
+    "Oppdatere avsluttet periode med null avsluttet metadata" {
         val periode = nyAvsluttetPeriode()
-        repository.opprettArbeidssoekerperiode(periode)
-        val updatedPeriode = periode.copy(avsluttetMetadata = null)
-
-        val exception =
-            shouldThrow<IllegalArgumentException> {
-                repository.oppdaterArbeidssoekerperiode(updatedPeriode)
-            }
+        repository.lagreArbeidssoekerperiode(periode)
+        val updatedPeriode = periode.copy(
+            startet = nyMetadata(
+                tidspunkt = Instant.now().minus(Duration.ofDays(2)),
+                bruker = nyBruker(type = BrukerType.UDEFINERT, id = "98765"),
+                kilde = "ANNEN_KILDE",
+                aarsak = "ANNEN_AARSAK",
+                tidspunktFraKilde = nyTidspunktFraKilde(
+                    tidspunkt = Instant.now().minus(Duration.ofDays(1)),
+                    avviksType = AvviksType.FORSINKELSE
+                )
+            ),
+            avsluttet = null
+        )
+        repository.lagreArbeidssoekerperiode(updatedPeriode)
 
         val retrievedPeriode = repository.hentArbeidssoekerperiode(periode.id)
 
-        exception.message shouldBe "Avsluttet kan ikke være null ved oppdatering av periode"
-        retrievedPeriode?.avsluttet shouldNotBe null
+        retrievedPeriode shouldNotBe null
+        retrievedPeriode shouldBe updatedPeriode
     }
 
     "Lagre startede perioder i batch" {
         val periode1 = nyStartetPeriode(identitetsnummer = "01017012345")
         val periode2 = nyStartetPeriode(identitetsnummer = "02017012345")
         val perioder = sequenceOf(periode1, periode2)
-        repository.storeBatch(perioder)
+        repository.lagreArbeidssoekerperioder(perioder)
 
         val lagretPeriode1 = repository.hentArbeidssoekerperiode(periode1.id)
         val lagretPeriode2 = repository.hentArbeidssoekerperiode(periode2.id)
 
         lagretPeriode1 shouldNotBe null
         lagretPeriode2 shouldNotBe null
-
         lagretPeriode1!! shouldBe periode1
         lagretPeriode2!! shouldBe periode2
     }
 
     "Lagre noen avsluttede perioder i batch" {
-        val periode1 =
-            nyStartetPeriode(
-                identitetsnummer = "01017012345",
-                startetMetadata =
-                nyMetadata(
-                    ident = "01017012345",
-                    brukerType = BrukerType.SLUTTBRUKER,
-                    tidspunkt = Instant.now().minus(Duration.ofDays(1))
-                )
+        val periode1 = nyStartetPeriode(
+            identitetsnummer = "01017012345",
+            startetMetadata = nyMetadata(
+                tidspunkt = Instant.now().minus(Duration.ofDays(1)),
+                bruker = nyBruker(id = "01017012345")
             )
-        val periode2 =
-            nyStartetPeriode(
-                identitetsnummer = "02017012345",
-                startetMetadata =
-                nyMetadata(
-                    ident = "02017012345",
-                    brukerType = BrukerType.SLUTTBRUKER,
-                    tidspunkt = Instant.now().minus(Duration.ofDays(2))
-                )
+        )
+        val periode2 = nyStartetPeriode(
+            identitetsnummer = "02017012345",
+            startetMetadata = nyMetadata(
+                tidspunkt = Instant.now().minus(Duration.ofDays(2)),
+                bruker = nyBruker(id = "02017012345")
             )
-        val periode3 =
-            nyStartetPeriode(
-                identitetsnummer = "03017012345",
-                startetMetadata =
-                nyMetadata(
-                    ident = "12345",
-                    brukerType = BrukerType.VEILEDER,
-                    tidspunkt = Instant.now().minus(Duration.ofDays(3))
-                )
+        )
+        val periode3 = nyStartetPeriode(
+            identitetsnummer = "03017012345",
+            startetMetadata = nyMetadata(
+                tidspunkt = Instant.now().minus(Duration.ofDays(3)),
+                bruker = nyBruker(type = BrukerType.VEILEDER, id = "12345")
             )
+        )
         val periode4 = periode1.copy(
-            avsluttetMetadata =
-            nyMetadata(
-                ident = "ARENA",
-                brukerType = BrukerType.SYSTEM,
-                tidspunkt = Instant.now()
+            startet = nyMetadata(
+                tidspunkt = Instant.now(),
+                bruker = nyBruker(id = "02027612345"),
+                kilde = "NY_KILDE",
+                aarsak = "NY_AARSAK",
+                tidspunktFraKilde = nyTidspunktFraKilde(
+                    tidspunkt = Instant.now(),
+                    avviksType = AvviksType.RETTING
+                )
+            ),
+            avsluttet = nyMetadata(
+                bruker = nyBruker(type = BrukerType.SYSTEM, id = "ARENA")
             )
         )
         val periode5 = periode2.copy(
-            avsluttetMetadata =
-            nyMetadata(
-                ident = "ARENA",
-                brukerType = BrukerType.SYSTEM,
-                tidspunkt = Instant.now()
+            avsluttet = nyMetadata(
+                bruker = nyBruker(type = BrukerType.SYSTEM, id = "ARENA")
             )
         )
         val startedePerioder = sequenceOf(periode1, periode2, periode3)
         val avsluttedePerioder = sequenceOf(periode4, periode5)
-        repository.storeBatch(startedePerioder)
-        repository.storeBatch(avsluttedePerioder)
+        repository.lagreArbeidssoekerperioder(startedePerioder)
+        repository.lagreArbeidssoekerperioder(avsluttedePerioder)
 
         val lagretPeriode1 = repository.hentArbeidssoekerperiode(periode1.id)
         val lagretPeriode2 = repository.hentArbeidssoekerperiode(periode2.id)
@@ -210,93 +214,3 @@ class ArbeidssoekerperiodeRepositoryTest : StringSpec({
         lagretPeriode2 shouldBe lagretPeriode5
     }
 })
-
-fun nyStartetPeriode(
-    identitetsnummer: String = "01017012345",
-    periodeId: UUID = UUID.randomUUID(),
-    startetMetadata: Metadata = nyMetadata(
-        ident = identitetsnummer,
-        tidspunkt = Instant.now().minus(Duration.ofDays(30))
-    ),
-    avsluttetMetadata: Metadata? = null
-) = Periode(
-    periodeId,
-    identitetsnummer,
-    startetMetadata,
-    avsluttetMetadata
-)
-
-fun nyAvsluttetPeriode(
-    identitetsnummer: String = "01017012345",
-    periodeId: UUID = UUID.randomUUID(),
-    startetMetadata: Metadata = nyMetadata(
-        ident = identitetsnummer,
-        tidspunkt = Instant.now().minus(Duration.ofDays(30))
-    ),
-    avsluttetMetadata: Metadata = nyMetadata(
-        ident = "ARENA",
-        brukerType = BrukerType.SYSTEM,
-        tidspunkt = Instant.now()
-    )
-) = Periode(
-    periodeId,
-    identitetsnummer,
-    startetMetadata,
-    avsluttetMetadata
-)
-
-fun nyMetadata(
-    ident: String,
-    brukerType: BrukerType = BrukerType.SLUTTBRUKER,
-    tidspunkt: Instant
-) = Metadata(
-    tidspunkt,
-    Bruker(brukerType, ident),
-    "KILDE",
-    "AARSAK",
-    TidspunktFraKilde(
-        tidspunkt.minusSeconds(60),
-        AvviksType.UKJENT_VERDI
-    )
-)
-
-private fun Periode.copy(avsluttetMetadata: Metadata?): Periode {
-    return Periode(
-        id,
-        identitetsnummer,
-        startet,
-        avsluttetMetadata
-    )
-}
-
-private infix fun TidspunktFraKildeResponse.shouldBeEqualTo(tidspunktFraKilde: TidspunktFraKilde): TidspunktFraKildeResponse {
-    tidspunktFraKilde shouldNotBe null
-    tidspunkt shouldBe tidspunktFraKilde.tidspunkt
-    avviksType.name shouldBe tidspunktFraKilde.avviksType.name
-    return this
-}
-
-private infix fun BrukerResponse.shouldBeEqualTo(bruker: Bruker): BrukerResponse {
-    bruker shouldNotBe null
-    id shouldBe bruker.id
-    type.name shouldBe bruker.type.name
-    return this
-}
-
-private infix fun MetadataResponse.shouldBeEqualTo(metadata: Metadata): MetadataResponse {
-    metadata shouldNotBe null
-    tidspunkt shouldBe metadata.tidspunkt
-    utfoertAv shouldBeEqualTo metadata.utfoertAv
-    kilde shouldBe metadata.kilde
-    aarsak shouldBe metadata.aarsak
-    tidspunktFraKilde?.shouldBeEqualTo(metadata.tidspunktFraKilde)
-    return this
-}
-
-private infix fun ArbeidssoekerperiodeResponse.shouldBeEqualTo(periode: Periode): ArbeidssoekerperiodeResponse {
-    periode shouldNotBe null
-    periodeId shouldBe periode.id
-    startet shouldBeEqualTo periode.startet
-    avsluttet?.shouldBeEqualTo(periode.avsluttet)
-    return this
-}
