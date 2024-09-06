@@ -21,7 +21,7 @@ import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.createSisteSamletInf
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getPidClaim
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.getRequestBody
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.isPeriodeIdValid
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.buildLogger
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.verifyAccessFromToken
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.verifyPeriodeId
 import java.util.*
@@ -39,16 +39,15 @@ fun Route.oppslagRoutes(
                     val identitetsnummer = call.getPidClaim()
                     val siste = call.request.queryParameters["siste"]?.toBoolean() ?: false
 
-                    val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(identitetsnummer)
-
                     val response =
                         if (siste) {
+                            val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(identitetsnummer)
                             arbeidssoekerperioder.maxByOrNull { it.startet.tidspunkt }?.let { listOf(it) } ?: emptyList()
                         } else {
                             arbeidssoekerperiodeService.hentArbeidssoekerperioder(identitetsnummer)
                         }
 
-                    logger.info("Hentet arbeidssøkerperioder for bruker")
+                    buildLogger.info("Hentet arbeidssøkerperioder for bruker")
 
                     call.respond(HttpStatusCode.OK, response)
                 }
@@ -66,7 +65,7 @@ fun Route.oppslagRoutes(
                             opplysninger
                         }
 
-                    logger.info("Hentet opplysninger for bruker")
+                    buildLogger.info("Hentet opplysninger for bruker")
 
                     call.respond(HttpStatusCode.OK, response)
                 }
@@ -80,7 +79,7 @@ fun Route.oppslagRoutes(
 
                     val opplysningerOmArbeidssoeker = opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(periodeId)
 
-                    logger.info("Hentet opplysninger for bruker")
+                    buildLogger.info("Hentet opplysninger for bruker")
 
                     call.respond(HttpStatusCode.OK, opplysningerOmArbeidssoeker)
                 }
@@ -99,7 +98,7 @@ fun Route.oppslagRoutes(
                             profilering
                         }
 
-                    logger.info("Hentet profilering for bruker")
+                    buildLogger.info("Hentet profilering for bruker")
 
                     call.respond(HttpStatusCode.OK, response)
                 }
@@ -113,7 +112,7 @@ fun Route.oppslagRoutes(
 
                     val profilering = profileringService.hentProfileringForArbeidssoekerMedPeriodeId(periodeId)
 
-                    logger.info("Hentet profilering for bruker")
+                    buildLogger.info("Hentet profilering for bruker")
 
                     call.respond(HttpStatusCode.OK, profilering)
                 }
@@ -130,7 +129,7 @@ fun Route.oppslagRoutes(
                             createSamletInformasjonResponse(arbeidssoekerperiodeService.hentArbeidssoekerperioder(identitetsnummer), identitetsnummer.verdi, opplysningerOmArbeidssoekerService, profileringService)
                         }
 
-                    logger.info("Hentet siste samlet informasjon for bruker")
+                    buildLogger.info("Hentet siste samlet informasjon for bruker")
 
                     call.respond(HttpStatusCode.OK, response)
                 }
@@ -146,16 +145,15 @@ fun Route.oppslagRoutes(
                         return@post
                     }
 
-                    val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(Identitetsnummer(identitetsnummer))
-
                     val response =
                         if (siste) {
+                            val arbeidssoekerperioder = arbeidssoekerperiodeService.hentArbeidssoekerperioder(Identitetsnummer(identitetsnummer))
                             arbeidssoekerperioder.maxByOrNull { it.startet.tidspunkt }?.let { listOf(it) } ?: emptyList()
                         } else {
                             arbeidssoekerperiodeService.hentArbeidssoekerperioder(Identitetsnummer(identitetsnummer))
                         }
 
-                    logger.info("Veileder hentet arbeidssøkerperioder for bruker")
+                    buildLogger.info("Veileder hentet arbeidssøkerperioder for bruker")
 
                     call.respond(HttpStatusCode.OK, response)
                 }
@@ -177,6 +175,7 @@ fun Route.oppslagRoutes(
                                 }
                                 opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoeker(periodeId)
                             }
+
                             else -> {
                                 opplysningerOmArbeidssoekerService.hentOpplysningerOmArbeidssoekerMedIdentitetsnummer(Identitetsnummer(identitetsnummer))
                             }
@@ -189,7 +188,7 @@ fun Route.oppslagRoutes(
                             opplysninger
                         }
 
-                    logger.info("Veileder hentet opplysninger-om-arbeidssøker for bruker")
+                    buildLogger.info("Veileder hentet opplysninger-om-arbeidssøker for bruker")
 
                     call.respond(HttpStatusCode.OK, response)
                 }
@@ -211,6 +210,7 @@ fun Route.oppslagRoutes(
                                 }
                                 profileringService.hentProfileringForArbeidssoekerMedPeriodeId(periodeId)
                             }
+
                             else -> {
                                 profileringService.hentProfileringForArbeidssoekerMedIdentitetsnummer(Identitetsnummer(identitetsnummer))
                             }
@@ -223,7 +223,7 @@ fun Route.oppslagRoutes(
                             profilering
                         }
 
-                    logger.info("Veileder hentet profilering for bruker")
+                    buildLogger.info("Veileder hentet profilering for bruker")
 
                     call.respond(HttpStatusCode.OK, response)
                 }
@@ -246,7 +246,7 @@ fun Route.oppslagRoutes(
                             createSamletInformasjonResponse(arbeidssoekerperioder, identitetsnummer, opplysningerOmArbeidssoekerService, profileringService)
                         }
 
-                    logger.info("Veileder hentet siste samlet informasjon for bruker")
+                    buildLogger.info("Veileder hentet siste samlet informasjon for bruker")
 
                     call.respond(HttpStatusCode.OK, response)
                 }

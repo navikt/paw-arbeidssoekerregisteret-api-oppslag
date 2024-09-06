@@ -1,35 +1,33 @@
-package no.nav.paw.arbeidssokerregisteret.api.repositories
+package no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories
 
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.OpplysningerOmArbeidssoekerRepository
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.ProfileringRepository
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.repositories.initTestDatabase
-import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
-import no.nav.paw.arbeidssokerregisteret.api.v1.BrukerType
-import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata
-import no.nav.paw.arbeidssokerregisteret.api.v1.Profilering
-import no.nav.paw.arbeidssokerregisteret.api.v1.ProfilertTil
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.test.nyOpplysningerOmArbeidssoeker
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.test.nyProfilering
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.test.shouldBeEqualTo
 import org.jetbrains.exposed.sql.Database
-import java.time.Instant
 import java.util.*
 import javax.sql.DataSource
 
 class ProfileringRepositoryTest : StringSpec({
     lateinit var dataSource: DataSource
     lateinit var database: Database
+    lateinit var repository: ProfileringRepository
     val periodeId1: UUID = UUID.fromString("84201f96-363b-4aab-a589-89fa4b9b1feb")
     val periodeId2: UUID = UUID.fromString("84201f96-363b-4aab-a589-89fa4b9b1fec")
-    val opplysningerOmArbeidssoekerId1: UUID = UUID.fromString("84201f96-363b-4aab-a589-89fa4b9b1fed")
-    val opplysningerOmArbeidssoekerId2: UUID = UUID.fromString("84201f96-363b-4aab-a589-89fa4b9b1fee")
+    val opplysningerId1: UUID = UUID.fromString("84201f96-363b-4aab-a589-89fa4b9b1fed")
+    val opplysningerId2: UUID = UUID.fromString("84201f96-363b-4aab-a589-89fa4b9b1fee")
 
     beforeEach {
         dataSource = initTestDatabase()
         database = Database.connect(dataSource)
-        settInnTestPeriode(database, periodeId1)
-        settInnTestPeriode(database, periodeId2)
-        settInnTestOpplysningerOmArbeidssoeker(database, periodeId1, opplysningerOmArbeidssoekerId1)
-        settInnTestOpplysningerOmArbeidssoeker(database, periodeId2, opplysningerOmArbeidssoekerId2)
+        repository = ProfileringRepository(database)
+        val opplysningerRepository = OpplysningerOmArbeidssoekerRepository(database)
+        val opplysninger1 = nyOpplysningerOmArbeidssoeker(periodeId = periodeId1, opplysningerId = opplysningerId1)
+        val opplysninger2 = nyOpplysningerOmArbeidssoeker(periodeId = periodeId2, opplysningerId = opplysningerId2)
+        opplysningerRepository.lagreOpplysningerOmArbeidssoeker(opplysninger1)
+        opplysningerRepository.lagreOpplysningerOmArbeidssoeker(opplysninger2)
     }
 
     afterEach {
@@ -37,69 +35,63 @@ class ProfileringRepositoryTest : StringSpec({
     }
 
     "Opprett og hent ut en profilering" {
-        val repository = ProfileringRepository(database)
-        val profilering = lagTestProfilering(periodeId1, opplysningerOmArbeidssoekerId1)
-        repository.opprettProfileringForArbeidssoeker(profilering)
+        val profilering = nyProfilering(periodeId1, opplysningerId1)
+        repository.lagreProfilering(profilering)
 
-        val retrievedProfilering = repository.hentProfileringForArbeidssoekerMedPeriodeId(profilering.periodeId)
+        val profileringResponser = repository.hentProfilering(profilering.periodeId)
 
-        retrievedProfilering.size shouldBe 1
+        profileringResponser.size shouldBe 1
+        val profileringResponse = profileringResponser[0]
+        profileringResponse shouldBeEqualTo profilering
     }
 
     "Opprett og hent ut flere profileringer" {
-        val repository = ProfileringRepository(database)
-        val profilering1 = lagTestProfilering(periodeId1, opplysningerOmArbeidssoekerId1)
-        val profilering2 = lagTestProfilering(periodeId1, opplysningerOmArbeidssoekerId2)
-        repository.opprettProfileringForArbeidssoeker(profilering1)
-        repository.opprettProfileringForArbeidssoeker(profilering2)
+        val profilering1 = nyProfilering(periodeId1, opplysningerId1)
+        val profilering2 = nyProfilering(periodeId1, opplysningerId2)
+        repository.lagreProfilering(profilering1)
+        repository.lagreProfilering(profilering2)
 
-        val retrievedProfilering = repository.hentProfileringForArbeidssoekerMedPeriodeId(periodeId1)
+        val profileringResponser = repository.hentProfilering(periodeId1)
 
-        retrievedProfilering.size shouldBe 2
+        profileringResponser.size shouldBe 2
+        val profileringResponse1 = profileringResponser[0]
+        profileringResponse1 shouldBeEqualTo profilering1
+        val profileringResponse2 = profileringResponser[1]
+        profileringResponse2 shouldBeEqualTo profilering2
     }
 
     "Hent ut profilering med PeriodeId" {
-        val repository = ProfileringRepository(database)
-        val profilering = lagTestProfilering(periodeId1, opplysningerOmArbeidssoekerId1)
-        repository.opprettProfileringForArbeidssoeker(profilering)
-        val retrievedProfilering = repository.hentProfileringForArbeidssoekerMedPeriodeId(periodeId1)
+        val profilering = nyProfilering(periodeId1, opplysningerId1)
+        repository.lagreProfilering(profilering)
+        val profileringResponser = repository.hentProfilering(periodeId1)
 
-        retrievedProfilering.size shouldBe 1
+        profileringResponser.size shouldBe 1
+        val profileringResponse = profileringResponser[0]
+        profileringResponse shouldBeEqualTo profilering
     }
 
     "Hent ut ikke-eksisterende profilering" {
-        val repository = ProfileringRepository(database)
+        val profileringResponser = repository.hentProfilering(UUID.randomUUID())
 
-        val retrievedProfilering = repository.hentProfileringForArbeidssoekerMedPeriodeId(UUID.randomUUID())
+        profileringResponser.size shouldBe 0
+    }
 
-        retrievedProfilering.size shouldBe 0
+    "Lagre profileringer med samme periodeId i batch" {
+        val periodeId = UUID.randomUUID()
+        val profilering1 = nyProfilering(periodeId, UUID.randomUUID())
+        val profilering2 = nyProfilering(periodeId, UUID.randomUUID())
+        val profilering3 = nyProfilering(periodeId, UUID.randomUUID())
+        val profileringer = sequenceOf(profilering1, profilering2, profilering3)
+        repository.lagreProfileringer(profileringer)
+
+        val lagredeProfileringer = repository.hentProfilering(periodeId)
+
+        lagredeProfileringer.size shouldBeExactly 3
+        val lagredeProfilering1 = lagredeProfileringer[0]
+        val lagredeProfilering2 = lagredeProfileringer[1]
+        val lagredeProfilering3 = lagredeProfileringer[2]
+        lagredeProfilering1 shouldBeEqualTo profilering1
+        lagredeProfilering2 shouldBeEqualTo profilering2
+        lagredeProfilering3 shouldBeEqualTo profilering3
     }
 })
-
-fun settInnTestOpplysningerOmArbeidssoeker(
-    database: Database,
-    periodeId: UUID,
-    opplysningerOmArbeidssoekerId: UUID
-) {
-    val opplysninger = hentTestOpplysningerOmArbeidssoeker(periodeId, opplysningerOmArbeidssoekerId)
-    OpplysningerOmArbeidssoekerRepository(database).lagreOpplysningerOmArbeidssoeker(opplysninger)
-}
-
-fun lagTestProfilering(
-    periodeId: UUID,
-    opplysningerOmArbeidssoekerId: UUID
-) = Profilering(
-    UUID.fromString("84201f96-363b-4aab-a589-89fa4b9b1feb"),
-    periodeId,
-    opplysningerOmArbeidssoekerId,
-    Metadata(
-        Instant.now(),
-        Bruker(BrukerType.SLUTTBRUKER, "1"),
-        "KILDE",
-        "AARSAK",
-        null
-    ),
-    ProfilertTil.UDEFINERT,
-    true,
-    30
-)

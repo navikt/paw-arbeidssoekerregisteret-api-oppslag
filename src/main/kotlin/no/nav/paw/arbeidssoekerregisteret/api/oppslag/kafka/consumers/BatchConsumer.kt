@@ -3,7 +3,7 @@ package no.nav.paw.arbeidssoekerregisteret.api.oppslag.kafka.consumers
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.logger
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils.buildLogger
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import java.time.Duration
 
@@ -30,23 +30,26 @@ class BatchConsumer<K, V>(
     fun getAndProcessBatch(
         @SpanAttribute("topics") topic: String = this.topic
     ) {
-        consumer
-            .poll(pollingInterval)
-            .asSequence()
-            .onEach {
-                logger.trace(
-                    "Mottok melding fra {} med offset {} partition {}",
-                    it.topic(),
-                    it.offset(),
-                    it.partition()
+        val records = consumer.poll(pollingInterval)
+        if (records.isEmpty) {
+            buildLogger.trace("Mottok ingen meldinger i intervall")
+        } else {
+            records.asSequence()
+                .onEach {
+                    buildLogger.trace(
+                        "Mottok melding fra {} med offset {} partition {}",
+                        it.topic(),
+                        it.offset(),
+                        it.partition()
+                    )
+                }.map { it.value() }
+                .runCatching(receiver)
+                .mapCatching { commitSync() }
+                .fold(
+                    onSuccess = { buildLogger.debug("Batch behandlet og commitet") },
+                    onFailure = { error -> throw Exception("Feil ved konsumering av melding fra $topic", error) }
                 )
-            }.map { it.value() }
-            .runCatching(receiver)
-            .mapCatching { commitSync() }
-            .fold(
-                onSuccess = { logger.debug("Batch behandlet og commitet") },
-                onFailure = { error -> throw Exception("Feil ved konsumering av melding fra $topic", error) }
-            )
+        }
     }
 
     @WithSpan(

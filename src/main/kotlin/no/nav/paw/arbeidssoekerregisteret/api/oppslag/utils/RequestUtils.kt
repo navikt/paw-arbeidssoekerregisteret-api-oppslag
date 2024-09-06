@@ -1,19 +1,21 @@
 package no.nav.paw.arbeidssoekerregisteret.api.oppslag.utils
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.*
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.call
 import io.ktor.server.auth.authentication
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.util.pipeline.*
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
+import io.ktor.util.pipeline.PipelineContext
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.ArbeidssoekerperiodeResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.Identitetsnummer
+import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.NavAnsatt
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.SamletInformasjonResponse
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.models.toIdentitetsnummer
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.plugins.StatusException
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ArbeidssoekerperiodeService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.AutorisasjonService
-import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.NavAnsatt
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.OpplysningerOmArbeidssoekerService
 import no.nav.paw.arbeidssoekerregisteret.api.oppslag.services.ProfileringService
 import no.nav.security.token.support.v2.TokenValidationContextPrincipal
@@ -79,10 +81,10 @@ suspend fun ApplicationCall.verifyAccessFromToken(
         getNavAnsattFromToken()
             ?: return true
 
-    logger.info("Sjekker om NAV-ansatt har tilgang til bruker")
+    buildLogger.info("Sjekker om NAV-ansatt har tilgang til bruker")
     return autorisasjonService.verifiserTilgangTilBruker(navAnsatt, identitetsnummer).also { harTilgang ->
         if (!harTilgang) {
-            logger.warn("NAV-ansatt har ikke tilgang til bruker")
+            buildLogger.warn("NAV-ansatt har ikke tilgang til bruker")
             respondText(status = HttpStatusCode.Forbidden, text = HttpStatusCode.Forbidden.description)
         }
     }
@@ -95,7 +97,7 @@ suspend fun ApplicationCall.verifyPeriodeId(
 ): Boolean {
     val periodeIdTilhoererIdentitetsnummer = arbeidssoekerperiodeService.periodeIdTilhoererIdentitetsnummer(periodeId, identitetsnummer)
     if (!periodeIdTilhoererIdentitetsnummer) {
-        logger.warn("PeriodeId tilhører ikke bruker: $periodeId")
+        buildLogger.warn("PeriodeId tilhører ikke bruker: $periodeId")
         respondText(status = HttpStatusCode.Forbidden, text = "PeriodeId tilhører ikke bruker: $periodeId")
         return false
     }
@@ -110,7 +112,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.isPeriodeIdValid(
     if (periodeId != null) {
         val periodeIdTilhoererIdentitetsnummer = call.verifyPeriodeId(periodeId, identitetsnummer, arbeidssoekerperiodeService)
         if (!periodeIdTilhoererIdentitetsnummer) {
-            logger.warn("PeriodeId tilhører ikke bruker: $periodeId")
+            buildLogger.warn("PeriodeId tilhører ikke bruker: $periodeId")
             call.respond(HttpStatusCode.Forbidden, "PeriodeId tilhører ikke bruker: $periodeId")
             return false
         }
