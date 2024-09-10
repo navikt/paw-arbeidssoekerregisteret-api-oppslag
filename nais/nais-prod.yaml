@@ -95,6 +95,9 @@ spec:
         - application: veilarbportefolje
           namespace: obo
           cluster: prod-gcp
+        - application: veilarbperson
+          namespace: obo
+          cluster: prod-gcp
     outbound:
       rules:
         - application: poao-tilgang
