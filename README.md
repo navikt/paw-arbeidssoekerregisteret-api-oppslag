@@ -95,7 +95,7 @@ Gå til https://dolly.ekstern.dev.nav.no/testnorge og imporer en bruker fra test
 
 Gå til https://arbeid.intern.dev.nav.no/arbeid/registrering og registrer bruker.
 
-Vent litt. 
+Vent litt.
 
 3) Logg inn i tokenx-token-generator med test-id med din nye dolly bruker
 
@@ -237,12 +237,6 @@ Konsumer meldinger fra `arbeidssoker-profilering-v1`
 ```sh
 docker exec -it paw-arbeidssoekerregisteret-api-oppslag_kafka_1 /usr/bin/kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic arbeidssoker-profilering-v1
 ```
-
-## Formatering
-
-Prosjektet bruker kotlinter
-Kjør `./gradlew installKotlinterPrePushHook` før du starter, så vil koden bli formatert pre-push.
-Eller kjør `./gradlew formatKotlin` for autoformatering eller `./gradlew lintKotlin` for å se lint-feil.
 
 ## Deploye kun til dev
 
