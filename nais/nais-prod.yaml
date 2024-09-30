@@ -81,9 +81,6 @@ spec:
         - application: veilarbpersonflate
           namespace: poao
           cluster: prod-gcp
-        - application: veilarbperson
-          namespace: pto
-          cluster: prod-fss
         - application: arbeidssokerregistrering
           namespace: paw
           cluster: prod-gcp

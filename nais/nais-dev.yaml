@@ -75,9 +75,6 @@ spec:
         - application: veilarbpersonflate
           namespace: poao
           cluster: dev-gcp
-        - application: veilarbperson
-          namespace: pto
-          cluster: dev-fss
         - application: arbeidssokerregistrering
           namespace: paw
           cluster: dev-gcp
