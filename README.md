@@ -1,3 +1,6 @@
+> [!WARNING]
+> Koden er flyttet til [paw-arbeidssoekerregisteret-monorepo-ekstern](https://github.com/navikt/paw-arbeidssoekerregisteret-monorepo-ekstern/tree/main/apps/oppslag-api)
+
 # paw-arbeidssoekerregisteret-api-oppslag
 
 REST-api for oppslag i arbeidssøkerregisteret
